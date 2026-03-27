@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel — Los Rogeles de Marcela</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background: #FDF6F0; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const C = { bg:"#FDF6F0",bgCard:"#FFFFFF",bgInput:"#FFF8F5",rosa:"#C4687A",rosaLight:"#E8A0A8",rosaPale:"#F5D0D6",rosaPaleBg:"#FDE8EC",marron:"#5C3340",marronLight:"#8B6070",crema:"#F0DDE2",verde:"#7BAE84",naranja:"#D4845A",rojo:"#C0444A",nav:"#FFFFFF",border:"#F0D0D8" };
+const SIZES = ["Entero","Medio","Cuarto","Rogelito"];
+const PM = {Entero:73000,Medio:45000,Cuarto:31000,Rogelito:9000}; // Rogelito minorista x unidad
+const PMay = {Entero:56940,Medio:35100,Cuarto:24180,Rogelito:40560};
+const GM = {Entero:24950,Medio:15850,Cuarto:10650,Rogelito:1400}; // Rogelito ganancia x unidad (aprox)
+const GMay = {Entero:8890,Medio:5950,Cuarto:3830,Rogelito:2960};
+const PUNTOS = [
+  "Valle Escondido (Casa Central)",
+  "Barrio Jardín",
+  "Cañitas / Valle del Golf / Causana",
+  "Camino a San Carlos",
+  "Centro (Bonafide Colón y Cañada)",
+  "Cerro de las Rosas / Urca",
+  "Cofico",
+  "Docta",
+  "Intercountry (El Bosque)",
+  "J. Claret / P. Lugones",
+  "La Cuesta / La Calera",
+  "Manantiales",
+  "Montecristo",
+  "Nueva Córdoba (Strobel Panadería / Café)",
+  "Orfeo / Dino",
+  "Sierras Chicas - Río Ceballos / Salsipuedes",
+  "Siete Soles / Tejas 3",
+  "V. Rivera Indarte / Saldán",
+  "Villa Allende / Mendiolaza",
+  "Villa Allende - Av. Padre Luchesse / Ruta E53",
+  "Villa Belgrano",
+];
+const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
+const SK = "rogeles_v4";
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyNfAicx6zEvi45ZuJchDQVRKZG6WoM0UbCy6pisEt03L4-prmGNl2Q8iHyLgikvZxE/exec";
+const ld = () => { try { const r=localStorage.getItem(SK); if(r) return JSON.parse(r); } catch{} return null; };
+const sd = d => { try { localStorage.setItem(SK,JSON.stringify(d)); } catch{} };
+const inp = () => ({width:"100%",padding:"11px 13px",borderRadius:10,background:C.bgInput,border:`1px solid ${C.border}`,color:C.marron,fontSize:13,marginBottom:8,boxSizing:"border-box",outline:"none"});
+const mb = bg => ({background:bg,color:"#fff",border:"none",borderRadius:20,padding:"9px 18px",fontSize:13,cursor:"pointer",fontWeight:"bold"});
+const fb = bg => ({padding:13,borderRadius:12,border:"none",background:bg,color:"#fff",cursor:"pointer",fontSize:13,fontWeight:"bold"});
+const ob = () => ({padding:13,borderRadius:12,border:`1px solid ${C.border}`,background:"transparent",color:C.marronLight,cursor:"pointer",fontSize:13});
+const sb = bg => ({fontSize:10,background:bg,color:"#fff",border:"none",borderRadius:8,padding:"4px 9px",cursor:"pointer",marginTop:4,display:"block",fontWeight:"bold"});
+const KPI = ({emoji,label,value,sub,color}) => <div style={{background:C.bgCard,borderRadius:16,padding:14,border:`1px solid ${C.border}`}}><div style={{fontSize:18}}>{emoji}</div><div style={{fontSize:22,fontWeight:"bold",color,marginTop:4}}>{value}</div><div style={{fontSize:12,color:C.marron,marginTop:2}}>{label}</div><div style={{fontSize:10,color:C.marronLight}}>{sub}</div></div>;
+const Card = ({title,titleColor=C.rosaLight,borderColor=C.border,children}) => <div style={{background:C.bgCard,borderRadius:16,padding:16,marginBottom:14,border:`1px solid ${borderColor}`}}>{title&&<div style={{fontSize:11,color:titleColor,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>{title}</div>}{children}</div>;
+const ST = ({children,noTop}) => <div style={{fontSize:12,color:C.rosaLight,letterSpacing:2.5,textTransform:"uppercase",paddingTop:noTop?0:20,marginBottom:14,fontWeight:"bold"}}>{children}</div>;
+const Lbl = ({children}) => <div style={{fontSize:12,color:C.marronLight,marginBottom:6}}>{children}</div>;
+const Fil = ({label,valor,vc}) => <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:2}}><span style={{color:C.marronLight}}>{label}</span><span style={{fontWeight:"bold",color:vc}}>{valor}</span></div>;
+const Vac = ({emoji,text}) => <div style={{textAlign:"center",padding:50,color:C.rosaLight}}><div style={{fontSize:48}}>{emoji}</div><div style={{marginTop:12,fontSize:14,color:C.marronLight}}>{text}</div></div>;
+
+function App() {
+  const [tab,setTab]=useState("dashboard");
+  const [stock,setStock]=useState({Entero:22,Medio:16,Cuarto:0,Rogelito:15});
+  const [ventas,setVentas]=useState([]);
+  const [peds,setPeds]=useState([]);
+  const [svf,setSvf]=useState(false);
+  const [spf,setSpf]=useState(false);
+  const [vf,setVf]=useState({tipo:"minorista",cliente:"",celular:"",tamano:"Entero",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
+  const [pf,setPf]=useState({punto:PUNTOS[0],Entero:0,Medio:0,Cuarto:0,Rogelito:0});
+  const [toast,setToast]=useState(null);
+  const [rv,setRv]=useState({Entero:0,Medio:0,Cuarto:0,Rogelito:0});
+
+  useEffect(()=>{ const d=ld(); if(d){if(d.stock)setStock(d.stock);if(d.ventas)setVentas(d.ventas);if(d.peds)setPeds(d.peds);} },[]);
+  useEffect(()=>{ sd({stock,ventas,peds}); },[stock,ventas,peds]);
+
+  // Cargar pedidos mayoristas desde Google Sheets
+  useEffect(()=>{
+    const getSem = () => { const d=new Date(); const s=new Date(d.getFullYear(),0,1); return `Sem ${Math.ceil(((d-s)/86400000+s.getDay()+1)/7)} / ${d.getFullYear()}`; };
+    const sem = getSem();
+    fetch(SHEETS_URL + "?t=" + Date.now())
+      .then(r=>r.json())
+      .then(res=>{
+        if(res.ok && res.data){
+          const pedidos = res.data
+            .filter(r => r.punto && r.semana)
+            .map((r,i) => ({
+              id: i + 1,
+              punto: r.punto,
+              contacto: r.contacto,
+              semana: r.semana,
+              fecha: r.fecha,
+              Entero: parseInt(r.entero)||0,
+              Medio: parseInt(r.medio)||0,
+              Cuarto: parseInt(r.cuarto)||0,
+              Rogelito: parseInt(r.rogelito)||0,
+              ganancia: (parseInt(r.entero)||0)*8890 + (parseInt(r.medio)||0)*5950 + (parseInt(r.cuarto)||0)*3830 + (parseInt(r.rogelito)||0)*2960,
+            }));
+          if(pedidos.length > 0) setPeds(pedidos);
+        }
+      })
+      .catch(()=>{});
+  },[]);
+
+  const toast2=(msg,ok=true)=>{ setToast({msg,ok}); setTimeout(()=>setToast(null),2500); };
+  const pv=(t,tipo)=>tipo==="minorista"?PM[t]:PMay[t];
+  const gan=(t,tipo,c)=>(tipo==="minorista"?GM[t]:GMay[t])*c;
+  const gsem=()=>{
+    const d=new Date();
+    const day=d.getDay(); // 0=dom,1=lun...6=sab
+    const diffLun=day===0?-6:1-day;
+    const lun=new Date(d); lun.setDate(d.getDate()+diffLun);
+    const dom=new Date(lun); dom.setDate(lun.getDate()+6);
+    const fmt2=x=>x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
+    return "Pedido semanal " + fmt2(lun) + " - " + fmt2(dom);
+  };
+  const sem=gsem();
+  const getMes = () => { const d=new Date(); return `${d.getMonth()+1}-${d.getFullYear()}`; };
+  const mes = getMes();
+  const pend=ventas.filter(v=>!v.pagado);
+  const hoy=ventas.filter(v=>v.fecha===new Date().toLocaleDateString("es-AR"));
+  const caja=ventas.filter(v=>v.pagado).reduce((a,v)=>a+v.precio,0);
+  // Filtrar por mes actual
+  const ventasMes = ventas.filter(v=>{ try{ const p=v.fecha.split("/"); const d=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])); return `${d.getMonth()+1}-${d.getFullYear()}`===mes; }catch{return true;} });
+  const gm=ventasMes.filter(v=>v.tipo==="minorista").reduce((a,v)=>a+v.ganancia,0);
+  const gmy=peds.filter(p=>{ if(!p.semana) return true; const parts=p.semana.split("/"); if(parts.length<2) return true; const yr=parseInt(parts[1].trim()); const d=new Date(); return yr===d.getFullYear(); }).reduce((a,p)=>a+p.ganancia,0);
+  const gmyMes=peds.filter(p=>p.semana&&p.semana.includes(new Date().getFullYear().toString())&&(!p.punto||!p.punto.toLowerCase().includes('valle escondido'))).reduce((a,p)=>a+p.ganancia,0);
+  // Semana actual — acepta tanto "Sem 13 / 2026" como "Semana 13 / 2026"
+  const semNum = sem.replace("Sem ","").trim();
+  // Inversion Valle Escondido
+  const COSTO = {Entero:48050,Medio:29150,Cuarto:20350,Rogelito:37600};
+  const ps=peds.filter(p=>{ if(!p.semana) return false; const s=p.semana.replace("Semana ","Sem ").trim(); return s===sem || p.semana.includes(semNum); });
+  const con=SIZES.reduce((acc,s)=>{acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0);return acc;},{});
+  const sc=n=>n===0?C.rojo:n<=3?C.naranja:C.verde;
+
+  const regVenta=()=>{
+    if(!vf.cliente.trim()){toast2("Ingresá el nombre",false);return;}
+    if(stock[vf.tamano]<vf.cantidad){toast2("Stock insuficiente",false);return;}
+    const v={...vf,id:Date.now(),precio:pv(vf.tamano,vf.tipo)*vf.cantidad,ganancia:gan(vf.tamano,vf.tipo,vf.cantidad)};
+    setVentas(p=>[v,...p]); setStock(p=>({...p,[vf.tamano]:p[vf.tamano]-vf.cantidad}));
+    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"Entero",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
+    setSvf(false); toast2("✓ Venta registrada");
+  };
+  const cobrar=id=>{ setVentas(p=>p.map(v=>v.id===id?{...v,pagado:true}:v)); toast2("✓ Cobrado"); };
+  const addPed=()=>{
+    const tot=SIZES.reduce((a,s)=>a+(pf[s]||0),0);
+    if(tot===0){toast2("Ingresá al menos un producto",false);return;}
+    const esValle=pf.punto.toLowerCase().includes('valle escondido');
+    const g=esValle?0:SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0);
+    setPeds(p=>[{...pf,id:Date.now(),semana:sem,ganancia:g},...p]);
+    setPf({punto:PUNTOS[0],Entero:0,Medio:0,Cuarto:0,Rogelito:0}); setSpf(false); toast2("✓ Pedido guardado");
+  };
+  const enviarPedido=()=>{
+    const tot=SIZES.reduce((a,s)=>a+con[s],0);
+    if(tot===0){toast2("No hay pedidos cargados",false);return;}
+    const porPunto={};
+    ps.forEach(p=>{
+      if(!porPunto[p.punto]) porPunto[p.punto]={Entero:0,Medio:0,Cuarto:0,Rogelito:0};
+      porPunto[p.punto].Entero+=(parseInt(p.Entero)||0);
+      porPunto[p.punto].Medio+=(parseInt(p.Medio)||0);
+      porPunto[p.punto].Cuarto+=(parseInt(p.Cuarto)||0);
+      porPunto[p.punto].Rogelito+=(parseInt(p.Rogelito)||0);
+    });
+    const totalE=Object.values(porPunto).reduce((a,p)=>a+(p.Entero||0),0);
+    const totalM=Object.values(porPunto).reduce((a,p)=>a+(p.Medio||0),0);
+    const totalC=Object.values(porPunto).reduce((a,p)=>a+(p.Cuarto||0),0);
+    const totalR=Object.values(porPunto).reduce((a,p)=>a+(p.Rogelito||0),0);
+    const msg="Rodri te paso el pedido \u{1F382}\n\nENTEROS: "+totalE+"\nMEDIOS: "+totalM+"\nCUARTOS: "+totalC+"\nCAJA DE ROGELITOS: "+totalR+"\n\nGracias";
+    window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
+    toast2("\u2713 Pedido enviado a Rodri");
+  };
+
+  const enviarRepartida=()=>{
+    const tot=SIZES.reduce((a,s)=>a+con[s],0);
+    if(tot===0){toast2("No hay pedidos cargados",false);return;}
+    const porPunto={};
+    ps.forEach(p=>{
+      if(!porPunto[p.punto]) porPunto[p.punto]={Entero:0,Medio:0,Cuarto:0,Rogelito:0};
+      porPunto[p.punto].Entero+=(parseInt(p.Entero)||0);
+      porPunto[p.punto].Medio+=(parseInt(p.Medio)||0);
+      porPunto[p.punto].Cuarto+=(parseInt(p.Cuarto)||0);
+      porPunto[p.punto].Rogelito+=(parseInt(p.Rogelito)||0);
+    });
+    const REPARTIDA=[
+      {key:"Manantiales",label:"MANANTIALES",retira:""},
+      {key:"Camino a San Carlos",label:"CAMINO A SAN CARLOS",retira:"retira Fran"},
+      {key:"Montecristo",label:"MONTECRISTO",retira:"retira Bel\u00e9n"},
+    ];
+    let rep="";
+    REPARTIDA.forEach(r=>{
+      const key=Object.keys(porPunto).find(k=>k.toLowerCase().includes(r.key.toLowerCase()));
+      const p=key?porPunto[key]:{Entero:0,Medio:0,Cuarto:0,Rogelito:0};
+      const titulo=r.retira?r.label+" ("+r.retira+")":r.label;
+      const lineas=[];
+      if(p.Entero>0) lineas.push("Entero: "+p.Entero);
+      if(p.Medio>0) lineas.push("Medio: "+p.Medio);
+      if(p.Cuarto>0) lineas.push("Cuarto: "+p.Cuarto);
+      if(p.Rogelito>0) lineas.push("Caja Rogelito: "+p.Rogelito);
+      rep+="\n"+titulo+"\n"+(lineas.length>0?lineas.join("\n"):"Sin pedido")+"\n";
+    });
+    rep+="\nRESTO EN CASA";
+    const msg="\u{1F382} Repartida de la semana\n"+rep+"\n\nGracias";
+    window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
+    toast2("\u2713 Repartida enviada");
+  };;;
+
+  const tabs=[{id:"dashboard",icon:"◈",label:"Inicio"},{id:"ventas",icon:"◉",label:"Ventas"},{id:"stock",icon:"◫",label:"Stock"},{id:"mayoristas",icon:"◎",label:"Mayorista"},{id:"ganancia",icon:"◐",label:"Ganancia"},{id:"stats",icon:"◑",label:"Stats"}];
+
+  return (
+    <div style={{fontFamily:"'Lato',sans-serif",background:C.bg,minHeight:"100vh",color:C.marron,maxWidth:430,margin:"0 auto",paddingBottom:88}}>
+      <div style={{background:`linear-gradient(160deg,${C.rosaPale} 0%,${C.rosaLight} 60%,${C.rosa} 100%)`,padding:"28px 22px 22px",position:"relative",overflow:"hidden",boxShadow:"0 2px 20px rgba(196,104,122,0.25)"}}>
+        <div style={{position:"absolute",top:-30,right:-30,width:120,height:120,borderRadius:"50%",background:"rgba(255,255,255,0.18)"}}/>
+        <div style={{fontSize:10,letterSpacing:4,color:"rgba(92,51,64,0.6)",textTransform:"uppercase",marginBottom:4}}>Sistema de Gestión</div>
+        <div style={{fontSize:13,fontStyle:"italic",color:C.marron,opacity:0.7,fontFamily:"'Playfair Display',serif"}}>Los</div>
+        <div style={{fontSize:32,fontWeight:"bold",color:C.marron,lineHeight:1,fontFamily:"'Playfair Display',serif"}}>rogeles</div>
+        <div style={{fontSize:14,letterSpacing:6,color:C.marron,opacity:0.75,textTransform:"uppercase",marginBottom:8}}>de Marcela</div>
+        <div style={{fontSize:11,color:C.marron,opacity:0.6}}>📍 Valle Escondido · {new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</div>
+      </div>
+      {toast&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:toast.ok?C.verde:C.rojo,color:"#fff",padding:"11px 26px",borderRadius:30,fontSize:13,fontWeight:"bold",zIndex:999,whiteSpace:"nowrap"}}>{toast.msg}</div>}
+      <div style={{padding:"0 14px"}}>
+
+        {tab==="dashboard"&&<div>
+          <ST>Resumen del día</ST>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}><KPI emoji="💰" label="Total Caja" value={fmt(caja)} sub="cobrado" color={C.verde}/><KPI emoji="📈" label="Ganancia" value={fmt(gm+gmy)} sub="acumulada" color={C.naranja}/></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}><KPI emoji="🛒" label="Ventas hoy" value={hoy.length} sub="operaciones" color={C.rosa}/><KPI emoji="⏳" label="Pendientes" value={pend.length} sub="sin cobrar" color={pend.length>0?C.rojo:C.verde}/></div>
+          <Card title="Stock actual">{<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{SIZES.map(s=><div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:C.bg,borderRadius:10,padding:"10px 14px",border:`1px solid ${C.border}`}}><span style={{fontSize:13,color:C.marronLight}}>{s}</span><span style={{fontWeight:"bold",color:sc(stock[s]),fontSize:22}}>{stock[s]}</span></div>)}</div>}</Card>
+          {pend.length>0&&<Card title="⚠ Pendientes" titleColor={C.rojo} borderColor={`${C.rojo}33`}>{pend.slice(0,4).map(v=><div key={v.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,background:C.bg,borderRadius:10,padding:"10px 12px",border:`1px solid ${C.border}`}}><div><div style={{fontSize:13,fontWeight:"bold"}}>{v.cliente}</div><div style={{fontSize:11,color:C.marronLight}}>{v.tamano} x{v.cantidad} · {v.retira||"—"}</div></div><div style={{textAlign:"right"}}><div style={{fontSize:13,fontWeight:"bold",color:C.naranja}}>{fmt(v.precio)}</div><button onClick={()=>cobrar(v.id)} style={sb(C.verde)}>Cobrar ✓</button></div></div>)}{pend.length>4&&<div style={{textAlign:"center",fontSize:11,color:C.marronLight}}>+{pend.length-4} más</div>}</Card>}
+          <Card title={`Pedido ${sem}`} titleColor={C.rosa}>{SIZES.map(s=><div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:`1px solid ${C.border}`}}><span style={{fontSize:13,color:C.marronLight}}>{s}</span><span style={{fontWeight:"bold",color:con[s]>0?C.marron:C.border}}>{con[s]} u.</span></div>)}<div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:`1px solid ${C.crema}`}}><span style={{fontSize:12,color:C.marronLight}}>{ps.length}/20 puntos</span><span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gmy)}</span></div></Card>
+        </div>}
+
+        {tab==="ventas"&&<div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}><ST noTop>Ventas</ST><button onClick={()=>setSvf(v=>!v)} style={mb(C.rosa)}>{svf?"✕ Cerrar":"+ Nueva venta"}</button></div>
+          {svf&&<Card title="Nueva venta" titleColor={C.rosa}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>{["minorista","mayorista"].map(t=><button key={t} onClick={()=>setVf(f=>({...f,tipo:t}))} style={{padding:10,borderRadius:10,border:`2px solid ${vf.tipo===t?C.rosa:C.border}`,cursor:"pointer",fontWeight:"bold",fontSize:13,background:vf.tipo===t?C.rosaPaleBg:C.bgCard,color:vf.tipo===t?C.rosa:C.marronLight}}>{t==="minorista"?"🛒 Minorista":"🏪 Mayorista"}</button>)}</div>
+            <input placeholder="Nombre *" value={vf.cliente} onChange={e=>setVf(f=>({...f,cliente:e.target.value}))} style={inp()}/>
+            <input placeholder="Celular (opcional)" value={vf.celular} onChange={e=>setVf(f=>({...f,celular:e.target.value}))} style={inp()}/>
+            <Lbl>Tamaño</Lbl>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>{SIZES.map(s=><button key={s} onClick={()=>setVf(f=>({...f,tamano:s}))} style={{padding:10,borderRadius:10,border:`2px solid ${vf.tamano===s?C.rosa:C.border}`,cursor:"pointer",fontSize:12,background:vf.tamano===s?C.rosaPaleBg:C.bgCard,color:vf.tamano===s?C.rosa:C.marronLight,textAlign:"left"}}><div style={{fontWeight:"bold"}}>{s}</div><div style={{fontSize:10,opacity:0.75}}>{fmt(pv(s,vf.tipo))}</div></button>)}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><div><Lbl>Cantidad</Lbl><input type="number" min="1" value={vf.cantidad} onChange={e=>setVf(f=>({...f,cantidad:Math.max(1,parseInt(e.target.value)||1)}))} style={inp()}/></div><div><Lbl>Retira</Lbl><input placeholder="ej: viernes" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/></div></div>
+            <div style={{background:C.rosaPaleBg,borderRadius:12,padding:12,marginBottom:12}}><Fil label="Total:" valor={fmt(pv(vf.tamano,vf.tipo)*vf.cantidad)} vc={C.naranja}/><Fil label="Ganancia:" valor={fmt(gan(vf.tamano,vf.tipo,vf.cantidad))} vc={C.verde}/></div>
+            <label style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,fontSize:13,cursor:"pointer",color:C.marronLight}}><input type="checkbox" checked={vf.pagado} onChange={e=>setVf(f=>({...f,pagado:e.target.checked}))} style={{accentColor:C.rosa,width:16,height:16}}/>Ya cobrado</label>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button onClick={()=>setSvf(false)} style={ob()}>Cancelar</button><button onClick={regVenta} style={fb(C.rosa)}>Registrar</button></div>
+          </Card>}
+          {ventas.length===0&&!svf&&<Vac emoji="🥐" text="No hay ventas registradas"/>}
+          {ventas.map(v=><div key={v.id} style={{background:C.bgCard,borderRadius:14,padding:14,marginBottom:10,border:`1px solid ${v.pagado?`${C.verde}44`:`${C.rojo}33`}`}}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{flex:1}}><div style={{fontWeight:"bold",fontSize:14}}>{v.cliente}</div><div style={{fontSize:11,color:C.marronLight}}>{v.tamano} x{v.cantidad} · {v.tipo} · {v.fecha}{v.retira&&` · ${v.retira}`}</div>{v.celular&&<div style={{fontSize:11,color:C.marronLight}}>📱 {v.celular}</div>}</div><div style={{textAlign:"right",marginLeft:10}}><div style={{fontWeight:"bold",color:C.naranja,fontSize:15}}>{fmt(v.precio)}</div><div style={{fontSize:11,color:C.verde}}>+{fmt(v.ganancia)}</div>{!v.pagado?<button onClick={()=>cobrar(v.id)} style={sb(C.verde)}>Cobrar ✓</button>:<div style={{fontSize:10,color:C.verde,marginTop:4}}>✓ Pagado</div>}</div></div></div>)}
+        </div>}
+
+        {tab==="stock"&&<div>
+          <ST>Control de Stock</ST>
+          {SIZES.map(s=><div key={s} style={{background:C.bgCard,borderRadius:16,padding:16,marginBottom:12,border:`1px solid ${C.border}`}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:18,fontWeight:"bold"}}>{s}</div><div style={{fontSize:11,color:C.marronLight}}>Min: {fmt(PM[s])} · May: {fmt(PMay[s])}</div></div><div style={{textAlign:"center"}}><div style={{fontSize:46,fontWeight:"bold",color:sc(stock[s]),lineHeight:1}}>{stock[s]}</div><div style={{fontSize:10,color:C.marronLight}}>unidades</div></div></div>
+            <div style={{display:"flex",gap:8,marginTop:12}}><button onClick={()=>setStock(p=>({...p,[s]:Math.max(0,p[s]-1)}))} style={{flex:1,padding:11,borderRadius:10,border:`1px solid ${C.border}`,background:C.bg,color:C.marron,fontSize:20,cursor:"pointer",fontWeight:"bold"}}>−</button><button onClick={()=>setStock(p=>({...p,[s]:p[s]+1}))} style={{flex:1,padding:11,borderRadius:10,border:"none",background:C.rosa,color:"#fff",fontSize:20,cursor:"pointer",fontWeight:"bold"}}>+</button></div>
+            <div style={{display:"flex",gap:8,marginTop:8,alignItems:"center"}}><input type="number" min="0" placeholder="Agregar..." value={rv[s]||""} onChange={e=>setRv(p=>({...p,[s]:parseInt(e.target.value)||0}))} style={{...inp(),marginBottom:0,flex:1,fontSize:12}}/><button onClick={()=>{if(rv[s]>0){setStock(p=>({...p,[s]:p[s]+rv[s]}));setRv(p=>({...p,[s]:0}));toast2(`+${rv[s]} ${s} cargados`);}}} style={{padding:"10px 14px",borderRadius:10,border:"none",background:C.verde,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold",whiteSpace:"nowrap"}}>Cargar pedido</button></div>
+          </div>)}
+        </div>}
+
+
+        {tab==="stats"&&(()=>{
+          const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+          const anio=new Date().getFullYear();
+          // Agrupar ventas minoristas por mes
+          const minoMes=Array(12).fill(0).map((_,m)=>{
+            const vv=ventas.filter(v=>{ try{ const p=v.fecha.split("/"); return parseInt(p[1])-1===m && parseInt(p[2])===anio && v.tipo==="minorista"; }catch{return false;} });
+            return { gan:vv.reduce((a,v)=>a+v.ganancia,0), Entero:vv.filter(v=>v.tamano==="Entero").reduce((a,v)=>a+v.cantidad,0), Medio:vv.filter(v=>v.tamano==="Medio").reduce((a,v)=>a+v.cantidad,0), Cuarto:vv.filter(v=>v.tamano==="Cuarto").reduce((a,v)=>a+v.cantidad,0), Rogelito:vv.filter(v=>v.tamano==="Rogelito").reduce((a,v)=>a+v.cantidad,0) };
+          });
+          // Agrupar pedidos mayoristas por mes (usar semana/año)
+          const mayoMes=Array(12).fill(0).map((_,m)=>{
+            const pp=peds.filter(p=>{ try{ const yr=parseInt(p.semana.split("/")[1].trim()); if(yr!==anio) return false; const sem=parseInt(p.semana.split(" ")[1]); const d=new Date(anio,0,1+(sem-1)*7); return d.getMonth()===m; }catch{return false;} });
+            return { gan:pp.reduce((a,p)=>a+p.ganancia,0), Entero:pp.reduce((a,p)=>a+(p.Entero||0),0), Medio:pp.reduce((a,p)=>a+(p.Medio||0),0), Cuarto:pp.reduce((a,p)=>a+(p.Cuarto||0),0), Rogelito:pp.reduce((a,p)=>a+(p.Rogelito||0),0) };
+          });
+          // Ranking tamaños minorista
+          const totalPorTam={Entero:ventas.filter(v=>v.tamano==="Entero"&&v.tipo==="minorista").reduce((a,v)=>a+v.cantidad,0),Medio:ventas.filter(v=>v.tamano==="Medio"&&v.tipo==="minorista").reduce((a,v)=>a+v.cantidad,0),Cuarto:ventas.filter(v=>v.tamano==="Cuarto"&&v.tipo==="minorista").reduce((a,v)=>a+v.cantidad,0),Rogelito:ventas.filter(v=>v.tamano==="Rogelito"&&v.tipo==="minorista").reduce((a,v)=>a+v.cantidad,0)};
+          const rankTam=Object.entries(totalPorTam).sort((a,b)=>b[1]-a[1]);
+          // Ranking puntos mayoristas
+          const puntosMap={};
+          peds.forEach(p=>{ if(!puntosMap[p.punto]) puntosMap[p.punto]={gan:0,pedidos:0}; puntosMap[p.punto].gan+=p.ganancia; puntosMap[p.punto].pedidos+=1; });
+          const rankPuntos=Object.entries(puntosMap).sort((a,b)=>b[1].gan-a[1].gan).slice(0,10);
+          // Max para grafico
+          const maxGan=Math.max(...minoMes.map(m=>m.gan),...mayoMes.map(m=>m.gan),1);
+          return <div>
+            <ST>Estadísticas {anio}</ST>
+
+            {/* Gráfico de barras */}
+            <Card title="Ganancia mensual" titleColor={C.rosa}>
+              <div style={{display:"flex",gap:4,alignItems:"flex-end",height:120,marginBottom:8}}>
+                {MESES.map((mes,i)=>{
+                  const gMino=minoMes[i].gan; const gMayo=mayoMes[i].gan;
+                  const hMino=gMino>0?Math.max(8,Math.round((gMino/maxGan)*100)):2;
+                  const hMayo=gMayo>0?Math.max(8,Math.round((gMayo/maxGan)*100)):2;
+                  return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                    <div style={{width:"100%",display:"flex",gap:1,alignItems:"flex-end",height:100}}>
+                      <div style={{flex:1,background:C.rosa,borderRadius:"3px 3px 0 0",height:hMino+"px",opacity:0.85}}/>
+                      <div style={{flex:1,background:C.verde,borderRadius:"3px 3px 0 0",height:hMayo+"px",opacity:0.85}}/>
+                    </div>
+                    <div style={{fontSize:7,color:C.marronLight,textAlign:"center"}}>{mes.slice(0,3)}</div>
+                  </div>;
+                })}
+              </div>
+              <div style={{display:"flex",gap:16,justifyContent:"center",marginTop:4}}>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:C.rosa,borderRadius:2}}/><span style={{fontSize:10,color:C.marronLight}}>Minorista</span></div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:C.verde,borderRadius:2}}/><span style={{fontSize:10,color:C.marronLight}}>Mayorista</span></div>
+              </div>
+            </Card>
+
+            {/* Tabla mes a mes */}
+            <Card title="Tabla mensual" titleColor={C.rosa}>
+              <div style={{overflowX:"auto"}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                  <thead>
+                    <tr style={{borderBottom:`2px solid ${C.border}`}}>
+                      <th style={{textAlign:"left",padding:"6px 4px",color:C.marronLight,fontWeight:"bold"}}>Mes</th>
+                      <th style={{textAlign:"right",padding:"6px 4px",color:C.rosa,fontWeight:"bold"}}>G.Mino</th>
+                      <th style={{textAlign:"right",padding:"6px 4px",color:C.verde,fontWeight:"bold"}}>G.Mayo</th>
+                      <th style={{textAlign:"right",padding:"6px 4px",color:C.naranja,fontWeight:"bold"}}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MESES.map((m,i)=>( (minoMes[i].gan>0||mayoMes[i].gan>0) &&
+                      <tr key={i} style={{borderBottom:`1px solid ${C.border}`}}>
+                        <td style={{padding:"6px 4px",color:C.marron,fontWeight:"bold"}}>{m}</td>
+                        <td style={{textAlign:"right",padding:"6px 4px",color:C.rosa}}>{fmt(minoMes[i].gan)}</td>
+                        <td style={{textAlign:"right",padding:"6px 4px",color:C.verde}}>{fmt(mayoMes[i].gan)}</td>
+                        <td style={{textAlign:"right",padding:"6px 4px",color:C.naranja,fontWeight:"bold"}}>{fmt(minoMes[i].gan+mayoMes[i].gan)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            {/* Ranking tamaños */}
+            <Card title="Ranking tamaños minorista" titleColor={C.rosa}>
+              {rankTam.map(([tam,cant],i)=>{
+                const max=rankTam[0][1]||1;
+                return <div key={tam} style={{marginBottom:10}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontSize:13,fontWeight:"bold",color:C.marron}}>#{i+1} {tam}</span>
+                    <span style={{fontSize:13,fontWeight:"bold",color:C.rosa}}>{cant} u.</span>
+                  </div>
+                  <div style={{background:C.border,borderRadius:6,height:8}}>
+                    <div style={{background:C.rosa,borderRadius:6,height:8,width:`${Math.round((cant/max)*100)}%`,transition:"width .3s"}}/>
+                  </div>
+                </div>;
+              })}
+            </Card>
+
+            {/* Ranking puntos mayoristas */}
+            <Card title="Top puntos mayoristas" titleColor={C.verde}>
+              {rankPuntos.length===0&&<div style={{textAlign:"center",color:C.marronLight,fontSize:13,padding:16}}>Sin datos aún</div>}
+              {rankPuntos.map(([punto,data],i)=>{
+                const max=rankPuntos[0][1].gan||1;
+                return <div key={punto} style={{marginBottom:10}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontSize:12,fontWeight:"bold",color:C.marron}}>#{i+1} {punto}</span>
+                    <span style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>{fmt(data.gan)}</span>
+                  </div>
+                  <div style={{background:C.border,borderRadius:6,height:8}}>
+                    <div style={{background:C.verde,borderRadius:6,height:8,width:`${Math.round((data.gan/max)*100)}%`,transition:"width .3s"}}/>
+                  </div>
+                  <div style={{fontSize:10,color:C.marronLight,marginTop:2}}>{data.pedidos} pedido{data.pedidos!==1?"s":""}</div>
+                </div>;
+              })}
+            </Card>
+          </div>;
+        })()}
+        {tab==="ganancia"&&<div>
+          <ST>Ganancia del mes</ST>
+          <div style={{fontSize:11,color:C.marronLight,marginBottom:16,letterSpacing:1}}>{new Date().toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase()} · Se resetea el 1 de cada mes</div>
+          <Card title="Ganancia Minorista" titleColor={C.rosa}>
+            <div style={{textAlign:"center",padding:"20px 0"}}>
+              <div style={{fontSize:11,color:C.marronLight,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Total del mes</div>
+              <div style={{fontSize:42,fontWeight:"bold",color:C.rosa}}>{fmt(gm)}</div>
+              <div style={{fontSize:12,color:C.marronLight,marginTop:8}}>Ventas directas al público</div>
+            </div>
+            <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,marginTop:4}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Enteros vendidos</span><span style={{fontWeight:"bold"}}>{ventasMes.filter(v=>v.tipo==="minorista"&&v.tamano==="Entero").reduce((a,v)=>a+v.cantidad,0)} u.</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Medios vendidos</span><span style={{fontWeight:"bold"}}>{ventasMes.filter(v=>v.tipo==="minorista"&&v.tamano==="Medio").reduce((a,v)=>a+v.cantidad,0)} u.</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Cuartos vendidos</span><span style={{fontWeight:"bold"}}>{ventasMes.filter(v=>v.tipo==="minorista"&&v.tamano==="Cuarto").reduce((a,v)=>a+v.cantidad,0)} u.</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:C.marronLight}}>Rogelitos vendidos</span><span style={{fontWeight:"bold"}}>{ventasMes.filter(v=>v.tipo==="minorista"&&v.tamano==="Rogelito").reduce((a,v)=>a+v.cantidad,0)} u.</span></div>
+            </div>
+          </Card>
+          <Card title="Ganancia Mayorista" titleColor={C.verde}>
+            <div style={{textAlign:"center",padding:"20px 0"}}>
+              <div style={{fontSize:11,color:C.marronLight,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Total del mes</div>
+              <div style={{fontSize:42,fontWeight:"bold",color:C.verde}}>{fmt(gmyMes)}</div>
+              <div style={{fontSize:12,color:C.marronLight,marginTop:8}}>Pedidos de los 20 puntos</div>
+            </div>
+            <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,marginTop:4}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Puntos activos este mes</span><span style={{fontWeight:"bold"}}>{new Set(peds.map(p=>p.punto)).size}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:C.marronLight}}>Pedidos registrados</span><span style={{fontWeight:"bold"}}>{peds.length}</span></div>
+            </div>
+          </Card>
+          <Card title="Total combinado" titleColor={C.naranja}>
+            <div style={{textAlign:"center",padding:"20px 0"}}>
+              <div style={{fontSize:11,color:C.marronLight,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Ganancia total del mes</div>
+              <div style={{fontSize:46,fontWeight:"bold",color:C.naranja}}>{fmt(gm+gmyMes)}</div>
+            </div>
+            <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,marginTop:4}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Minorista</span><span style={{fontWeight:"bold",color:C.rosa}}>{fmt(gm)}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:C.marronLight}}>Mayorista</span><span style={{fontWeight:"bold",color:C.verde}}>{fmt(gmyMes)}</span></div>
+            </div>
+          </Card>
+        </div>}
+
+        {tab==="mayoristas"&&<div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}><ST noTop>Pedidos Mayoristas</ST><button onClick={()=>setSpf(v=>!v)} style={mb(C.rosa)}>{spf?"✕ Cerrar":"+ Cargar pedido"}</button></div>
+          <Card title={`Consolidado — ${sem}`} titleColor={C.rosa}>
+            {SIZES.map(s=><div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:`1px solid ${C.border}`}}><span style={{fontSize:13,color:C.marronLight}}>{s==="Rogelito"?"Caja Rogelito":s}</span><span style={{fontWeight:"bold",color:con[s]>0?C.marron:C.border}}>{con[s]} u.</span></div>)}
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:`1px solid ${C.crema}`}}><span style={{fontSize:12,color:C.marronLight}}>{ps.length}/20 puntos</span><span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gmy)}</span></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
+              <button onClick={enviarPedido} style={{padding:13,borderRadius:12,border:"none",background:C.marron,color:"#fff",fontSize:12,fontWeight:"bold",cursor:"pointer",lineHeight:1.3}}>📦 Enviar pedido a Rodri</button>
+              <button onClick={enviarRepartida} style={{padding:13,borderRadius:12,border:"none",background:C.rosa,color:"#fff",fontSize:12,fontWeight:"bold",cursor:"pointer",lineHeight:1.3}}>🚚 Enviar repartida</button>
+            </div>
+          </Card>
+          {spf&&<Card title="Cargar pedido de punto" titleColor={C.rosa}>
+            <Lbl>Punto de venta</Lbl>
+            <select value={pf.punto} onChange={e=>setPf(f=>({...f,punto:e.target.value}))} style={{...inp(),marginBottom:14}}>{PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}</select>
+            <Lbl>Cantidades</Lbl>
+            {SIZES.map(s=><div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,background:C.bg,borderRadius:10,padding:"10px 12px",border:`1px solid ${C.border}`}}><div style={{width:80}}><div style={{fontSize:13,fontWeight:"bold"}}>{s==="Rogelito"?"Caja Rogelito":s}</div><div style={{fontSize:10,color:C.marronLight}}>{fmt(PMay[s])}</div></div><div style={{display:"flex",gap:12,alignItems:"center"}}><button onClick={()=>setPf(f=>({...f,[s]:Math.max(0,(f[s]||0)-1)}))} style={{width:36,height:36,borderRadius:8,border:`1px solid ${C.border}`,background:C.bgCard,color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>−</button><span style={{width:28,textAlign:"center",fontSize:20,fontWeight:"bold"}}>{pf[s]||0}</span><button onClick={()=>setPf(f=>({...f,[s]:(f[s]||0)+1}))} style={{width:36,height:36,borderRadius:8,border:"none",background:C.rosa,color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button></div><span style={{fontSize:12,color:C.naranja,width:80,textAlign:"right",fontWeight:"bold"}}>{fmt(PMay[s]*(pf[s]||0))}</span></div>)}
+            <div style={{background:C.rosaPaleBg,borderRadius:12,padding:12,marginBottom:12}}><Fil label="Ganancia:" valor={fmt(SIZES.reduce((a,s)=>a+gan(s,"mayorista",pf[s]||0),0))} vc={C.verde}/></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button onClick={()=>setSpf(false)} style={ob()}>Cancelar</button><button onClick={addPed} style={fb(C.rosa)}>Guardar</button></div>
+          </Card>}
+          {peds.length===0&&!spf&&<Vac emoji="🏪" text="No hay pedidos esta semana"/>}
+          {peds.map(p=><div key={p.id} style={{background:C.bgCard,borderRadius:14,padding:14,marginBottom:10,border:`1px solid ${C.border}`}}><div style={{display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div><div style={{fontSize:11,color:C.marronLight,marginTop:4}}>{SIZES.filter(s=>p[s]>0).map(s=>`${s}: ${p[s]}`).join(" · ")}</div><div style={{fontSize:10,color:C.rosaLight,marginTop:2}}>{p.semana}</div></div><div style={{textAlign:"right"}}><div style={{fontSize:14,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div></div></div></div>)}
+        </div>}
+
+      </div>
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:C.nav,borderTop:`1px solid ${C.border}`,display:"flex",padding:"10px 0 14px",zIndex:100,boxShadow:"0 -4px 20px rgba(196,104,122,0.12)"}}>
+        {tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,background:"none",border:"none",cursor:"pointer",padding:"4px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><span style={{fontSize:18,color:tab===t.id?C.rosa:C.crema}}>{t.icon}</span><span style={{fontSize:10,color:tab===t.id?C.rosa:C.marronLight,fontWeight:tab===t.id?"bold":"normal"}}>{t.label}</span>{tab===t.id&&<div style={{width:24,height:2.5,background:C.rosa,borderRadius:2}}/>}</button>)}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
