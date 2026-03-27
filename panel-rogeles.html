@@ -273,7 +273,6 @@ function App() {
             { mes:"Noviembre",  ganMino:2146487, ganMayo:5371400,  total:7517887,  caja:6132820,  minoE:0,   minoM:0,   minoC:6,  minoP:1  },
             { mes:"Diciembre",  ganMino:3174605, ganMayo:10560260, total:13734865, caja:9070300,  minoE:1011,minoM:653, minoC:241,minoP:96 },
           ];
-          const [anioVista, setAnioVista] = React.useState("2026");
           const H = anioVista==="2026" ? H2026 : H2025;
 
           const varPct = (curr,prev) => prev===0?null:((curr-prev)/prev*100);
