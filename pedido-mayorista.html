@@ -322,14 +322,32 @@
 
   const cantidades = { entero: 0, medio: 0, cuarto: 0, rogelito: 0 };
 
-  // Mostrar precios
-  Object.keys(PRECIOS).forEach(k => {
-    const p = PRECIOS[k];
-    const el = document.getElementById(`price-${k}`);
-    if (el && p.precio) {
-      el.textContent = "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.nota ? " · " + p.nota : "");
-    }
-  });
+  const PRECIOS_COSTO = {
+    entero:   { label: "Entero",   precio: 48050 },
+    medio:    { label: "Medio",    precio: 29150 },
+    cuarto:   { label: "Cuarto",   precio: 20350 },
+    rogelito: { label: "Rogelito", precio: 37600, nota: "x6 unidades" },
+  };
+
+  function actualizarPrecios() {
+    const punto = document.getElementById("punto").value;
+    const esValle = punto.toLowerCase().includes("valle escondido");
+    const precios = esValle ? PRECIOS_COSTO : PRECIOS;
+    Object.keys(precios).forEach(k => {
+      const p = precios[k];
+      const el = document.getElementById(`price-${k}`);
+      if (el && p.precio) {
+        el.textContent = "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.nota ? " · " + p.nota : "");
+        if(esValle) el.textContent += " (precio costo)";
+      }
+    });
+  }
+
+  // Mostrar precios iniciales
+  actualizarPrecios();
+
+  // Actualizar cuando cambia el punto
+  document.getElementById("punto").addEventListener("change", actualizarPrecios);
 
   function cambiar(tipo, delta) {
     cantidades[tipo] = Math.max(0, cantidades[tipo] + delta);
