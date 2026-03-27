@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedido Semanal — Los Rogeles de Marcela</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: #FDF6F0;
+    color: #5C3340;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: linear-gradient(160deg, #F5D0D6 0%, #E8A0A8 60%, #C4687A 100%);
+    padding: 32px 22px 26px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+  .header-sub  { font-size: 11px; letter-spacing: 4px; color: rgba(92,51,64,0.6); text-transform: uppercase; margin-bottom: 4px; }
+  .header-los  { font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px; color: #5C3340; opacity: 0.75; }
+  .header-name { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 700; color: #5C3340; line-height: 1; }
+  .header-de   { font-size: 13px; letter-spacing: 6px; text-transform: uppercase; color: #5C3340; opacity: 0.7; margin-bottom: 10px; }
+  .header-info { font-size: 12px; color: rgba(92,51,64,0.6); margin-top: 6px; }
+
+  .container { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  .section-title {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: #C4687A; font-weight: 700; margin: 24px 0 12px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid #F0D0D8;
+    box-shadow: 0 1px 8px rgba(196,104,122,0.07);
+  }
+
+  label { display: block; font-size: 12px; color: #8B6070; margin-bottom: 6px; font-weight: 700; letter-spacing: 0.5px; }
+
+  select, input[type="text"], input[type="tel"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #F0D0D8;
+    background: #FFF8F5;
+    color: #5C3340;
+    font-size: 14px;
+    font-family: 'Lato', sans-serif;
+    outline: none;
+    transition: border-color .2s;
+    appearance: none;
+  }
+  select:focus, input:focus { border-color: #C4687A; }
+
+  .size-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .size-card {
+    background: #FDF6F0;
+    border-radius: 12px;
+    padding: 14px 12px;
+    border: 1.5px solid #F0D0D8;
+    transition: border-color .2s;
+  }
+  .size-card.active { border-color: #C4687A; background: #FDE8EC; }
+
+  .size-name { font-size: 15px; font-weight: 700; color: #5C3340; margin-bottom: 2px; }
+  .size-price { font-size: 11px; color: #8B6070; margin-bottom: 10px; }
+
+  .qty-control { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  .qty-btn {
+    width: 34px; height: 34px; border-radius: 8px; border: none;
+    font-size: 18px; cursor: pointer; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .qty-btn.minus { background: #fff; border: 1.5px solid #F0D0D8; color: #5C3340; }
+  .qty-btn.plus  { background: #C4687A; color: #fff; }
+  .qty-btn.minus:active { background: #F5D0D6; }
+  .qty-btn.plus:active  { background: #a05060; }
+  .qty-val { font-size: 22px; font-weight: 700; color: #5C3340; min-width: 28px; text-align: center; }
+
+  .summary {
+    background: #FDE8EC;
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid #F0D0D8;
+    margin-bottom: 20px;
+  }
+  .summary-title { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #C4687A; font-weight: 700; margin-bottom: 10px; }
+  .summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 1px solid rgba(196,104,122,0.1); }
+  .summary-row:last-child { border: none; }
+  .summary-label { color: #8B6070; }
+  .summary-val { font-weight: 700; color: #5C3340; }
+  .summary-empty { color: rgba(139,96,112,0.4); font-style: italic; font-size: 12px; text-align: center; padding: 8px; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #C4687A, #E8A0A8);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Lato', sans-serif;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 16px rgba(196,104,122,0.4);
+    transition: all .2s;
+  }
+  .submit-btn:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(196,104,122,0.3); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .success-icon { font-size: 64px; margin-bottom: 16px; }
+  .success-title { font-family: 'Playfair Display', serif; font-size: 28px; color: #C4687A; margin-bottom: 8px; }
+  .success-text { font-size: 14px; color: #8B6070; line-height: 1.6; }
+  .success-detail { background: #FDE8EC; border-radius: 12px; padding: 14px; margin: 20px 0; text-align: left; }
+  .success-detail p { font-size: 13px; color: #5C3340; margin-bottom: 4px; }
+
+  .footer { text-align: center; font-size: 11px; color: rgba(139,96,112,0.5); margin-top: 30px; padding-bottom: 20px; }
+
+  .required { color: #C4687A; }
+  .error-msg { font-size: 11px; color: #C0444A; margin-top: 4px; display: none; }
+  .error-msg.show { display: block; }
+
+  .whatsapp-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; border-radius: 14px; border: none;
+    background: #25D366; color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: 'Lato', sans-serif; margin-top: 10px;
+    box-shadow: 0 4px 16px rgba(37,211,102,0.3);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-sub">Pedido Semanal Mayorista</div>
+  <div class="header-los">Los</div>
+  <div class="header-name">rogeles</div>
+  <div class="header-de">de Marcela</div>
+  <div class="header-info">📍 Valle Escondido, Córdoba</div>
+</div>
+
+<div class="container">
+
+  <!-- Formulario -->
+  <div id="form-screen">
+
+    <p class="section-title">Datos del punto</p>
+
+    <div class="card">
+      <label>Punto de venta <span class="required">*</span></label>
+      <select id="punto">
+                <option value="">— Seleccioná tu punto —</option>
+        <option>Valle Escondido (Casa Central)</option>
+        <option>Barrio Jardín</option>
+        <option>Cañitas / Valle del Golf / Causana</option>
+        <option>Camino a San Carlos</option>
+        <option>Centro (Bonafide Colón y Cañada)</option>
+        <option>Cerro de las Rosas / Urca</option>
+        <option>Cofico</option>
+        <option>Docta</option>
+        <option>Intercountry (El Bosque)</option>
+        <option>J. Claret / P. Lugones</option>
+        <option>La Cuesta / La Calera</option>
+        <option>Manantiales</option>
+        <option>Montecristo</option>
+        <option>Nueva Córdoba (Strobel Panadería / Café)</option>
+        <option>Orfeo / Dino</option>
+        <option>Sierras Chicas - Río Ceballos / Salsipuedes</option>
+        <option>Siete Soles / Tejas 3</option>
+        <option>V. Rivera Indarte / Saldán</option>
+        <option>Villa Allende / Mendiolaza</option>
+        <option>Villa Allende - Av. Padre Luchesse / Ruta E53</option>
+        <option>Villa Belgrano</option>
+      </select>
+      <div class="error-msg" id="err-punto">Por favor seleccioná tu punto de venta.</div>
+
+      <div style="margin-top:12px">
+        <label>Nombre de contacto <span class="required">*</span></label>
+        <input type="text" id="contacto" placeholder="Tu nombre" />
+        <div class="error-msg" id="err-contacto">Por favor ingresá tu nombre.</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Teléfono <span class="required">*</span></label>
+        <input type="tel" id="telefono" placeholder="Ej: 351 123-4567" />
+      </div>
+      <div style="margin-top:12px">
+        <label>Email (opcional)</label>
+        <input type="email" id="email" placeholder="tucorreo@gmail.com" />
+      </div>
+    </div>
+
+    <p class="section-title">¿Qué necesitás esta semana?</p>
+
+    <div class="size-grid">
+      <!-- ENTERO -->
+      <div class="size-card" id="card-entero">
+        <div class="size-name">Entero</div>
+        <div class="size-price" id="price-entero">Precio a confirmar</div>
+        <div class="qty-control">
+          <button class="qty-btn minus" onclick="cambiar('entero', -1)">−</button>
+          <span class="qty-val" id="val-entero">0</span>
+          <button class="qty-btn plus" onclick="cambiar('entero', 1)">+</button>
+        </div>
+      </div>
+      <!-- MEDIO -->
+      <div class="size-card" id="card-medio">
+        <div class="size-name">Medio</div>
+        <div class="size-price" id="price-medio">Precio a confirmar</div>
+        <div class="qty-control">
+          <button class="qty-btn minus" onclick="cambiar('medio', -1)">−</button>
+          <span class="qty-val" id="val-medio">0</span>
+          <button class="qty-btn plus" onclick="cambiar('medio', 1)">+</button>
+        </div>
+      </div>
+      <!-- CUARTO -->
+      <div class="size-card" id="card-cuarto">
+        <div class="size-name">Cuarto</div>
+        <div class="size-price" id="price-cuarto">Precio a confirmar</div>
+        <div class="qty-control">
+          <button class="qty-btn minus" onclick="cambiar('cuarto', -1)">−</button>
+          <span class="qty-val" id="val-cuarto">0</span>
+          <button class="qty-btn plus" onclick="cambiar('cuarto', 1)">+</button>
+        </div>
+      </div>
+      <!-- ROGELITO -->
+      <div class="size-card" id="card-rogelito">
+        <div class="size-name">Rogelito</div>
+        <div class="size-price" id="price-rogelito">Precio a confirmar</div>
+        <div class="qty-control">
+          <button class="qty-btn minus" onclick="cambiar('rogelito', -1)">−</button>
+          <span class="qty-val" id="val-rogelito">0</span>
+          <button class="qty-btn plus" onclick="cambiar('rogelito', 1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg show" id="err-items" style="display:none; margin: 8px 0;">Seleccioná al menos un producto.</div>
+
+    <p class="section-title">Resumen del pedido</p>
+
+    <div class="summary">
+      <div class="summary-title">Tu pedido esta semana</div>
+      <div id="summary-content">
+        <div class="summary-empty">Todavía no cargaste productos</div>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="enviar()">Confirmar pedido ✓</button>
+
+  </div>
+
+  <!-- Pantalla de éxito -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">🎀</div>
+    <div class="success-title">¡Pedido enviado!</div>
+    <div class="success-text">Tu pedido fue registrado correctamente.<br>Marcela lo recibirá en breve.</div>
+    <div class="success-detail" id="success-detail"></div>
+    <button class="whatsapp-btn" id="wa-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Confirmar por WhatsApp
+    </button>
+    <button id="wa-punto-btn" onclick="enviarWAPunto()" style="display:none;width:100%;padding:14px;border-radius:14px;border:none;background:#25D366;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-top:10px;">
+      📱 Confirmar al punto por WhatsApp
+    </button>
+    <a id="email-btn" style="display:none;width:100%;padding:14px;border-radius:14px;border:none;background:#C4687A;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-top:10px;text-decoration:none;text-align:center;">
+      📧 Enviar confirmación por email
+    </a>
+    <button onclick="resetForm()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid #F0D0D8;background:transparent;color:#8B6070;font-size:13px;cursor:pointer;margin-top:10px;font-family:'Lato',sans-serif;">
+      Hacer otro pedido
+    </button>
+  </div>
+
+  <div class="footer">Los Rogeles de Marcela · Valle Escondido, Córdoba<br>Pedidos mayoristas — solo domingos</div>
+</div>
+
+<script>
+  // ── Precios mayorista reales (marzo 2026) ──
+  const PRECIOS = {
+    entero:   { label: "Entero",   precio: 56940 },
+    medio:    { label: "Medio",    precio: 35100 },
+    cuarto:   { label: "Cuarto",   precio: 24180 },
+    rogelito: { label: "Rogelito", precio: 40560, nota: "x6 unidades · $8.667 c/u" },
+  };
+
+  const WA_NUMERO = "5493513128283";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyNfAicx6zEvi45ZuJchDQVRKZG6WoM0UbCy6pisEt03L4-prmGNl2Q8iHyLgikvZxE/exec";
+
+  const cantidades = { entero: 0, medio: 0, cuarto: 0, rogelito: 0 };
+
+  // Mostrar precios
+  Object.keys(PRECIOS).forEach(k => {
+    const p = PRECIOS[k];
+    const el = document.getElementById(`price-${k}`);
+    if (el && p.precio) {
+      el.textContent = "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.nota ? " · " + p.nota : "");
+    }
+  });
+
+  function cambiar(tipo, delta) {
+    cantidades[tipo] = Math.max(0, cantidades[tipo] + delta);
+    document.getElementById(`val-${tipo}`).textContent = cantidades[tipo];
+    const card = document.getElementById(`card-${tipo}`);
+    card.classList.toggle("active", cantidades[tipo] > 0);
+    actualizarResumen();
+  }
+
+  function actualizarResumen() {
+    const cont = document.getElementById("summary-content");
+    const items = Object.entries(cantidades).filter(([, v]) => v > 0);
+
+    if (items.length === 0) {
+      cont.innerHTML = '<div class="summary-empty">Todavía no cargaste productos</div>';
+      return;
+    }
+
+    cont.innerHTML = items.map(([k, v]) => {
+      const p = PRECIOS[k];
+      const subtotal = p.precio ? "$" + (p.precio * v).toLocaleString("es-AR") : "—";
+      return `<div class="summary-row">
+        <span class="summary-label">${p.label} x${v}</span>
+        <span class="summary-val">${subtotal}</span>
+      </div>`;
+    }).join("");
+
+    // Total si hay precios
+    const total = items.reduce((a, [k, v]) => a + (PRECIOS[k].precio ? PRECIOS[k].precio * v : 0), 0);
+    if (total > 0) {
+      cont.innerHTML += `<div class="summary-row" style="margin-top:6px;padding-top:8px;border-top:1.5px solid rgba(196,104,122,0.2)">
+        <span style="font-weight:700;color:#5C3340">Total</span>
+        <span style="font-weight:700;color:#C4687A;font-size:15px">$${total.toLocaleString("es-AR")}</span>
+      </div>`;
+    }
+  }
+
+  let _msgPunto = "";
+  let _telPunto = "";
+  let _emailPunto = "";
+
+  function enviarWAPunto() {
+    if(_telPunto) window.open("https://wa.me/54" + _telPunto + "?text=" + encodeURIComponent(_msgPunto), "_blank");
+  }
+
+  function enviar() {
+    let ok = true;
+
+    const punto = document.getElementById("punto").value;
+    const contacto = document.getElementById("contacto").value.trim();
+    const errPunto = document.getElementById("err-punto");
+    const errContacto = document.getElementById("err-contacto");
+    const errItems = document.getElementById("err-items");
+
+    errPunto.classList.remove("show");
+    errContacto.classList.remove("show");
+    errItems.style.display = "none";
+
+    if (!punto) { errPunto.classList.add("show"); ok = false; }
+    if (!contacto) { errContacto.classList.add("show"); ok = false; }
+
+    const items = Object.entries(cantidades).filter(([, v]) => v > 0);
+    if (items.length === 0) { errItems.style.display = "block"; ok = false; }
+
+    if (!ok) return;
+
+    // Armar resumen para pantalla de éxito
+    const semana = getSemana();
+    const itemsTexto = items.map(([k, v]) => `${PRECIOS[k].label}: ${v}`).join(", ");
+    const total = items.reduce((a, [k, v]) => a + (PRECIOS[k].precio ? PRECIOS[k].precio * v : 0), 0);
+
+    document.getElementById("success-detail").innerHTML = `
+      <p><strong>Punto:</strong> ${punto}</p>
+      <p><strong>Contacto:</strong> ${contacto}</p>
+      <p><strong>Semana:</strong> ${semana}</p>
+      <p><strong>Pedido:</strong> ${itemsTexto}</p>
+      ${total > 0 ? `<p><strong>Total:</strong> $${total.toLocaleString("es-AR")}</p>` : ""}
+    `;
+
+    // Armar mensaje de WhatsApp
+    const tel = document.getElementById("telefono").value.trim();
+    const msg = `🥐 *PEDIDO SEMANAL — Los Rogeles de Marcela*\n\n` +
+      `📍 *Punto:* ${punto}\n` +
+      `👤 *Contacto:* ${contacto}${tel ? `\n📱 *Tel:* ${tel}` : ""}\n` +
+      `📅 *Semana:* ${semana}\n\n` +
+      `*Pedido:*\n` +
+      items.map(([k, v]) => `• ${PRECIOS[k].label}: ${v} unid.`).join("\n") +
+      (total > 0 ? `\n\n💰 *Total: $${total.toLocaleString("es-AR")}*` : "") +
+      `\n\n✅ Pedido confirmado`;
+
+    const waUrl = `https://wa.me/${WA_NUMERO}?text=${encodeURIComponent(msg)}`;
+    document.getElementById("wa-btn").onclick = () => window.open(waUrl, "_blank");
+
+    // Confirmacion al punto
+    const telRaw = document.getElementById("telefono").value.trim().replace(/[^0-9]/g,"");
+    const emailVal = document.getElementById("email").value.trim();
+    const fecha = new Date().toLocaleDateString("es-AR");
+    const lineasPedido = items.map(([k,v]) => PRECIOS[k].label.toUpperCase() + ": " + v).join("\n");
+    const totalPunto = items.reduce((a,[k,v]) => a + (PRECIOS[k].precio ? PRECIOS[k].precio * v : 0), 0);
+    const totalStr = totalPunto > 0 ? "\n\n\uD83D\uDCB0 Total a pagar: $" + totalPunto.toLocaleString("es-AR") : "";
+    _msgPunto = "\uD83C\uDF82 Los Rogeles de Marcela\n\nHola " + contacto + "! Tu pedido fue confirmado \u2713\n\n" + lineasPedido + totalStr + "\n\n\uD83D\uDCC5 " + fecha + "\nGracias!";
+    _telPunto = telRaw;
+    _emailPunto = emailVal;
+
+    if(telRaw.length >= 8) {
+      document.getElementById("wa-punto-btn").style.display = "block";
+    }
+    if(emailVal) {
+      const subj = encodeURIComponent("Los Rogeles de Marcela - Pedido confirmado");
+      const body = encodeURIComponent(_msgPunto);
+      const emailEl = document.getElementById("email-btn");
+      emailEl.href = "mailto:" + emailVal + "?subject=" + subj + "&body=" + body;
+      emailEl.style.display = "block";
+    }
+
+    // Enviar a Google Sheets
+    const payload = {
+      fecha:     new Date().toLocaleDateString("es-AR"),
+      semana:    getSemana(),
+      punto:     punto,
+      contacto:  contacto,
+      entero:    cantidades.entero,
+      medio:     cantidades.medio,
+      cuarto:    cantidades.cuarto,
+      rogelito:  cantidades.rogelito,
+    };
+
+    fetch(SHEETS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {}); // silencioso si falla
+
+    document.getElementById("form-screen").style.display = "none";
+    document.getElementById("success-screen").style.display = "block";
+    window.scrollTo(0, 0);
+  }
+
+  function getSemana() {
+    const d = new Date();
+    const day = d.getDay();
+    const diffLun = day === 0 ? -6 : 1 - day;
+    const lun = new Date(d); lun.setDate(d.getDate() + diffLun);
+    const dom = new Date(lun); dom.setDate(lun.getDate() + 6);
+    const fmt = x => x.toLocaleDateString("es-AR", {day:"2-digit", month:"2-digit", year:"numeric"});
+    return "Pedido semanal " + fmt(lun) + " - " + fmt(dom);
+  }
+
+  function resetForm() {
+    Object.keys(cantidades).forEach(k => {
+      cantidades[k] = 0;
+      document.getElementById(`val-${k}`).textContent = "0";
+      document.getElementById(`card-${k}`).classList.remove("active");
+    });
+    document.getElementById("punto").value = "";
+    document.getElementById("contacto").value = "";
+    document.getElementById("telefono").value = "";
+    actualizarResumen();
+    document.getElementById("form-screen").style.display = "block";
+    document.getElementById("success-screen").style.display = "none";
+    window.scrollTo(0, 0);
+  }
+</script>
+</body>
+</html>
