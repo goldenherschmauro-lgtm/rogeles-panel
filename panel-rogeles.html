@@ -557,7 +557,23 @@ function App() {
             <Lbl>Punto de venta</Lbl>
             <select value={pf.punto} onChange={e=>setPf(f=>({...f,punto:e.target.value}))} style={{...inp(),marginBottom:14}}>{PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}</select>
             <Lbl>Cantidades</Lbl>
-            {SIZES.map(s=><div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,background:C.bg,borderRadius:10,padding:"10px 12px",border:`1px solid ${C.border}`}}><div style={{width:80}}><div style={{fontSize:13,fontWeight:"bold"}}>{s==="Rogelito"?"Caja Rogelito":s}</div><div style={{fontSize:10,color:C.marronLight}}>{fmt(PMay[s])}</div></div><div style={{display:"flex",gap:12,alignItems:"center"}}><button onClick={()=>setPf(f=>({...f,[s]:Math.max(0,(f[s]||0)-1)}))} style={{width:36,height:36,borderRadius:8,border:`1px solid ${C.border}`,background:C.bgCard,color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>−</button><span style={{width:28,textAlign:"center",fontSize:20,fontWeight:"bold"}}>{pf[s]||0}</span><button onClick={()=>setPf(f=>({...f,[s]:(f[s]||0)+1}))} style={{width:36,height:36,borderRadius:8,border:"none",background:C.rosa,color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button></div><span style={{fontSize:12,color:C.naranja,width:80,textAlign:"right",fontWeight:"bold"}}>{fmt(PMay[s]*(pf[s]||0))}</span></div>)}
+            {SIZES.map(s=>{
+              const esValle=pf.punto.toLowerCase().includes("valle escondido");
+              const precioMostrar=esValle?COSTO[s]:PMay[s];
+              const labelPrecio=esValle?"(precio costo)":"";
+              return <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,background:C.bg,borderRadius:10,padding:"10px 12px",border:`1px solid ${C.border}`}}>
+                <div style={{width:90}}>
+                  <div style={{fontSize:13,fontWeight:"bold"}}>{s==="Rogelito"?"Caja Rogelito":s}</div>
+                  <div style={{fontSize:10,color:C.marronLight}}>{fmt(precioMostrar)} {labelPrecio}</div>
+                </div>
+                <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                  <button onClick={()=>setPf(f=>({...f,[s]:Math.max(0,(f[s]||0)-1)}))} style={{width:36,height:36,borderRadius:8,border:`1px solid ${C.border}`,background:C.bgCard,color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>−</button>
+                  <span style={{width:28,textAlign:"center",fontSize:20,fontWeight:"bold"}}>{pf[s]||0}</span>
+                  <button onClick={()=>setPf(f=>({...f,[s]:(f[s]||0)+1}))} style={{width:36,height:36,borderRadius:8,border:"none",background:C.rosa,color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                </div>
+                <span style={{fontSize:12,color:C.naranja,width:80,textAlign:"right",fontWeight:"bold"}}>{fmt(precioMostrar*(pf[s]||0))}</span>
+              </div>;
+            })}
             <div style={{background:C.rosaPaleBg,borderRadius:12,padding:12,marginBottom:12}}><Fil label="Ganancia:" valor={fmt(SIZES.reduce((a,s)=>a+gan(s,"mayorista",pf[s]||0),0))} vc={C.verde}/></div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button onClick={()=>setSpf(false)} style={ob()}>Cancelar</button><button onClick={addPed} style={fb(C.rosa)}>Guardar</button></div>
           </Card>}
