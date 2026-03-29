@@ -332,13 +332,15 @@
   function actualizarPrecios() {
     const punto = document.getElementById("punto").value;
     const esValle = punto.toLowerCase().includes("valle escondido");
-    const precios = esValle ? PRECIOS_COSTO : PRECIOS;
-    Object.keys(precios).forEach(k => {
-      const p = precios[k];
+    Object.keys(PRECIOS).forEach(k => {
+      const p = PRECIOS[k];
       const el = document.getElementById(`price-${k}`);
-      if (el && p.precio) {
-        el.textContent = "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.nota ? " · " + p.nota : "");
-        if(esValle) el.textContent += " (precio costo)";
+      if (el) {
+        if(esValle) {
+          el.textContent = "Precio interno";
+        } else {
+          el.textContent = p.precio ? "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.nota ? " · " + p.nota : "") : "";
+        }
       }
     });
   }
