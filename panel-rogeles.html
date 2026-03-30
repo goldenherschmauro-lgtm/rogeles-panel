@@ -45,6 +45,18 @@ const PUNTOS = [
 ];
 
 
+
+const CAFE_PRODS = [
+  {id:"peru250",     nombre:"Peru Blend 250gr",        tipo:"grano",   costo:15791, mino:23000, mayo:19320, ganMino:7209,  ganMayo:3529, min:1},
+  {id:"colombia250", nombre:"Colombia El Tambo 250gr", tipo:"grano",   costo:20873, mino:26500, mayo:22260, ganMino:5627,  ganMayo:1387, min:1},
+  {id:"guate250",    nombre:"Guatemala Anaer. 250gr",  tipo:"grano",   costo:21054, mino:30000, mayo:25200, ganMino:8946,  ganMayo:4146, min:1},
+  {id:"peru1kg",     nombre:"Peru Blend 1kg",          tipo:"grano",   costo:39780, mino:52100, mayo:46369, ganMino:12320, ganMayo:6589, min:1},
+  {id:"capscol",     nombre:"Capsulas Colombia x10",   tipo:"capsula", costo:13260, mino:18000, mayo:14760, ganMino:4740,  ganMayo:1500, min:6},
+  {id:"capsperu",    nombre:"Capsulas Peru Blend x10", tipo:"capsula", costo:13260, mino:18000, mayo:14760, ganMino:4740,  ganMayo:1500, min:6},
+];
+const CAFE_SK = "cafe_cs_v1";
+const loadCafe = () => { try { const r=localStorage.getItem(CAFE_SK); if(r) return JSON.parse(r); } catch{} return []; };
+const saveCafe = d => { try { localStorage.setItem(CAFE_SK,JSON.stringify(d)); } catch{} };
 const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 const SK = "rogeles_v4";
 const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyNfAicx6zEvi45ZuJchDQVRKZG6WoM0UbCy6pisEt03L4-prmGNl2Q8iHyLgikvZxE/exec";
@@ -216,10 +228,14 @@ function App() {
   const [toast,setToast]=useState(null);
   const [rv,setRv]=useState({Entero:0,Medio:0,Cuarto:0,Rogelito:0});
   const [anioVista,setAnioVista]=useState("2026");
+  const [pedsCafe,setPedsCafe]=useState(loadCafe());
+  const [showCafe,setShowCafe]=useState(false);
+  const [cafeForm,setCafeForm]=useState({punto:PUNTOS[0],cantidades:{}});
 
 
   useEffect(()=>{ const d=ld(); if(d){if(d.stock)setStock(d.stock);if(d.ventas)setVentas(d.ventas);if(d.peds)setPeds(d.peds);} },[]);
   useEffect(()=>{ sd({stock,ventas,peds}); },[stock,ventas,peds]);
+  useEffect(()=>{ saveCafe(pedsCafe); },[pedsCafe]);
 
   // Cargar pedidos mayoristas desde Google Sheets
   useEffect(()=>{
@@ -351,7 +367,7 @@ function App() {
     toast2("\u2713 Repartida enviada");
   };;;
 
-  const tabs=[{id:"dashboard",icon:"◈",label:"Inicio"},{id:"ventas",icon:"◉",label:"Ventas"},{id:"stock",icon:"◫",label:"Stock"},{id:"mayoristas",icon:"◎",label:"Mayorista"},{id:"ganancia",icon:"◐",label:"Ganancia"},{id:"stats",icon:"◑",label:"Stats"},{id:"historial",icon:"◒",label:"2026"}];
+  const tabs=[{id:"dashboard",icon:"◈",label:"Inicio"},{id:"ventas",icon:"◉",label:"Ventas"},{id:"stock",icon:"◫",label:"Stock"},{id:"mayoristas",icon:"◎",label:"Mayorista"},{id:"ganancia",icon:"◐",label:"Ganancia"},{id:"stats",icon:"◑",label:"Stats"},{id:"cafe",icon:"CS",label:"Cafe"},{id:"historial",icon:"◒",label:"2026"}];
 
   return (
     <div style={{fontFamily:"'Lato',sans-serif",background:C.bg,minHeight:"100vh",color:C.marron,maxWidth:430,margin:"0 auto",paddingBottom:88}}>
@@ -405,6 +421,128 @@ function App() {
 
 
         
+
+        {tab==="cafe"&&(()=>{
+          const semCafe = (()=>{ const d=new Date(); const day=d.getDay(); const diff=day===0?-6:1-day; const lun=new Date(d); lun.setDate(d.getDate()+diff); const dom=new Date(lun); dom.setDate(lun.getDate()+6); const f=x=>x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"}); return "Pedido semanal "+f(lun)+" - "+f(dom); })();
+          const psCafe = pedsCafe.filter(p=>p.semana===semCafe);
+          const esV = cafeForm.punto.toLowerCase().includes("valle escondido");
+          const con = {}; CAFE_PRODS.forEach(p=>{con[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0);});
+          const ganC = psCafe.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+CAFE_PRODS.reduce((b,prod)=>b+(prod.ganMayo*(p.cantidades[prod.id]||0)),0),0);
+          const invV = psCafe.filter(p=>p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+CAFE_PRODS.reduce((b,prod)=>b+(prod.costo*(p.cantidades[prod.id]||0)),0),0);
+          const setCant = (id,delta) => setCafeForm(f=>({...f,cantidades:{...f.cantidades,[id]:Math.max(0,(f.cantidades[id]||0)+delta)}}));
+          const agregar = () => {
+            const tot=CAFE_PRODS.reduce((a,p)=>a+(cafeForm.cantidades[p.id]||0),0);
+            if(tot===0){toast2("Ingresa al menos un producto",false);return;}
+            for(const cp of CAFE_PRODS.filter(p=>p.tipo==="capsula")){
+              const c=cafeForm.cantidades[cp.id]||0;
+              if(c>0&&c<cp.min){toast2("Minimo "+cp.min+" cajas de capsulas",false);return;}
+            }
+            const gan=esV?0:CAFE_PRODS.reduce((a,p)=>a+(p.ganMayo*(cafeForm.cantidades[p.id]||0)),0);
+            setPedsCafe(prev=>[{...cafeForm,id:Date.now(),semana:semCafe,ganancia:gan},...prev]);
+            setCafeForm({punto:PUNTOS[0],cantidades:{}});
+            setShowCafe(false);
+            toast2("Pedido cafe guardado");
+          };
+          const cerrarCafe = () => {
+            const tot=CAFE_PRODS.reduce((a,p)=>a+con[p.id],0);
+            if(tot===0){toast2("No hay pedidos de cafe",false);return;}
+            let det="";
+            psCafe.forEach(p=>{const ls=CAFE_PRODS.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.nombre+": "+p.cantidades[prod.id]);if(ls.length>0)det+="
+"+p.punto.toUpperCase()+"
+"+ls.join("
+")+"
+";});
+            const tots="
+TOTAL:
+"+CAFE_PRODS.filter(p=>con[p.id]>0).map(p=>"- "+p.nombre+": "+con[p.id]).join("
+");
+            window.open("https://wa.me/5493513128283?text="+encodeURIComponent("Pedido CHERRYSEASON
+"+det+tots+"
+
+Gracias!"),"_blank");
+            toast2("Pedido cafe enviado");
+          };
+          const rs = {display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,background:C.bg,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border};
+          return <div>
+            <div style={{background:"#8B2010",padding:"20px 16px",margin:"0 -14px",marginBottom:16,textAlign:"center"}}>
+              <div style={{fontSize:9,letterSpacing:4,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",marginBottom:4}}>Cafe de Especialidad</div>
+              <div style={{fontSize:24,fontWeight:"bold",color:"#fff",letterSpacing:3}}>CHERRYSEASON</div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+              <button onClick={()=>setShowCafe(v=>!v)} style={{padding:11,borderRadius:12,border:"none",background:"#C0392B",color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:13}}>{showCafe?"Cerrar":"+ Cargar pedido"}</button>
+              <button onClick={cerrarCafe} style={{padding:11,borderRadius:12,border:"none",background:C.marron,color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:12}}>Cerrar pedido</button>
+            </div>
+            <div style={{background:C.bgCard,borderRadius:16,padding:16,marginBottom:14,border:"1px solid #E8C5C0"}}>
+              <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Consolidado — {semCafe}</div>
+              {CAFE_PRODS.map(p=><div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #F5E5E0"}}><span style={{fontSize:12,color:C.marronLight}}>{p.nombre}</span><span style={{fontWeight:"bold",color:con[p.id]>0?C.marron:"#E8C5C0"}}>{con[p.id]} u.</span></div>)}
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid #E8C5C0"}}>
+                <span style={{fontSize:12,color:C.marronLight}}>{psCafe.length} puntos</span>
+                <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(ganC)}</span>
+              </div>
+              {invV>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:6,background:"#FDE8EC",borderRadius:8,padding:"6px 10px"}}>
+                <span style={{fontSize:11,color:C.marronLight}}>Inv. Valle Escondido:</span>
+                <span style={{fontSize:12,color:"#C0392B",fontWeight:"bold"}}>{fmt(invV)}</span>
+              </div>}
+            </div>
+            {showCafe&&<div style={{background:C.bgCard,borderRadius:16,padding:16,marginBottom:14,border:"1px solid #E8C5C0"}}>
+              <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Cargar pedido cafe</div>
+              <div style={{fontSize:12,color:C.marronLight,marginBottom:6}}>Punto de venta</div>
+              <select value={cafeForm.punto} onChange={e=>setCafeForm(f=>({...f,punto:e.target.value}))} style={{width:"100%",padding:"11px 13px",borderRadius:10,background:C.bgInput,border:"1px solid "+C.border,color:C.marron,fontSize:13,marginBottom:14,boxSizing:"border-box"}}>
+                {PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}
+              </select>
+              <div style={{fontSize:10,color:C.marronLight,fontWeight:"bold",textTransform:"uppercase",marginBottom:8}}>Cafe en grano</div>
+              {CAFE_PRODS.filter(p=>p.tipo==="grano").map(prod=>{
+                const precio=esV?prod.costo:prod.mayo; const cant=cafeForm.cantidades[prod.id]||0;
+                return <div key={prod.id} style={rs}>
+                  <div style={{flex:1}}><div style={{fontSize:12,fontWeight:"bold",color:C.marron}}>{prod.nombre}</div><div style={{fontSize:10,color:C.marronLight}}>{esV?fmt(precio)+" (costo)":fmt(precio)}</div></div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <button onClick={()=>setCant(prod.id,-1)} style={{width:32,height:32,borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.marron,fontSize:16,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                    <span style={{width:24,textAlign:"center",fontSize:18,fontWeight:"bold",color:C.marron}}>{cant}</span>
+                    <button onClick={()=>setCant(prod.id,1)} style={{width:32,height:32,borderRadius:8,border:"none",background:"#C0392B",color:"#fff",fontSize:16,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                  </div>
+                  <span style={{fontSize:11,color:C.naranja,width:70,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cant)}</span>
+                </div>;
+              })}
+              <div style={{fontSize:10,color:C.marronLight,fontWeight:"bold",textTransform:"uppercase",marginBottom:8,marginTop:8}}>Capsulas (min. 6 cajas)</div>
+              {CAFE_PRODS.filter(p=>p.tipo==="capsula").map(prod=>{
+                const precio=esV?prod.costo:prod.mayo; const cant=cafeForm.cantidades[prod.id]||0;
+                return <div key={prod.id} style={rs}>
+                  <div style={{flex:1}}><div style={{fontSize:12,fontWeight:"bold",color:C.marron}}>{prod.nombre}</div><div style={{fontSize:10,color:C.marronLight}}>{esV?fmt(precio)+" (costo)":fmt(precio)+" min 6"}</div></div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <button onClick={()=>setCant(prod.id,-1)} style={{width:32,height:32,borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.marron,fontSize:16,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                    <span style={{width:24,textAlign:"center",fontSize:18,fontWeight:"bold",color:C.marron}}>{cant}</span>
+                    <button onClick={()=>setCant(prod.id,1)} style={{width:32,height:32,borderRadius:8,border:"none",background:"#C0392B",color:"#fff",fontSize:16,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                  </div>
+                  <span style={{fontSize:11,color:C.naranja,width:70,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cant)}</span>
+                </div>;
+              })}
+              <div style={{background:"#FDE8EC",borderRadius:12,padding:12,marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                  <span style={{color:C.marronLight}}>Total:</span>
+                  <span style={{fontWeight:"bold",color:C.naranja}}>{fmt(CAFE_PRODS.reduce((a,p)=>a+((esV?p.costo:p.mayo)*(cafeForm.cantidades[p.id]||0)),0))}</span>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <button onClick={()=>setShowCafe(false)} style={{padding:13,borderRadius:12,border:"1px solid "+C.border,background:"transparent",color:C.marronLight,cursor:"pointer",fontSize:13}}>Cancelar</button>
+                <button onClick={agregar} style={{padding:13,borderRadius:12,border:"none",background:"#C0392B",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:"bold"}}>Guardar</button>
+              </div>
+            </div>}
+            {pedsCafe.length===0&&!showCafe&&<Vac emoji="CS" text="No hay pedidos de cafe esta semana"/>}
+            {pedsCafe.map(p=><div key={p.id} style={{background:C.bgCard,borderRadius:14,padding:14,marginBottom:10,border:"1px solid #E8C5C0"}}>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontWeight:"bold",fontSize:14,color:C.marron}}>{p.punto}</div>
+                  <div style={{fontSize:11,color:C.marronLight,marginTop:4}}>{CAFE_PRODS.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.nombre+": "+p.cantidades[prod.id]).join(" / ")}</div>
+                  <div style={{fontSize:10,color:"#E8A0A8",marginTop:2}}>{p.semana}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  {p.ganancia>0&&<div style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>}
+                  {p.ganancia===0&&<div style={{fontSize:11,color:C.marronLight}}>Valle Escondido</div>}
+                </div>
+              </div>
+            </div>)}
+          </div>;
+        })()}
         {tab==="historial"&&<HistorialTab anioVista={anioVista} setAnioVista={setAnioVista}/>}
 
                 {tab==="stats"&&(()=>{
