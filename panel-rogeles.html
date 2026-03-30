@@ -43,6 +43,8 @@ const PUNTOS = [
   "Villa Allende - Av. Padre Luchesse / Ruta E53",
   "Villa Belgrano",
 ];
+
+
 const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 const SK = "rogeles_v4";
 const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyNfAicx6zEvi45ZuJchDQVRKZG6WoM0UbCy6pisEt03L4-prmGNl2Q8iHyLgikvZxE/exec";
@@ -61,21 +63,27 @@ const Fil = ({label,valor,vc}) => <div style={{display:"flex",justifyContent:"sp
 const Vac = ({emoji,text}) => <div style={{textAlign:"center",padding:50,color:C.rosaLight}}><div style={{fontSize:48}}>{emoji}</div><div style={{marginTop:12,fontSize:14,color:C.marronLight}}>{text}</div></div>;
 
 
+
+
 function HistorialTab({anioVista, setAnioVista}) {
   const H2026 = [
-    { mes:"Enero",    ganMino:1177820,  ganMayo:5918760,  total:7096580,  caja:3365200,  minoE:35,  minoM:26,  minoC:12, minoP:6,  mayoE:377, mayoM:300, mayoC:40, mayoP:174 },
-    { mes:"Febrero",  ganMino:2212669,  ganMayo:5869760,  total:8082429,  caja:6321911,  minoE:70,  minoM:46,  minoC:6,  minoP:11, mayoE:410, mayoM:400, mayoC:0,  mayoP:40  },
-    { mes:"Marzo",    ganMino:1815205,  ganMayo:7323940,  total:9139145,  caja:5186300,  minoE:0,   minoM:0,   minoC:0,  minoP:0,  mayoE:0,   mayoM:0,   mayoC:0,  mayoP:0   },
+    { mes:"Enero",   ganMino:1177820, ganMayo:5209220, total:6387040,  caja:3365200, invValle:3807000, minoE:35,  minoM:26, minoC:12, minoP:6,  mayoE:412, mayoM:326, mayoC:52, mayoP:30 },
+    { mes:"Febrero", ganMino:2212669, ganMayo:6325020, total:8537689,  caja:6321911, invValle:4391800, minoE:70,  minoM:46, minoC:6,  minoP:11, mayoE:480, mayoM:446, mayoC:0,  mayoP:51 },
+    { mes:"Marzo",   ganMino:1815205, ganMayo:5486990, total:7302195,  caja:5186300, invValle:2892400, minoE:0,   minoM:0,  minoC:0,  minoP:0,  mayoE:408, mayoM:377, mayoC:0,  mayoP:37 },
   ];
   const H2025 = [
-    { mes:"Mayo",       ganMino:2151450, ganMayo:4863650,  total:7015100,  caja:6147000,  minoE:632, minoM:497, minoC:236, minoP:0  },
-    { mes:"Junio",      ganMino:1858535, ganMayo:5693540,  total:7552075,  caja:5310100,  minoE:513, minoM:409, minoC:211, minoP:0  },
-    { mes:"Julio",      ganMino:2481780, ganMayo:6585850,  total:9067630,  caja:7090800,  minoE:565, minoM:547, minoC:250, minoP:0  },
-    { mes:"Agosto",     ganMino:2028775, ganMayo:4394710,  total:6423485,  caja:5796500,  minoE:664, minoM:559, minoC:276, minoP:0  },
-    { mes:"Septiembre", ganMino:2313325, ganMayo:5466170,  total:7779495,  caja:6609500,  minoE:609, minoM:422, minoC:186, minoP:0  },
-    { mes:"Octubre",    ganMino:1850558, ganMayo:6138980,  total:7989538,  caja:5287308,  minoE:0,   minoM:0,   minoC:8,   minoP:6  },
-    { mes:"Noviembre",  ganMino:2146487, ganMayo:5371400,  total:7517887,  caja:6132820,  minoE:0,   minoM:0,   minoC:6,   minoP:1  },
-    { mes:"Diciembre",  ganMino:3174605, ganMayo:10560260, total:13734865, caja:9070300,  minoE:1011,minoM:653, minoC:241, minoP:96 },
+    { mes:"Enero",      ganMino:0,       ganMayo:6667680,  total:6667680,  caja:0, invValle:4263800, minoE:0,   minoM:0,   minoC:0,  minoP:0, mayoE:392,  mayoM:374,  mayoC:250, mayoP:0  },
+    { mes:"Febrero",    ganMino:0,       ganMayo:10017240, total:10017240, caja:0, invValle:6418500, minoE:0,   minoM:0,   minoC:0,  minoP:0, mayoE:674,  mayoM:486,  mayoC:296, mayoP:0  },
+    { mes:"Marzo",      ganMino:0,       ganMayo:14187800, total:14187800, caja:0, invValle:9404500, minoE:0,   minoM:0,   minoC:0,  minoP:0, mayoE:912,  mayoM:794,  mayoC:354, mayoP:0  },
+    { mes:"Abril",      ganMino:0,       ganMayo:13697420, total:13697420, caja:0, invValle:9411000, minoE:0,   minoM:0,   minoC:0,  minoP:0, mayoE:930,  mayoM:704,  mayoC:324, mayoP:0  },
+    { mes:"Mayo",       ganMino:2151450, ganMayo:8835520,  total:10986970, caja:6147000, invValle:6270850, minoE:632, minoM:497, minoC:236,minoP:0, mayoE:577, mayoM:460, mayoC:253, mayoP:0  },
+    { mes:"Junio",      ganMino:1858535, ganMayo:16137040, total:17995575, caja:5310100, invValle:10610000, minoE:513, minoM:409, minoC:211,minoP:0, mayoE:1054,mayoM:847, mayoC:451, mayoP:0  },
+    { mes:"Julio",      ganMino:2481780, ganMayo:20338450, total:22820230, caja:7090800, invValle:13485800, minoE:565, minoM:547, minoC:250,minoP:0, mayoE:1210,mayoM:1237,mayoC:580, mayoP:0  },
+    { mes:"Agosto",     ganMino:2028775, ganMayo:14579540, total:16608315, caja:5796500, invValle:10657100, minoE:664, minoM:559, minoC:276,minoP:0, mayoE:924, mayoM:802, mayoC:416, mayoP:0  },
+    { mes:"Septiembre", ganMino:2313325, ganMayo:7360910,  total:9674235,  caja:6609500, invValle:5094100,  minoE:609, minoM:422, minoC:186,minoP:0, mayoE:523, mayoM:354, mayoC:158, mayoP:0  },
+    { mes:"Octubre",    ganMino:1850558, ganMayo:10164840, total:12015398, caja:5287308, invValle:4636250,  minoE:0,   minoM:0,   minoC:8,  minoP:6, mayoE:671, mayoM:542, mayoC:229, mayoP:33 },
+    { mes:"Noviembre",  ganMino:2146487, ganMayo:11905230, total:14051717, caja:6132820, invValle:7518350,  minoE:0,   minoM:0,   minoC:6,  minoP:1, mayoE:809, mayoM:604, mayoC:266, mayoP:34 },
+    { mes:"Diciembre",  ganMino:3174605, ganMayo:12543230, total:15717835, caja:9070300, invValle:6850700,  minoE:1011,minoM:653, minoC:241,minoP:96,mayoE:907, mayoM:595, mayoC:233, mayoP:16 },
   ];
   const H = anioVista==="2026" ? H2026 : H2025;
   const maxTotal = Math.max(...H.map(h=>h.total));
@@ -208,6 +216,7 @@ function App() {
   const [toast,setToast]=useState(null);
   const [rv,setRv]=useState({Entero:0,Medio:0,Cuarto:0,Rogelito:0});
   const [anioVista,setAnioVista]=useState("2026");
+
 
   useEffect(()=>{ const d=ld(); if(d){if(d.stock)setStock(d.stock);if(d.ventas)setVentas(d.ventas);if(d.peds)setPeds(d.peds);} },[]);
   useEffect(()=>{ sd({stock,ventas,peds}); },[stock,ventas,peds]);
@@ -394,6 +403,8 @@ function App() {
 
 
 
+
+        
         {tab==="historial"&&<HistorialTab anioVista={anioVista} setAnioVista={setAnioVista}/>}
 
                 {tab==="stats"&&(()=>{
