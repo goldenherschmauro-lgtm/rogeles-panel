@@ -283,7 +283,9 @@ function App() {
       const ls = CAFE.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.n+": "+p.cantidades[prod.id]);
       if(ls.length>0) det += "\n"+p.punto.toUpperCase()+"\n"+ls.join("\n")+"\n";
     });
-    const tots = "\nTOTAL:\n"+CAFE.filter(p=>conCafe[p.id]>0).map(p=>"- "+p.n+": "+conCafe[p.id]).join("\n");
+    // Totales incluyendo Valle Escondido
+    const conTodo = CAFE.reduce((acc,p)=>{acc[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0);return acc;},{});
+    const tots = "\nTOTAL (todos los puntos):\n"+CAFE.filter(p=>conTodo[p.id]>0).map(p=>"- "+p.n+": "+conTodo[p.id]).join("\n");
     window.open("https://wa.me/5493513128283?text="+encodeURIComponent("Pedido CHERRYSEASON\n"+det+tots+"\n\nGracias!"),"_blank");
     showT("Pedido cafe enviado");
   };
@@ -294,13 +296,13 @@ function App() {
   };
 
   const tabs = [
-    {id:"dashboard",label:"Inicio"},
-    {id:"ventas",label:"Ventas"},
-    {id:"stock",label:"Stock"},
-    {id:"mayoristas",label:"Mayorista"},
-    {id:"cafe",label:"Cafe"},
-    {id:"ganancia",label:"Ganancia"},
-    {id:"historial",label:"2026"},
+    {id:"dashboard",icon:"*",label:"Inicio"},
+    {id:"ventas",icon:"$",label:"Ventas"},
+    {id:"stock",icon:"S",label:"Stock"},
+    {id:"mayoristas",icon:"M",label:"Mayorista"},
+    {id:"cafe",icon:"C",label:"Cafe"},
+    {id:"ganancia",icon:"G",label:"Ganancia"},
+    {id:"historial",icon:"H",label:"2026"},
   ];
 
   const rowStyle = {display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,background:C.bg,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border};
@@ -579,9 +581,8 @@ function App() {
           {/* CAFE en Mayoristas */}
           <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
             <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>CHERRYSEASON - Cafe</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-              <button onClick={()=>setShowCafeForm(v=>!v)} style={{...btnFill("#C0392B"),fontSize:12}}>{showCafeForm?"Cerrar":"+ Pedido cafe"}</button>
-              <button onClick={cerrarCafe} style={{...btnFill(C.marron),fontSize:12}}>Cerrar pedido cafe</button>
+            <div style={{marginBottom:12}}>
+              <button onClick={cerrarCafe} style={{...btnFill("#C0392B"),width:"100%",fontSize:12}}>Cerrar pedido cafe - Enviar WhatsApp</button>
             </div>
             <div style={{background:C.bg,borderRadius:12,padding:12,border:"1px solid #E8C5C0"}}>
               {CAFE.map(p => (
@@ -704,10 +705,24 @@ function App() {
             </div>
           </Card>
           <Card title="Ganancia - Cafe Cherry Season" titleColor="#C0392B" borderColor="#E8C5C0">
-            <div style={{textAlign:"center",padding:"16px 0"}}>
-              <div style={{fontSize:38,fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafe)}</div>
-              <div style={{fontSize:12,color:C.marronL,marginTop:6}}>Pedidos de cafe esta semana</div>
-            </div>
+            {(()=>{
+              const ganCafeMino = pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+CAFE.reduce((b,prod)=>b+(prod.gm*(p.cantidades[prod.id]||0)),0),0);
+              const ganCafeMayo = pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+CAFE.reduce((b,prod)=>b+(prod.gma*(p.cantidades[prod.id]||0)),0),0);
+              return <div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8,paddingBottom:8,borderBottom:"1px solid #E8C5C0"}}>
+                  <span style={{color:C.marronL}}>Minorista cafe</span>
+                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafeMino)}</span>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:12,paddingBottom:12,borderBottom:"1px solid #E8C5C0"}}>
+                  <span style={{color:C.marronL}}>Mayorista cafe</span>
+                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafeMayo)}</span>
+                </div>
+                <div style={{textAlign:"center",paddingBottom:8}}>
+                  <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Total cafe</div>
+                  <div style={{fontSize:36,fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafe)}</div>
+                </div>
+              </div>;
+            })()}
           </Card>
           <Card title="TOTAL COMBINADO" titleColor={C.naranja}>
             <div style={{textAlign:"center",padding:"16px 0"}}>
@@ -730,8 +745,9 @@ function App() {
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"#fff",borderTop:"1px solid "+C.border,display:"flex",padding:"10px 0 14px",zIndex:100,boxShadow:"0 -4px 20px rgba(196,104,122,0.12)"}}>
         {tabs.map(t => (
           <button key={t.id} onClick={()=>setTab(t.id)}
-            style={{flex:1,background:"none",border:"none",cursor:"pointer",padding:"4px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-            <span style={{fontSize:9,color:tab===t.id?C.rosa:C.marronL,fontWeight:tab===t.id?"bold":"normal",letterSpacing:0.3}}>{t.label}</span>
+            style={{flex:1,background:"none",border:"none",cursor:"pointer",padding:"4px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+            <span style={{fontSize:15,color:tab===t.id?C.rosa:C.marronL,fontWeight:"bold"}}>{t.icon}</span>
+            <span style={{fontSize:8,color:tab===t.id?C.rosa:C.marronL,fontWeight:tab===t.id?"bold":"normal",letterSpacing:0.3}}>{t.label}</span>
             {tab===t.id && <div style={{width:20,height:2.5,background:C.rosa,borderRadius:2}}/>}
           </button>
         ))}
