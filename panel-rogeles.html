@@ -25,12 +25,12 @@ const C = {
 };
 
 // Rogeles data
-const SIZES = ["Entero","Medio","Cuarto","Rogelito"];
-const PM = {Entero:73000, Medio:45000, Cuarto:31000, Rogelito:9000};
-const PMay = {Entero:56940, Medio:35100, Cuarto:24180, Rogelito:40560};
-const COSTO = {Entero:48050, Medio:29150, Cuarto:20350, Rogelito:37600};
-const GM = {Entero:24950, Medio:15850, Cuarto:10650, Rogelito:1400};
-const GMay = {Entero:8890, Medio:5950, Cuarto:3830, Rogelito:2960};
+const SIZES = ["ENTERO","MEDIANO","PEQUENO","PORCION"];
+const PM = {ENTERO:73000, MEDIANO:45000, PEQUENO:31000, PORCION:9000};
+const PMay = {ENTERO:56940, MEDIANO:35100, PEQUENO:24180, PORCION:40560};
+const COSTO = {ENTERO:48050, MEDIANO:29150, PEQUENO:20350, PORCION:37600};
+const GM = {ENTERO:24950, MEDIANO:15850, PEQUENO:10650, PORCION:1400};
+const GMay = {ENTERO:8890, MEDIANO:5950, PEQUENO:3830, PORCION:2960};
 
 // Puntos
 const PUNTOS = [
@@ -136,23 +136,99 @@ function Empty({text}) {
   return <div style={{textAlign:"center",padding:50,color:C.rosaL}}><div style={{marginTop:12,fontSize:14,color:C.marronL}}>{text}</div></div>;
 }
 
+
+function CalendarioEntregas({ventas, calMes, calAnio, setCalMes, setCalAnio}) {
+  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const hoy = new Date();
+  const primerDia = new Date(calAnio, calMes, 1).getDay();
+  const diasEnMes = new Date(calAnio, calMes+1, 0).getDate();
+  const offset = primerDia===0 ? 6 : primerDia-1;
+
+  // Get delivery dates from ventas
+  const fechasEntrega = {};
+  ventas.forEach(v => {
+    if(!v.retira) return;
+    try {
+      const d = new Date(v.retira);
+      if(isNaN(d.getTime())) return;
+      if(d.getMonth()===calMes && d.getFullYear()===calAnio) {
+        const dia = d.getDate();
+        if(!fechasEntrega[dia]) fechasEntrega[dia] = [];
+        fechasEntrega[dia].push(v);
+      }
+    } catch{}
+  });
+
+  const prevMes = () => { if(calMes===0){setCalMes(11);setCalAnio(y=>y-1);}else setCalMes(m=>m-1); };
+  const nextMes = () => { if(calMes===11){setCalMes(0);setCalAnio(y=>y+1);}else setCalMes(m=>m+1); };
+
+  const celdas = [];
+  for(let i=0;i<offset;i++) celdas.push(null);
+  for(let i=1;i<=diasEnMes;i++) celdas.push(i);
+
+  return (
+    <div style={{background:"#FFFFFF",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <button onClick={prevMes} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:"#C4687A",fontWeight:"bold"}}>{"<"}</button>
+        <div style={{fontSize:13,fontWeight:"bold",color:"#5C3340"}}>{MESES[calMes]} {calAnio}</div>
+        <button onClick={nextMes} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:"#C4687A",fontWeight:"bold"}}>{">"}</button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:6}}>
+        {["L","M","M","J","V","S","D"].map((d,i)=>(
+          <div key={i} style={{textAlign:"center",fontSize:9,color:"#8B6070",fontWeight:"bold",padding:"2px 0"}}>{d}</div>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+        {celdas.map((dia,i) => {
+          if(!dia) return <div key={i}/>;
+          const tieneEntrega = fechasEntrega[dia] && fechasEntrega[dia].length>0;
+          const esHoy = dia===hoy.getDate() && calMes===hoy.getMonth() && calAnio===hoy.getFullYear();
+          const todasEntregadas = tieneEntrega && fechasEntrega[dia].every(v=>v.pagado);
+          const bgColor = tieneEntrega && !todasEntregadas ? "#7BAE84" : esHoy ? "#F5D0D6" : "transparent";
+          const textColor = tieneEntrega && !todasEntregadas ? "#fff" : esHoy ? "#C4687A" : "#5C3340";
+          return (
+            <div key={i} style={{textAlign:"center",padding:"5px 2px",borderRadius:8,background:bgColor,position:"relative"}}>
+              <span style={{fontSize:12,fontWeight:tieneEntrega||esHoy?"bold":"normal",color:textColor}}>{dia}</span>
+              {tieneEntrega && !todasEntregadas && <div style={{fontSize:7,color:"rgba(255,255,255,0.9)",marginTop:1}}>{fechasEntrega[dia].length}ent</div>}
+            </div>
+          );
+        })}
+      </div>
+      {Object.keys(fechasEntrega).length>0 && (
+        <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid #F0D0D8"}}>
+          <div style={{fontSize:10,color:"#8B6070",fontWeight:"bold",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Entregas del mes</div>
+          {Object.entries(fechasEntrega).sort((a,b)=>parseInt(a[0])-parseInt(b[0])).map(([dia,vs])=>(
+            <div key={dia} style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4,padding:"4px 8px",background:vs.every(v=>v.pagado)?"#F0F8F2":"#F0FFF4",borderRadius:8,border:"1px solid "+(vs.every(v=>v.pagado)?"#C5E0CB":"#7BAE84")}}>
+              <span style={{color:"#5C3340",fontWeight:"bold"}}>Dia {dia}</span>
+              <span style={{color:"#5C3340"}}>{vs.map(v=>v.cliente+(v.tamano?" - "+v.tamano:"")).join(", ")}</span>
+              <span style={{color:vs.every(v=>v.pagado)?"#7BAE84":"#D4845A",fontWeight:"bold"}}>{vs.every(v=>v.pagado)?"Entregado":"Pendiente"}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const [tab, setTab] = useState("dashboard");
-  const [stock, setStock] = useState({Entero:22,Medio:16,Cuarto:0,Rogelito:15});
+  const [stock, setStock] = useState({ENTERO:22,MEDIANO:16,PEQUENO:0,PORCION:15});
   const [ventas, setVentas] = useState([]);
   const [peds, setPeds] = useState([]);
   const [svf, setSvf] = useState(false);
   const [spf, setSpf] = useState(false);
-  const [vf, setVf] = useState({tipo:"minorista",cliente:"",celular:"",tamano:"Entero",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
-  const [pf, setPf] = useState({punto:PUNTOS[0],Entero:0,Medio:0,Cuarto:0,Rogelito:0});
+  const [vf, setVf] = useState({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
+  const [pf, setPf] = useState({punto:PUNTOS[0],ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
   const [toast, setToast] = useState(null);
-  const [rv, setRv] = useState({Entero:0,Medio:0,Cuarto:0,Rogelito:0});
+  const [rv, setRv] = useState({ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
   const [anio, setAnio] = useState("2026");
   const [pedsCafe, setPedsCafe] = useState([]);
   const [showCafeForm, setShowCafeForm] = useState(false);
   const [cafeForm, setCafeForm] = useState({punto:PUNTOS[0],cantidades:{}});
   const [stockCafe, setStockCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
+  const [calMes, setCalMes] = useState(new Date().getMonth());
+  const [calAnio, setCalAnio] = useState(new Date().getFullYear());
 
   useEffect(() => {
     const d = ld();
@@ -194,7 +270,7 @@ function App() {
     const v = {...vf, id:Date.now(), precio:pv(vf.tamano,vf.tipo)*vf.cantidad, ganancia:gan(vf.tamano,vf.tipo,vf.cantidad)};
     setVentas(p => [v,...p]);
     setStock(p => ({...p,[vf.tamano]:p[vf.tamano]-vf.cantidad}));
-    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"Entero",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
+    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
     setSvf(false);
     showT("Venta registrada");
   };
@@ -207,7 +283,7 @@ function App() {
     const esV = pf.punto.toLowerCase().includes("valle");
     const g = esV ? 0 : SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0);
     setPeds(p => [{...pf,id:Date.now(),semana:sem,ganancia:g},...p]);
-    setPf({punto:PUNTOS[0],Entero:0,Medio:0,Cuarto:0,Rogelito:0});
+    setPf({punto:PUNTOS[0],ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
     setSpf(false);
     showT("Pedido guardado");
   };
@@ -336,13 +412,26 @@ function App() {
             <KPI label="Pendientes" value={pend.length} sub="sin cobrar" color={pend.length>0?C.rojo:C.verde}/>
           </div>
           <Card title="Stock actual">
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
               {SIZES.map(s => (
                 <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:C.bg,borderRadius:10,padding:"10px 14px",border:"1px solid "+C.border}}>
                   <span style={{fontSize:13,color:C.marronL}}>{s}</span>
                   <span style={{fontWeight:"bold",color:sc(stock[s]),fontSize:22}}>{stock[s]}</span>
                 </div>
               ))}
+            </div>
+            <div style={{fontSize:10,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:8,fontWeight:"bold",borderTop:"1px solid #E8C5C0",paddingTop:10}}>Stock Cherry Season</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {CAFE.map(p => {
+                const cant = stockCafe[p.id]||0;
+                const color = cant===0?C.rojo:cant<=3?C.naranja:C.verde;
+                return (
+                  <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#FDF6F0",borderRadius:10,padding:"8px 12px",border:"1px solid #E8C5C0"}}>
+                    <span style={{fontSize:10,color:C.marronL,flex:1}}>{p.n}</span>
+                    <span style={{fontWeight:"bold",color,fontSize:18,marginLeft:4}}>{cant}</span>
+                  </div>
+                );
+              })}
             </div>
           </Card>
           {pend.length>0 && <Card title="Pendientes de cobro" titleColor={C.rojo} borderColor={C.rojo+"33"}>
@@ -359,6 +448,7 @@ function App() {
               </div>
             ))}
           </Card>}
+          <CalendarioEntregas ventas={ventas} calMes={calMes} calAnio={calAnio} setCalMes={setCalMes} setCalAnio={setCalAnio}/>
           <Card title={"Pedido "+sem} titleColor={C.rosa}>
             {SIZES.map(s => (
               <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
@@ -368,8 +458,12 @@ function App() {
             ))}
             <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid "+C.crema}}>
               <span style={{fontSize:12,color:C.marronL}}>{ps.length}/20 puntos</span>
-              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gma)}</span>
+              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gma+ganCafe)}</span>
             </div>
+            {ganCafe>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:11}}>
+              <span style={{color:"#C0392B"}}>Inc. cafe Cherry Season</span>
+              <span style={{color:"#C0392B",fontWeight:"bold"}}>{fmt(ganCafe)}</span>
+            </div>}
           </Card>
         </div>}
 
@@ -390,7 +484,7 @@ function App() {
             </div>
             <input placeholder="Nombre *" value={vf.cliente} onChange={e=>setVf(f=>({...f,cliente:e.target.value}))} style={inp()}/>
             <input placeholder="Celular (opcional)" value={vf.celular} onChange={e=>setVf(f=>({...f,celular:e.target.value}))} style={inp()}/>
-            <Lbl>Tamano</Lbl>
+            <Lbl>Tamaño</Lbl>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
               {SIZES.map(s => (
                 <button key={s} onClick={()=>setVf(f=>({...f,tamano:s}))}
@@ -402,7 +496,7 @@ function App() {
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
               <div><Lbl>Cantidad</Lbl><input type="number" min="1" value={vf.cantidad} onChange={e=>setVf(f=>({...f,cantidad:Math.max(1,parseInt(e.target.value)||1)}))} style={inp()}/></div>
-              <div><Lbl>Retira</Lbl><input placeholder="ej: viernes" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/></div>
+              <div><Lbl>Fecha retira</Lbl><input type="date" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/></div>
             </div>
             <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
@@ -513,14 +607,18 @@ function App() {
           <Card title={"Consolidado - "+sem} titleColor={C.rosa}>
             {SIZES.map(s => (
               <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
-                <span style={{fontSize:13,color:C.marronL}}>{s==="Rogelito"?"Caja Rogelito":s}</span>
+                <span style={{fontSize:13,color:C.marronL}}>{s==="PORCION"?"PORCION":s}</span>
                 <span style={{fontWeight:"bold",color:con[s]>0?C.marron:C.border}}>{con[s]} u.</span>
               </div>
             ))}
             <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid "+C.crema}}>
               <span style={{fontSize:12,color:C.marronL}}>{ps.length}/20 puntos</span>
-              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gma)}</span>
+              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gma+ganCafe)}</span>
             </div>
+            {ganCafe>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:11}}>
+              <span style={{color:"#C0392B"}}>Inc. cafe Cherry Season</span>
+              <span style={{color:"#C0392B",fontWeight:"bold"}}>{fmt(ganCafe)}</span>
+            </div>}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
               <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
               <button onClick={enviarRepartida} style={{...btnFill(C.rosa),fontSize:11}}>Enviar repartida</button>
@@ -539,7 +637,7 @@ function App() {
               return (
                 <div key={s} style={rowStyle}>
                   <div style={{width:90}}>
-                    <div style={{fontSize:13,fontWeight:"bold"}}>{s==="Rogelito"?"Caja Rogelito":s}</div>
+                    <div style={{fontSize:13,fontWeight:"bold"}}>{s==="PORCION"?"PORCION":s}</div>
                     <div style={{fontSize:10,color:C.marronL}}>{esV?fmt(precio)+" (costo)":fmt(precio)}</div>
                   </div>
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
@@ -724,14 +822,26 @@ function App() {
               </div>;
             })()}
           </Card>
-          <Card title="TOTAL COMBINADO" titleColor={C.naranja}>
-            <div style={{textAlign:"center",padding:"16px 0"}}>
-              <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gma+ganCafe)}</div>
+          <Card title="Ganancia ROGELES" titleColor={C.rosa}>
+            <div style={{textAlign:"center",padding:"12px 0"}}>
+              <div style={{fontSize:38,fontWeight:"bold",color:C.rosa}}>{fmt(gmi+gma)}</div>
+              <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Minorista + Mayorista</div>
             </div>
-            <div style={{borderTop:"1px solid "+C.border,paddingTop:12,marginTop:4}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronL}}>Minorista rogeles</span><span style={{fontWeight:"bold",color:C.rosa}}>{fmt(gmi)}</span></div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronL}}>Mayorista rogeles</span><span style={{fontWeight:"bold",color:C.verde}}>{fmt(gma)}</span></div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:C.marronL}}>Cafe Cherry Season</span><span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafe)}</span></div>
+            <div style={{borderTop:"1px solid "+C.border,paddingTop:10,marginTop:4}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:C.marronL}}>Minorista</span><span style={{fontWeight:"bold",color:C.rosa}}>{fmt(gmi)}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}><span style={{color:C.marronL}}>Mayorista</span><span style={{fontWeight:"bold",color:C.verde}}>{fmt(gma)}</span></div>
+            </div>
+          </Card>
+          <Card title="Ganancia CAFE Cherry Season" titleColor="#C0392B" borderColor="#E8C5C0">
+            <div style={{textAlign:"center",padding:"12px 0"}}>
+              <div style={{fontSize:38,fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafe)}</div>
+              <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Pedidos mayoristas cafe</div>
+            </div>
+          </Card>
+          <Card title="TOTAL GENERAL" titleColor={C.naranja}>
+            <div style={{textAlign:"center",padding:"12px 0"}}>
+              <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gma+ganCafe)}</div>
+              <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Rogeles + Cafe</div>
             </div>
           </Card>
         </div>}
