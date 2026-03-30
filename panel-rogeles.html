@@ -3,793 +3,820 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel — Los Rogeles de Marcela</title>
+<title>Panel Rogeles de Marcela</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background: #FDF6F0; }</style>
+<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background: #FDF6F0; font-family: 'Lato', sans-serif; }</style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
 const { useState, useEffect } = React;
-const C = { bg:"#FDF6F0",bgCard:"#FFFFFF",bgInput:"#FFF8F5",rosa:"#C4687A",rosaLight:"#E8A0A8",rosaPale:"#F5D0D6",rosaPaleBg:"#FDE8EC",marron:"#5C3340",marronLight:"#8B6070",crema:"#F0DDE2",verde:"#7BAE84",naranja:"#D4845A",rojo:"#C0444A",nav:"#FFFFFF",border:"#F0D0D8" };
+
+// Colors
+const C = {
+  bg:"#FDF6F0", card:"#FFFFFF", input:"#FFF8F5",
+  rosa:"#C4687A", rosaL:"#E8A0A8", rosaPale:"#F5D0D6", rosaBg:"#FDE8EC",
+  marron:"#5C3340", marronL:"#8B6070", crema:"#F0DDE2",
+  verde:"#7BAE84", naranja:"#D4845A", rojo:"#C0444A",
+  border:"#F0D0D8"
+};
+
+// Rogeles data
 const SIZES = ["Entero","Medio","Cuarto","Rogelito"];
-const PM = {Entero:73000,Medio:45000,Cuarto:31000,Rogelito:9000}; // Rogelito minorista x unidad
-const PMay = {Entero:56940,Medio:35100,Cuarto:24180,Rogelito:40560};
-const GM = {Entero:24950,Medio:15850,Cuarto:10650,Rogelito:1400}; // Rogelito ganancia x unidad (aprox)
-const GMay = {Entero:8890,Medio:5950,Cuarto:3830,Rogelito:2960};
+const PM = {Entero:73000, Medio:45000, Cuarto:31000, Rogelito:9000};
+const PMay = {Entero:56940, Medio:35100, Cuarto:24180, Rogelito:40560};
+const COSTO = {Entero:48050, Medio:29150, Cuarto:20350, Rogelito:37600};
+const GM = {Entero:24950, Medio:15850, Cuarto:10650, Rogelito:1400};
+const GMay = {Entero:8890, Medio:5950, Cuarto:3830, Rogelito:2960};
+
+// Puntos
 const PUNTOS = [
   "Valle Escondido (Casa Central)",
-  "Barrio Jardín",
-  "Cañitas / Valle del Golf / Causana",
-  "Camino a San Carlos",
-  "Centro (Bonafide Colón y Cañada)",
-  "Cerro de las Rosas / Urca",
-  "Cofico",
-  "Docta",
-  "Intercountry (El Bosque)",
-  "J. Claret / P. Lugones",
-  "La Cuesta / La Calera",
-  "Manantiales",
-  "Montecristo",
-  "Nueva Córdoba (Strobel Panadería / Café)",
-  "Orfeo / Dino",
-  "Sierras Chicas - Río Ceballos / Salsipuedes",
-  "Siete Soles / Tejas 3",
-  "V. Rivera Indarte / Saldán",
-  "Villa Allende / Mendiolaza",
-  "Villa Allende - Av. Padre Luchesse / Ruta E53",
-  "Villa Belgrano",
+  "Barrio Jardin","Canitas / Valle del Golf / Causana","Camino a San Carlos",
+  "Centro (Bonafide Colon y Canada)","Cerro de las Rosas / Urca","Cofico","Docta",
+  "Intercountry (El Bosque)","J. Claret / P. Lugones","La Cuesta / La Calera",
+  "Manantiales","Montecristo","Nueva Cordoba (Strobel Panaderia / Cafe)",
+  "Orfeo / Dino","Sierras Chicas - Rio Ceballos / Salsipuedes","Siete Soles / Tejas 3",
+  "V. Rivera Indarte / Saldan","Villa Allende / Mendiolaza",
+  "Villa Allende - Av. Padre Luchesse / Ruta E53","Villa Belgrano"
 ];
 
-
-
-const CAFE_PRODS = [
-  {id:"peru250",     nombre:"Peru Blend 250gr",        tipo:"grano",   costo:15791, mino:23000, mayo:19320, ganMino:7209,  ganMayo:3529, min:1},
-  {id:"colombia250", nombre:"Colombia El Tambo 250gr", tipo:"grano",   costo:20873, mino:26500, mayo:22260, ganMino:5627,  ganMayo:1387, min:1},
-  {id:"guate250",    nombre:"Guatemala Anaer. 250gr",  tipo:"grano",   costo:21054, mino:30000, mayo:25200, ganMino:8946,  ganMayo:4146, min:1},
-  {id:"peru1kg",     nombre:"Peru Blend 1kg",          tipo:"grano",   costo:39780, mino:52100, mayo:46369, ganMino:12320, ganMayo:6589, min:1},
-  {id:"capscol",     nombre:"Capsulas Colombia x10",   tipo:"capsula", costo:13260, mino:18000, mayo:14760, ganMino:4740,  ganMayo:1500, min:6},
-  {id:"capsperu",    nombre:"Capsulas Peru Blend x10", tipo:"capsula", costo:13260, mino:18000, mayo:14760, ganMino:4740,  ganMayo:1500, min:6},
+// Cafe data
+const CAFE = [
+  {id:"peru250",     n:"Peru Blend 250gr",        t:"grano",   cv:15791, mi:23000, ma:19320, gm:7209,  gma:3529, min:1},
+  {id:"col250",      n:"Colombia El Tambo 250gr",  t:"grano",   cv:20873, mi:26500, ma:22260, gm:5627,  gma:1387, min:1},
+  {id:"guat250",     n:"Guatemala Anaer. 250gr",   t:"grano",   cv:21054, mi:30000, ma:25200, gm:8946,  gma:4146, min:1},
+  {id:"peru1kg",     n:"Peru Blend 1kg",           t:"grano",   cv:39780, mi:52100, ma:46369, gm:12320, gma:6589, min:1},
+  {id:"capscol",     n:"Capsulas Colombia x10",    t:"capsula", cv:13260, mi:18000, ma:14760, gm:4740,  gma:1500, min:6},
+  {id:"capsperu",    n:"Capsulas Peru Blend x10",  t:"capsula", cv:13260, mi:18000, ma:14760, gm:4740,  gma:1500, min:6},
 ];
-const CAFE_SK = "cafe_cs_v1";
-const loadCafe = () => { try { const r=localStorage.getItem(CAFE_SK); if(r) return JSON.parse(r); } catch{} return []; };
-const saveCafe = d => { try { localStorage.setItem(CAFE_SK,JSON.stringify(d)); } catch{} };
-const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
+
+// Historial 2025 mayorista
+const H2025 = [
+  {mes:"Enero",      gmi:0,       gma:6667680,  tot:6667680,  caja:0,       mE:0,   mM:0,   mC:0,  mP:0,  myE:392,  myM:374,  myC:250, myP:0},
+  {mes:"Febrero",    gmi:0,       gma:10017240, tot:10017240, caja:0,       mE:0,   mM:0,   mC:0,  mP:0,  myE:674,  myM:486,  myC:296, myP:0},
+  {mes:"Marzo",      gmi:0,       gma:14187800, tot:14187800, caja:0,       mE:0,   mM:0,   mC:0,  mP:0,  myE:912,  myM:794,  myC:354, myP:0},
+  {mes:"Abril",      gmi:0,       gma:13697420, tot:13697420, caja:0,       mE:0,   mM:0,   mC:0,  mP:0,  myE:930,  myM:704,  myC:324, myP:0},
+  {mes:"Mayo",       gmi:2151450, gma:8835520,  tot:10986970, caja:6147000, mE:632, mM:497, mC:236,mP:0,  myE:577,  myM:460,  myC:253, myP:0},
+  {mes:"Junio",      gmi:1858535, gma:16137040, tot:17995575, caja:5310100, mE:513, mM:409, mC:211,mP:0,  myE:1054, myM:847,  myC:451, myP:0},
+  {mes:"Julio",      gmi:2481780, gma:6585850,  tot:9067630,  caja:7090800, mE:565, mM:547, mC:250,mP:0,  myE:463,  myM:504,  myC:236, myP:0},
+  {mes:"Agosto",     gmi:2028775, gma:14579540, tot:16608315, caja:5796500, mE:664, mM:559, mC:276,mP:0,  myE:924,  myM:802,  myC:416, myP:0},
+  {mes:"Septiembre", gmi:2313325, gma:7360910,  tot:9674235,  caja:6609500, mE:609, mM:422, mC:186,mP:0,  myE:523,  myM:354,  myC:158, myP:0},
+  {mes:"Octubre",    gmi:1850558, gma:10164840, tot:12015398, caja:5287308, mE:0,   mM:0,   mC:8,  mP:6,  myE:671,  myM:542,  myC:229, myP:33},
+  {mes:"Noviembre",  gmi:2146487, gma:11905230, tot:14051717, caja:6132820, mE:0,   mM:0,   mC:6,  mP:1,  myE:809,  myM:604,  myC:266, myP:34},
+  {mes:"Diciembre",  gmi:3174605, gma:12543230, tot:15717835, caja:9070300, mE:1011,mM:653, mC:241,mP:96, myE:907,  myM:595,  myC:233, myP:16},
+];
+const H2026 = [
+  {mes:"Enero",   gmi:1177820, gma:5209220, tot:6387040, caja:3365200, mE:35, mM:26, mC:12, mP:6,  myE:412, myM:326, myC:52, myP:30},
+  {mes:"Febrero", gmi:2212669, gma:6325020, tot:8537689, caja:6321911, mE:70, mM:46, mC:6,  mP:11, myE:480, myM:446, myC:0,  myP:51},
+  {mes:"Marzo",   gmi:1815205, gma:5486990, tot:7302195, caja:5186300, mE:0,  mM:0,  mC:0,  mP:0,  myE:408, myM:377, myC:0,  myP:37},
+];
+
+// Storage helpers
 const SK = "rogeles_v4";
-const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyNfAicx6zEvi45ZuJchDQVRKZG6WoM0UbCy6pisEt03L4-prmGNl2Q8iHyLgikvZxE/exec";
+const SK_CAFE = "cafe_peds_v1";
+const SK_STOCK_CAFE = "cafe_stock_v1";
 const ld = () => { try { const r=localStorage.getItem(SK); if(r) return JSON.parse(r); } catch{} return null; };
 const sd = d => { try { localStorage.setItem(SK,JSON.stringify(d)); } catch{} };
-const inp = () => ({width:"100%",padding:"11px 13px",borderRadius:10,background:C.bgInput,border:`1px solid ${C.border}`,color:C.marron,fontSize:13,marginBottom:8,boxSizing:"border-box",outline:"none"});
-const mb = bg => ({background:bg,color:"#fff",border:"none",borderRadius:20,padding:"9px 18px",fontSize:13,cursor:"pointer",fontWeight:"bold"});
-const fb = bg => ({padding:13,borderRadius:12,border:"none",background:bg,color:"#fff",cursor:"pointer",fontSize:13,fontWeight:"bold"});
-const ob = () => ({padding:13,borderRadius:12,border:`1px solid ${C.border}`,background:"transparent",color:C.marronLight,cursor:"pointer",fontSize:13});
-const sb = bg => ({fontSize:10,background:bg,color:"#fff",border:"none",borderRadius:8,padding:"4px 9px",cursor:"pointer",marginTop:4,display:"block",fontWeight:"bold"});
-const KPI = ({emoji,label,value,sub,color}) => <div style={{background:C.bgCard,borderRadius:16,padding:14,border:`1px solid ${C.border}`}}><div style={{fontSize:18}}>{emoji}</div><div style={{fontSize:22,fontWeight:"bold",color,marginTop:4}}>{value}</div><div style={{fontSize:12,color:C.marron,marginTop:2}}>{label}</div><div style={{fontSize:10,color:C.marronLight}}>{sub}</div></div>;
-const Card = ({title,titleColor=C.rosaLight,borderColor=C.border,children}) => <div style={{background:C.bgCard,borderRadius:16,padding:16,marginBottom:14,border:`1px solid ${borderColor}`}}>{title&&<div style={{fontSize:11,color:titleColor,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>{title}</div>}{children}</div>;
-const ST = ({children,noTop}) => <div style={{fontSize:12,color:C.rosaLight,letterSpacing:2.5,textTransform:"uppercase",paddingTop:noTop?0:20,marginBottom:14,fontWeight:"bold"}}>{children}</div>;
-const Lbl = ({children}) => <div style={{fontSize:12,color:C.marronLight,marginBottom:6}}>{children}</div>;
-const Fil = ({label,valor,vc}) => <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:2}}><span style={{color:C.marronLight}}>{label}</span><span style={{fontWeight:"bold",color:vc}}>{valor}</span></div>;
-const Vac = ({emoji,text}) => <div style={{textAlign:"center",padding:50,color:C.rosaLight}}><div style={{fontSize:48}}>{emoji}</div><div style={{marginTop:12,fontSize:14,color:C.marronLight}}>{text}</div></div>;
+const ldCafe = () => { try { const r=localStorage.getItem(SK_CAFE); if(r) return JSON.parse(r); } catch{} return []; };
+const sdCafe = d => { try { localStorage.setItem(SK_CAFE,JSON.stringify(d)); } catch{} };
+const ldStockCafe = () => { try { const r=localStorage.getItem(SK_STOCK_CAFE); if(r) return JSON.parse(r); } catch{} return {peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}; };
+const sdStockCafe = d => { try { localStorage.setItem(SK_STOCK_CAFE,JSON.stringify(d)); } catch{} };
 
+const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 
+const getSem = () => {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day===0 ? -6 : 1-day;
+  const lun = new Date(d); lun.setDate(d.getDate()+diff);
+  const dom = new Date(lun); dom.setDate(lun.getDate()+6);
+  const f = x => x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
+  return "Pedido semanal "+f(lun)+" - "+f(dom);
+};
 
+// Shared styles
+const inp = () => ({width:"100%",padding:"11px 13px",borderRadius:10,background:C.input,border:"1px solid "+C.border,color:C.marron,fontSize:13,marginBottom:8,boxSizing:"border-box",outline:"none"});
+const btnFill = (bg) => ({padding:12,borderRadius:12,border:"none",background:bg,color:"#fff",cursor:"pointer",fontSize:13,fontWeight:"bold"});
+const btnOut = () => ({padding:12,borderRadius:12,border:"1px solid "+C.border,background:"transparent",color:C.marronL,cursor:"pointer",fontSize:13});
+const btnSm = (bg) => ({fontSize:10,background:bg,color:"#fff",border:"none",borderRadius:8,padding:"4px 9px",cursor:"pointer",marginTop:4,display:"block",fontWeight:"bold"});
+const btnMain = (bg) => ({background:bg,color:"#fff",border:"none",borderRadius:20,padding:"9px 18px",fontSize:13,cursor:"pointer",fontWeight:"bold"});
 
-function HistorialTab({anioVista, setAnioVista}) {
-  const H2026 = [
-    { mes:"Enero",   ganMino:1177820, ganMayo:5209220, total:6387040,  caja:3365200, invValle:3807000, minoE:35,  minoM:26, minoC:12, minoP:6,  mayoE:412, mayoM:326, mayoC:52, mayoP:30 },
-    { mes:"Febrero", ganMino:2212669, ganMayo:6325020, total:8537689,  caja:6321911, invValle:4391800, minoE:70,  minoM:46, minoC:6,  minoP:11, mayoE:480, mayoM:446, mayoC:0,  mayoP:51 },
-    { mes:"Marzo",   ganMino:1815205, ganMayo:5486990, total:7302195,  caja:5186300, invValle:2892400, minoE:0,   minoM:0,  minoC:0,  minoP:0,  mayoE:408, mayoM:377, mayoC:0,  mayoP:37 },
-  ];
-  const H2025 = [
-    { mes:"Enero",      ganMino:0,       ganMayo:6667680,  total:6667680,  caja:0, invValle:4263800, minoE:0,   minoM:0,   minoC:0,  minoP:0, mayoE:392,  mayoM:374,  mayoC:250, mayoP:0  },
-    { mes:"Febrero",    ganMino:0,       ganMayo:10017240, total:10017240, caja:0, invValle:6418500, minoE:0,   minoM:0,   minoC:0,  minoP:0, mayoE:674,  mayoM:486,  mayoC:296, mayoP:0  },
-    { mes:"Marzo",      ganMino:0,       ganMayo:14187800, total:14187800, caja:0, invValle:9404500, minoE:0,   minoM:0,   minoC:0,  minoP:0, mayoE:912,  mayoM:794,  mayoC:354, mayoP:0  },
-    { mes:"Abril",      ganMino:0,       ganMayo:13697420, total:13697420, caja:0, invValle:9411000, minoE:0,   minoM:0,   minoC:0,  minoP:0, mayoE:930,  mayoM:704,  mayoC:324, mayoP:0  },
-    { mes:"Mayo",       ganMino:2151450, ganMayo:8835520,  total:10986970, caja:6147000, invValle:6270850, minoE:632, minoM:497, minoC:236,minoP:0, mayoE:577, mayoM:460, mayoC:253, mayoP:0  },
-    { mes:"Junio",      ganMino:1858535, ganMayo:16137040, total:17995575, caja:5310100, invValle:10610000, minoE:513, minoM:409, minoC:211,minoP:0, mayoE:1054,mayoM:847, mayoC:451, mayoP:0  },
-    { mes:"Julio",      ganMino:2481780, ganMayo:20338450, total:22820230, caja:7090800, invValle:13485800, minoE:565, minoM:547, minoC:250,minoP:0, mayoE:1210,mayoM:1237,mayoC:580, mayoP:0  },
-    { mes:"Agosto",     ganMino:2028775, ganMayo:14579540, total:16608315, caja:5796500, invValle:10657100, minoE:664, minoM:559, minoC:276,minoP:0, mayoE:924, mayoM:802, mayoC:416, mayoP:0  },
-    { mes:"Septiembre", ganMino:2313325, ganMayo:7360910,  total:9674235,  caja:6609500, invValle:5094100,  minoE:609, minoM:422, minoC:186,minoP:0, mayoE:523, mayoM:354, mayoC:158, mayoP:0  },
-    { mes:"Octubre",    ganMino:1850558, ganMayo:10164840, total:12015398, caja:5287308, invValle:4636250,  minoE:0,   minoM:0,   minoC:8,  minoP:6, mayoE:671, mayoM:542, mayoC:229, mayoP:33 },
-    { mes:"Noviembre",  ganMino:2146487, ganMayo:11905230, total:14051717, caja:6132820, invValle:7518350,  minoE:0,   minoM:0,   minoC:6,  minoP:1, mayoE:809, mayoM:604, mayoC:266, mayoP:34 },
-    { mes:"Diciembre",  ganMino:3174605, ganMayo:12543230, total:15717835, caja:9070300, invValle:6850700,  minoE:1011,minoM:653, minoC:241,minoP:96,mayoE:907, mayoM:595, mayoC:233, mayoP:16 },
-  ];
-  const H = anioVista==="2026" ? H2026 : H2025;
-  const maxTotal = Math.max(...H.map(h=>h.total));
-  const varPct = (curr,prev) => prev===0?null:((curr-prev)/prev*100);
-  const Badge = ({val}) => {
-    if(val===null) return null;
-    const ok = val>=0;
-    return <span style={{fontSize:11,fontWeight:"bold",color:"#fff",background:ok?C.verde:C.rojo,borderRadius:6,padding:"2px 6px",marginLeft:6}}>{ok?"+":""}{val.toFixed(1)}%</span>;
-  };
-
-  return <div>
-    <div style={{fontSize:12,color:C.rosaLight,letterSpacing:2.5,textTransform:"uppercase",paddingTop:20,marginBottom:14,fontWeight:"bold"}}>Historial</div>
-    <div style={{display:"flex",gap:8,marginBottom:16}}>
-      {["2026","2025"].map(a=><button key={a} onClick={()=>setAnioVista(a)}
-        style={{flex:1,padding:"10px 0",borderRadius:12,border:"2px solid "+(anioVista===a?C.rosa:C.border),background:anioVista===a?C.rosaPaleBg:C.bgCard,color:anioVista===a?C.rosa:C.marronLight,fontWeight:"bold",cursor:"pointer",fontSize:14}}>
-        {a}
-      </button>)}
+function KPI({label, value, sub, color}) {
+  return (
+    <div style={{background:C.card,borderRadius:16,padding:14,border:"1px solid "+C.border}}>
+      <div style={{fontSize:22,fontWeight:"bold",color,marginTop:4}}>{value}</div>
+      <div style={{fontSize:12,color:C.marron,marginTop:2}}>{label}</div>
+      <div style={{fontSize:10,color:C.marronL}}>{sub}</div>
     </div>
+  );
+}
 
-    <Card title={"Ganancia mensual "+anioVista} titleColor={C.rosa}>
-      <div style={{display:"flex",gap:4,alignItems:"flex-end",height:130,marginBottom:8}}>
-        {H.map((h,i)=>{
-          const hMino=Math.max(4,Math.round((h.ganMino/maxTotal)*110));
-          const hMayo=Math.max(4,Math.round((h.ganMayo/maxTotal)*110));
-          return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-            <div style={{width:"100%",display:"flex",gap:1,alignItems:"flex-end",height:110}}>
-              <div style={{flex:1,background:C.rosa,borderRadius:"3px 3px 0 0",height:hMino+"px"}}/>
-              <div style={{flex:1,background:C.verde,borderRadius:"3px 3px 0 0",height:hMayo+"px"}}/>
-            </div>
-            <div style={{fontSize:8,color:C.marronLight,textAlign:"center"}}>{h.mes.slice(0,3)}</div>
-          </div>;
-        })}
-      </div>
-      <div style={{display:"flex",gap:16,justifyContent:"center"}}>
-        <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:C.rosa,borderRadius:2}}/><span style={{fontSize:10,color:C.marronLight}}>Minorista</span></div>
-        <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:C.verde,borderRadius:2}}/><span style={{fontSize:10,color:C.marronLight}}>Mayorista</span></div>
-      </div>
-    </Card>
+function Card({title,titleColor,borderColor,children}) {
+  return (
+    <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid "+(borderColor||C.border)}}>
+      {title && <div style={{fontSize:11,color:titleColor||C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>{title}</div>}
+      {children}
+    </div>
+  );
+}
 
-    <Card title="Comparación intermensual" titleColor={C.rosa}>
-      {H.map((h,i)=>{
-        const prev=i>0?H[i-1]:null;
-        return <div key={h.mes} style={{background:C.bg,borderRadius:12,padding:12,marginBottom:10,border:"1px solid "+C.border}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-            <span style={{fontWeight:"bold",fontSize:14,color:C.marron}}>{h.mes}</span>
-            <div style={{display:"flex",alignItems:"center"}}>
-              <span style={{fontWeight:"bold",color:C.naranja,fontSize:14}}>{fmt(h.total)}</span>
-              <Badge val={prev?varPct(h.total,prev.total):null}/>
-            </div>
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}>
-            <span style={{color:C.marronLight}}>Minorista</span>
-            <div style={{display:"flex",alignItems:"center"}}>
-              <span style={{color:C.rosa,fontWeight:"bold"}}>{fmt(h.ganMino)}</span>
-              <Badge val={prev?varPct(h.ganMino,prev.ganMino):null}/>
-            </div>
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
-            <span style={{color:C.marronLight}}>Mayorista</span>
-            <div style={{display:"flex",alignItems:"center"}}>
-              <span style={{color:C.verde,fontWeight:"bold"}}>{fmt(h.ganMayo)}</span>
-              <Badge val={prev?varPct(h.ganMayo,prev.ganMayo):null}/>
-            </div>
-          </div>
-        </div>;
-      })}
-    </Card>
+function ST({children,noTop}) {
+  return <div style={{fontSize:12,color:C.rosaL,letterSpacing:2.5,textTransform:"uppercase",paddingTop:noTop?0:20,marginBottom:14,fontWeight:"bold"}}>{children}</div>;
+}
 
-    <Card title="Unidades — Minorista" titleColor={C.rosa}>
-      <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-        <thead><tr style={{borderBottom:"2px solid "+C.border}}>
-          <th style={{textAlign:"left",padding:"6px 4px",color:C.marronLight}}>Mes</th>
-          <th style={{textAlign:"right",padding:"6px 4px"}}>Entero</th>
-          <th style={{textAlign:"right",padding:"6px 4px"}}>Medio</th>
-          <th style={{textAlign:"right",padding:"6px 4px"}}>Cuarto</th>
-          <th style={{textAlign:"right",padding:"6px 4px"}}>Rogel.</th>
-        </tr></thead>
-        <tbody>
-          {H.map((h,i)=>{
-            const p=i>0?H[i-1]:null;
-            const arr=(v,pv)=>p?<span style={{fontSize:9,color:v>=pv?C.verde:C.rojo}}>{v>=pv?"▲":"▼"}</span>:null;
-            return <tr key={h.mes} style={{borderBottom:"1px solid "+C.border}}>
-              <td style={{padding:"6px 4px",fontWeight:"bold",color:C.marron}}>{h.mes.slice(0,3)}</td>
-              <td style={{textAlign:"right",padding:"6px 4px"}}>{h.minoE} {arr(h.minoE,p&&p.minoE)}</td>
-              <td style={{textAlign:"right",padding:"6px 4px"}}>{h.minoM} {arr(h.minoM,p&&p.minoM)}</td>
-              <td style={{textAlign:"right",padding:"6px 4px"}}>{h.minoC} {arr(h.minoC,p&&p.minoC)}</td>
-              <td style={{textAlign:"right",padding:"6px 4px"}}>{h.minoP} {arr(h.minoP,p&&p.minoP)}</td>
-            </tr>;
-          })}
-        </tbody>
-      </table>
-    </Card>
+function Lbl({children}) {
+  return <div style={{fontSize:12,color:C.marronL,marginBottom:6}}>{children}</div>;
+}
 
-    <Card title="Unidades — Mayorista" titleColor={C.verde}>
-      <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-        <thead><tr style={{borderBottom:"2px solid "+C.border}}>
-          <th style={{textAlign:"left",padding:"6px 4px",color:C.marronLight}}>Mes</th>
-          <th style={{textAlign:"right",padding:"6px 4px"}}>Entero</th>
-          <th style={{textAlign:"right",padding:"6px 4px"}}>Medio</th>
-          <th style={{textAlign:"right",padding:"6px 4px"}}>Cuarto</th>
-          <th style={{textAlign:"right",padding:"6px 4px"}}>Rogel.</th>
-        </tr></thead>
-        <tbody>
-          {H.map((h,i)=>{
-            const p=i>0?H[i-1]:null;
-            const arr=(v,pv)=>p?<span style={{fontSize:9,color:v>=pv?C.verde:C.rojo}}>{v>=pv?"▲":"▼"}</span>:null;
-            return <tr key={h.mes} style={{borderBottom:"1px solid "+C.border}}>
-              <td style={{padding:"6px 4px",fontWeight:"bold",color:C.marron}}>{h.mes.slice(0,3)}</td>
-              <td style={{textAlign:"right",padding:"6px 4px"}}>{h.mayoE||0} {arr(h.mayoE||0,p&&(p.mayoE||0))}</td>
-              <td style={{textAlign:"right",padding:"6px 4px"}}>{h.mayoM||0} {arr(h.mayoM||0,p&&(p.mayoM||0))}</td>
-              <td style={{textAlign:"right",padding:"6px 4px"}}>{h.mayoC||0} {arr(h.mayoC||0,p&&(p.mayoC||0))}</td>
-              <td style={{textAlign:"right",padding:"6px 4px"}}>{h.mayoP||0} {arr(h.mayoP||0,p&&(p.mayoP||0))}</td>
-            </tr>;
-          })}
-        </tbody>
-      </table>
-    </Card>
-  </div>;
+function Empty({text}) {
+  return <div style={{textAlign:"center",padding:50,color:C.rosaL}}><div style={{marginTop:12,fontSize:14,color:C.marronL}}>{text}</div></div>;
 }
 
 function App() {
-  const [tab,setTab]=useState("dashboard");
-  const [stock,setStock]=useState({Entero:22,Medio:16,Cuarto:0,Rogelito:15});
-  const [ventas,setVentas]=useState([]);
-  const [peds,setPeds]=useState([]);
-  const [svf,setSvf]=useState(false);
-  const [spf,setSpf]=useState(false);
-  const [vf,setVf]=useState({tipo:"minorista",cliente:"",celular:"",tamano:"Entero",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
-  const [pf,setPf]=useState({punto:PUNTOS[0],Entero:0,Medio:0,Cuarto:0,Rogelito:0});
-  const [toast,setToast]=useState(null);
-  const [rv,setRv]=useState({Entero:0,Medio:0,Cuarto:0,Rogelito:0});
-  const [stockCafe,setStockCafe]=useState({peru250:0,colombia250:0,guate250:0,peru1kg:0,capscol:0,capsperu:0});
-  const [rvCafe,setRvCafe]=useState({peru250:0,colombia250:0,guate250:0,peru1kg:0,capscol:0,capsperu:0});
-  const [anioVista,setAnioVista]=useState("2026");
-  const [pedsCafe,setPedsCafe]=useState(loadCafe());
-  const [showCafe,setShowCafe]=useState(false);
-  const [cafeForm,setCafeForm]=useState({punto:PUNTOS[0],cantidades:{}});
+  const [tab, setTab] = useState("dashboard");
+  const [stock, setStock] = useState({Entero:22,Medio:16,Cuarto:0,Rogelito:15});
+  const [ventas, setVentas] = useState([]);
+  const [peds, setPeds] = useState([]);
+  const [svf, setSvf] = useState(false);
+  const [spf, setSpf] = useState(false);
+  const [vf, setVf] = useState({tipo:"minorista",cliente:"",celular:"",tamano:"Entero",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
+  const [pf, setPf] = useState({punto:PUNTOS[0],Entero:0,Medio:0,Cuarto:0,Rogelito:0});
+  const [toast, setToast] = useState(null);
+  const [rv, setRv] = useState({Entero:0,Medio:0,Cuarto:0,Rogelito:0});
+  const [anio, setAnio] = useState("2026");
+  const [pedsCafe, setPedsCafe] = useState([]);
+  const [showCafeForm, setShowCafeForm] = useState(false);
+  const [cafeForm, setCafeForm] = useState({punto:PUNTOS[0],cantidades:{}});
+  const [stockCafe, setStockCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
+  const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
 
+  useEffect(() => {
+    const d = ld();
+    if(d) { if(d.stock) setStock(d.stock); if(d.ventas) setVentas(d.ventas); if(d.peds) setPeds(d.peds); }
+    setPedsCafe(ldCafe());
+    setStockCafe(ldStockCafe());
+  }, []);
 
-  useEffect(()=>{ const d=ld(); if(d){if(d.stock)setStock(d.stock);if(d.ventas)setVentas(d.ventas);if(d.peds)setPeds(d.peds);} try{const cs=localStorage.getItem("cafe_stock");if(cs)setStockCafe(JSON.parse(cs));}catch{} },[]);
-  useEffect(()=>{ sd({stock,ventas,peds}); },[stock,ventas,peds]);
-  useEffect(()=>{ saveCafe(pedsCafe); },[pedsCafe]);
-  useEffect(()=>{ try{localStorage.setItem("cafe_stock",JSON.stringify(stockCafe));}catch{} },[stockCafe]);
+  useEffect(() => { sd({stock,ventas,peds}); }, [stock,ventas,peds]);
+  useEffect(() => { sdCafe(pedsCafe); }, [pedsCafe]);
+  useEffect(() => { sdStockCafe(stockCafe); }, [stockCafe]);
 
-  // Cargar pedidos mayoristas desde Google Sheets
-  useEffect(()=>{
-    const getSem = () => { const d=new Date(); const s=new Date(d.getFullYear(),0,1); return `Sem ${Math.ceil(((d-s)/86400000+s.getDay()+1)/7)} / ${d.getFullYear()}`; };
-    const sem = getSem();
-    fetch(SHEETS_URL + "?t=" + Date.now())
-      .then(r=>r.json())
-      .then(res=>{
-        if(res.ok && res.data){
-          const pedidos = res.data
-            .filter(r => r.punto && r.semana)
-            .map((r,i) => ({
-              id: i + 1,
-              punto: r.punto,
-              contacto: r.contacto,
-              semana: r.semana,
-              fecha: r.fecha,
-              Entero: parseInt(r.entero)||0,
-              Medio: parseInt(r.medio)||0,
-              Cuarto: parseInt(r.cuarto)||0,
-              Rogelito: parseInt(r.rogelito)||0,
-              ganancia: (parseInt(r.entero)||0)*8890 + (parseInt(r.medio)||0)*5950 + (parseInt(r.cuarto)||0)*3830 + (parseInt(r.rogelito)||0)*2960,
-            }));
-          if(pedidos.length > 0) setPeds(pedidos);
-        }
-      })
-      .catch(()=>{});
-  },[]);
+  const showT = (msg, ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),2500); };
+  const pv = (t,tipo) => tipo==="minorista" ? PM[t] : PMay[t];
+  const gan = (t,tipo,c) => (tipo==="minorista" ? GM[t] : GMay[t]) * c;
+  const sem = getSem();
 
-  const toast2=(msg,ok=true)=>{ setToast({msg,ok}); setTimeout(()=>setToast(null),2500); };
-  const pv=(t,tipo)=>tipo==="minorista"?PM[t]:PMay[t];
-  const gan=(t,tipo,c)=>(tipo==="minorista"?GM[t]:GMay[t])*c;
-  const gsem=()=>{
-    const d=new Date();
-    const day=d.getDay(); // 0=dom,1=lun...6=sab
-    const diffLun=day===0?-6:1-day;
-    const lun=new Date(d); lun.setDate(d.getDate()+diffLun);
-    const dom=new Date(lun); dom.setDate(lun.getDate()+6);
-    const fmt2=x=>x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
-    return "Pedido semanal " + fmt2(lun) + " - " + fmt2(dom);
-  };
-  const sem=gsem();
-  const getMes = () => { const d=new Date(); return `${d.getMonth()+1}-${d.getFullYear()}`; };
-  const mes = getMes();
-  const pend=ventas.filter(v=>!v.pagado);
-  const hoy=ventas.filter(v=>v.fecha===new Date().toLocaleDateString("es-AR"));
-  const caja=ventas.filter(v=>v.pagado).reduce((a,v)=>a+v.precio,0);
-  // Filtrar por mes actual
-  const ventasMes = ventas.filter(v=>{ try{ const p=v.fecha.split("/"); const d=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])); return `${d.getMonth()+1}-${d.getFullYear()}`===mes; }catch{return true;} });
-  const gm=ventasMes.filter(v=>v.tipo==="minorista").reduce((a,v)=>a+v.ganancia,0);
-  const gmy=peds.filter(p=>{ if(!p.semana) return true; const parts=p.semana.split("/"); if(parts.length<2) return true; const yr=parseInt(parts[1].trim()); const d=new Date(); return yr===d.getFullYear(); }).reduce((a,p)=>a+p.ganancia,0);
-  const gmyMes=peds.filter(p=>p.semana&&p.semana.includes(new Date().getFullYear().toString())&&(!p.punto||!p.punto.toLowerCase().includes('valle escondido'))).reduce((a,p)=>a+p.ganancia,0);
-  // Semana actual — acepta tanto "Sem 13 / 2026" como "Semana 13 / 2026"
-  const semNum = sem.replace("Sem ","").trim();
-  // Inversion Valle Escondido
-  const COSTO = {Entero:48050,Medio:29150,Cuarto:20350,Rogelito:37600};
-  const ps=peds.filter(p=>{ if(!p.semana) return false; const s=p.semana.replace("Semana ","Sem ").trim(); return s===sem || p.semana.includes(semNum); });
-  const con=SIZES.reduce((acc,s)=>{acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0);return acc;},{});
-  const sc=n=>n===0?C.rojo:n<=3?C.naranja:C.verde;
+  // Rogeles metrics
+  const pend = ventas.filter(v => !v.pagado);
+  const hoy = ventas.filter(v => v.fecha===new Date().toLocaleDateString("es-AR"));
+  const caja = ventas.filter(v => v.pagado).reduce((a,v) => a+v.precio, 0);
+  const mes = new Date().getMonth()+1 + "-" + new Date().getFullYear();
+  const ventasMes = ventas.filter(v => { try { const p=v.fecha.split("/"); return (parseInt(p[1])-1+1)+"-"+parseInt(p[2])===mes; } catch{return true;} });
+  const gmi = ventasMes.filter(v => v.tipo==="minorista").reduce((a,v) => a+v.ganancia, 0);
+  const gma = peds.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+p.ganancia, 0);
+  const ps = peds.filter(p => p.semana===sem);
+  const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
+  const sc = n => n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
 
-  const regVenta=()=>{
-    if(!vf.cliente.trim()){toast2("Ingresá el nombre",false);return;}
-    if(stock[vf.tamano]<vf.cantidad){toast2("Stock insuficiente",false);return;}
-    const v={...vf,id:Date.now(),precio:pv(vf.tamano,vf.tipo)*vf.cantidad,ganancia:gan(vf.tamano,vf.tipo,vf.cantidad)};
-    setVentas(p=>[v,...p]); setStock(p=>({...p,[vf.tamano]:p[vf.tamano]-vf.cantidad}));
+  // Cafe metrics
+  const psCafe = pedsCafe.filter(p => p.semana===sem);
+  const ganCafe = psCafe.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*(p.cantidades[prod.id]||0)),0), 0);
+  const invValleCafe = psCafe.filter(p => p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.cv*(p.cantidades[prod.id]||0)),0), 0);
+  const conCafe = CAFE.reduce((acc,p) => { acc[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0); return acc; }, {});
+
+  const regVenta = () => {
+    if(!vf.cliente.trim()) { showT("Ingresa el nombre del cliente",false); return; }
+    if(stock[vf.tamano]<vf.cantidad) { showT("Stock insuficiente",false); return; }
+    const v = {...vf, id:Date.now(), precio:pv(vf.tamano,vf.tipo)*vf.cantidad, ganancia:gan(vf.tamano,vf.tipo,vf.cantidad)};
+    setVentas(p => [v,...p]);
+    setStock(p => ({...p,[vf.tamano]:p[vf.tamano]-vf.cantidad}));
     setVf({tipo:"minorista",cliente:"",celular:"",tamano:"Entero",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
-    setSvf(false); toast2("✓ Venta registrada");
-  };
-  const cobrar=id=>{ setVentas(p=>p.map(v=>v.id===id?{...v,pagado:true}:v)); toast2("✓ Cobrado"); };
-  const addPed=()=>{
-    const tot=SIZES.reduce((a,s)=>a+(pf[s]||0),0);
-    if(tot===0){toast2("Ingresá al menos un producto",false);return;}
-    const esValle=pf.punto.toLowerCase().includes('valle escondido');
-    const g=esValle?0:SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0);
-    setPeds(p=>[{...pf,id:Date.now(),semana:sem,ganancia:g},...p]);
-    setPf({punto:PUNTOS[0],Entero:0,Medio:0,Cuarto:0,Rogelito:0}); setSpf(false); toast2("✓ Pedido guardado");
-  };
-  const enviarPedido=()=>{
-    const tot=SIZES.reduce((a,s)=>a+con[s],0);
-    if(tot===0){toast2("No hay pedidos cargados",false);return;}
-    const porPunto={};
-    ps.forEach(p=>{
-      if(!porPunto[p.punto]) porPunto[p.punto]={Entero:0,Medio:0,Cuarto:0,Rogelito:0};
-      porPunto[p.punto].Entero+=(parseInt(p.Entero)||0);
-      porPunto[p.punto].Medio+=(parseInt(p.Medio)||0);
-      porPunto[p.punto].Cuarto+=(parseInt(p.Cuarto)||0);
-      porPunto[p.punto].Rogelito+=(parseInt(p.Rogelito)||0);
-    });
-    const totalE=Object.values(porPunto).reduce((a,p)=>a+(p.Entero||0),0);
-    const totalM=Object.values(porPunto).reduce((a,p)=>a+(p.Medio||0),0);
-    const totalC=Object.values(porPunto).reduce((a,p)=>a+(p.Cuarto||0),0);
-    const totalR=Object.values(porPunto).reduce((a,p)=>a+(p.Rogelito||0),0);
-    const msg="Rodri te paso el pedido \n\nENTEROS: "+totalE+"\nMEDIOS: "+totalM+"\nCUARTOS: "+totalC+"\nCAJA DE ROGELITOS: "+totalR+"\n\nGracias";
-    window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
-    toast2("\u2713 Pedido enviado a Rodri");
+    setSvf(false);
+    showT("Venta registrada");
   };
 
-  const enviarRepartida=()=>{
-    const tot=SIZES.reduce((a,s)=>a+con[s],0);
-    if(tot===0){toast2("No hay pedidos cargados",false);return;}
-    const porPunto={};
-    ps.forEach(p=>{
+  const cobrar = id => { setVentas(p => p.map(v => v.id===id ? {...v,pagado:true} : v)); showT("Cobrado"); };
+
+  const addPed = () => {
+    const tot = SIZES.reduce((a,s)=>a+(pf[s]||0),0);
+    if(tot===0) { showT("Ingresa al menos un producto",false); return; }
+    const esV = pf.punto.toLowerCase().includes("valle");
+    const g = esV ? 0 : SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0);
+    setPeds(p => [{...pf,id:Date.now(),semana:sem,ganancia:g},...p]);
+    setPf({punto:PUNTOS[0],Entero:0,Medio:0,Cuarto:0,Rogelito:0});
+    setSpf(false);
+    showT("Pedido guardado");
+  };
+
+  const enviarPedido = () => {
+    const tot = SIZES.reduce((a,s)=>a+con[s],0);
+    if(tot===0) { showT("No hay pedidos cargados",false); return; }
+    const porPunto = {};
+    ps.forEach(p => {
       if(!porPunto[p.punto]) porPunto[p.punto]={Entero:0,Medio:0,Cuarto:0,Rogelito:0};
-      porPunto[p.punto].Entero+=(parseInt(p.Entero)||0);
-      porPunto[p.punto].Medio+=(parseInt(p.Medio)||0);
-      porPunto[p.punto].Cuarto+=(parseInt(p.Cuarto)||0);
-      porPunto[p.punto].Rogelito+=(parseInt(p.Rogelito)||0);
+      SIZES.forEach(s => { porPunto[p.punto][s]+=(parseInt(p[s])||0); });
     });
-    const REPARTIDA=[
+    const totalE=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Entero||0),0);
+    const totalM=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Medio||0),0);
+    const totalC=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Cuarto||0),0);
+    const totalR=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Rogelito||0),0);
+    const msg = "Rodri te paso el pedido\n\nENTEROS: "+con.Entero+"\nMEDIOS: "+con.Medio+"\nCUARTOS: "+con.Cuarto+"\nCAJA ROGELITOS: "+con.Rogelito+"\n\nGracias";
+    window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
+    showT("Pedido enviado a Rodri");
+  };
+
+  const enviarRepartida = () => {
+    const tot = SIZES.reduce((a,s)=>a+con[s],0);
+    if(tot===0) { showT("No hay pedidos cargados",false); return; }
+    const porPunto = {};
+    ps.forEach(p => {
+      if(!porPunto[p.punto]) porPunto[p.punto]={Entero:0,Medio:0,Cuarto:0,Rogelito:0};
+      SIZES.forEach(s => { porPunto[p.punto][s]+=(parseInt(p[s])||0); });
+    });
+    const REPARTIDA = [
       {key:"Manantiales",label:"MANANTIALES",retira:""},
       {key:"Camino a San Carlos",label:"CAMINO A SAN CARLOS",retira:"retira Fran"},
-      {key:"Montecristo",label:"MONTECRISTO",retira:"retira Bel\u00e9n"},
+      {key:"Montecristo",label:"MONTECRISTO",retira:"retira Belen"},
     ];
-    let rep="";
-    REPARTIDA.forEach(r=>{
-      const key=Object.keys(porPunto).find(k=>k.toLowerCase().includes(r.key.toLowerCase()));
-      const p=key?porPunto[key]:{Entero:0,Medio:0,Cuarto:0,Rogelito:0};
-      const titulo=r.retira?r.label+" ("+r.retira+")":r.label;
-      const lineas=[];
+    let rep = "";
+    REPARTIDA.forEach(r => {
+      const key = Object.keys(porPunto).find(k=>k.toLowerCase().includes(r.key.toLowerCase()));
+      const p = key ? porPunto[key] : {Entero:0,Medio:0,Cuarto:0,Rogelito:0};
+      const titulo = r.retira ? r.label+" ("+r.retira+")" : r.label;
+      const lineas = [];
       if(p.Entero>0) lineas.push("Entero: "+p.Entero);
       if(p.Medio>0) lineas.push("Medio: "+p.Medio);
       if(p.Cuarto>0) lineas.push("Cuarto: "+p.Cuarto);
       if(p.Rogelito>0) lineas.push("Caja Rogelito: "+p.Rogelito);
-      rep+="\n"+titulo+"\n"+(lineas.length>0?lineas.join("\n"):"Sin pedido")+"\n";
+      rep += "\n"+titulo+"\n"+(lineas.length>0?lineas.join("\n"):"Sin pedido")+"\n";
     });
-    rep+="\nRESTO EN CASA";
-    const msg=" Repartida de la semana\n"+rep+"\n\nGracias";
+    rep += "\nRESTO EN CASA";
+    const msg = "Repartida de la semana\n"+rep+"\n\nGracias";
     window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
-    toast2("\u2713 Repartida enviada");
-  };;;
+    showT("Repartida enviada");
+  };
 
-  const tabs=[{id:"dashboard",icon:"◈",label:"Inicio"},{id:"ventas",icon:"◉",label:"Ventas"},{id:"stock",icon:"◫",label:"Stock"},{id:"mayoristas",icon:"◎",label:"Mayorista"},{id:"ganancia",icon:"◐",label:"Ganancia"},{id:"stats",icon:"◑",label:"Stats"},{id:"cafe",icon:"CS",label:"Cafe"},{id:"historial",icon:"◒",label:"2026"}];
+  const addPedCafe = () => {
+    const tot = CAFE.reduce((a,p)=>a+(cafeForm.cantidades[p.id]||0),0);
+    if(tot===0) { showT("Ingresa al menos un producto",false); return; }
+    for(const cp of CAFE.filter(p=>p.t==="capsula")) {
+      const c = cafeForm.cantidades[cp.id]||0;
+      if(c>0 && c<cp.min) { showT("Minimo "+cp.min+" cajas de capsulas",false); return; }
+    }
+    const esV = cafeForm.punto.toLowerCase().includes("valle");
+    const g = esV ? 0 : CAFE.reduce((a,p)=>a+(p.gma*(cafeForm.cantidades[p.id]||0)),0);
+    setPedsCafe(prev => [{...cafeForm,id:Date.now(),semana:sem,ganancia:g},...prev]);
+    setCafeForm({punto:PUNTOS[0],cantidades:{}});
+    setShowCafeForm(false);
+    showT("Pedido cafe guardado");
+  };
+
+  const cerrarCafe = () => {
+    const tot = CAFE.reduce((a,p)=>a+conCafe[p.id],0);
+    if(tot===0) { showT("No hay pedidos de cafe",false); return; }
+    let det = "";
+    psCafe.forEach(p => {
+      const ls = CAFE.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.n+": "+p.cantidades[prod.id]);
+      if(ls.length>0) det += "\n"+p.punto.toUpperCase()+"\n"+ls.join("\n")+"\n";
+    });
+    const tots = "\nTOTAL:\n"+CAFE.filter(p=>conCafe[p.id]>0).map(p=>"- "+p.n+": "+conCafe[p.id]).join("\n");
+    window.open("https://wa.me/5493513128283?text="+encodeURIComponent("Pedido CHERRYSEASON\n"+det+tots+"\n\nGracias!"),"_blank");
+    showT("Pedido cafe enviado");
+  };
+
+  const setCantCafe = (id,delta) => {
+    const prev = cafeForm.cantidades[id]||0;
+    setCafeForm(f => ({...f,cantidades:{...f.cantidades,[id]:Math.max(0,prev+delta)}}));
+  };
+
+  const tabs = [
+    {id:"dashboard",label:"Inicio"},
+    {id:"ventas",label:"Ventas"},
+    {id:"stock",label:"Stock"},
+    {id:"mayoristas",label:"Mayorista"},
+    {id:"cafe",label:"Cafe"},
+    {id:"ganancia",label:"Ganancia"},
+    {id:"historial",label:"2026"},
+  ];
+
+  const rowStyle = {display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,background:C.bg,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border};
 
   return (
-    <div style={{fontFamily:"'Lato',sans-serif",background:C.bg,minHeight:"100vh",color:C.marron,maxWidth:430,margin:"0 auto",paddingBottom:88}}>
-      <div style={{background:`linear-gradient(160deg,${C.rosaPale} 0%,${C.rosaLight} 60%,${C.rosa} 100%)`,padding:"28px 22px 22px",position:"relative",overflow:"hidden",boxShadow:"0 2px 20px rgba(196,104,122,0.25)"}}>
-        <div style={{position:"absolute",top:-30,right:-30,width:120,height:120,borderRadius:"50%",background:"rgba(255,255,255,0.18)"}}/>
-        <div style={{fontSize:10,letterSpacing:4,color:"rgba(92,51,64,0.6)",textTransform:"uppercase",marginBottom:4}}>Sistema de Gestión</div>
+    <div style={{background:C.bg,minHeight:"100vh",color:C.marron,maxWidth:430,margin:"0 auto",paddingBottom:88}}>
+
+      {/* Header */}
+      <div style={{background:"linear-gradient(160deg,"+C.rosaPale+" 0%,"+C.rosaL+" 60%,"+C.rosa+" 100%)",padding:"28px 22px 22px",position:"relative",overflow:"hidden"}}>
+        <div style={{fontSize:10,letterSpacing:4,color:"rgba(92,51,64,0.6)",textTransform:"uppercase",marginBottom:4}}>Sistema de Gestion</div>
         <div style={{fontSize:13,fontStyle:"italic",color:C.marron,opacity:0.7,fontFamily:"'Playfair Display',serif"}}>Los</div>
         <div style={{fontSize:32,fontWeight:"bold",color:C.marron,lineHeight:1,fontFamily:"'Playfair Display',serif"}}>rogeles</div>
         <div style={{fontSize:14,letterSpacing:6,color:C.marron,opacity:0.75,textTransform:"uppercase",marginBottom:8}}>de Marcela</div>
-        <div style={{fontSize:11,color:C.marron,opacity:0.6}}>Valle Escondido · {new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</div>
+        <div style={{fontSize:11,color:C.marron,opacity:0.6}}>Valle Escondido - {new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</div>
       </div>
-      {toast&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:toast.ok?C.verde:C.rojo,color:"#fff",padding:"11px 26px",borderRadius:30,fontSize:13,fontWeight:"bold",zIndex:999,whiteSpace:"nowrap"}}>{toast.msg}</div>}
+
+      {/* Toast */}
+      {toast && <div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:toast.ok?C.verde:C.rojo,color:"#fff",padding:"11px 26px",borderRadius:30,fontSize:13,fontWeight:"bold",zIndex:999,whiteSpace:"nowrap"}}>{toast.msg}</div>}
+
       <div style={{padding:"0 14px"}}>
 
-        {tab==="dashboard"&&<div>
-          <ST>Resumen del día</ST>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}><KPI emoji="$" label="Total Caja" value={fmt(caja)} sub="cobrado" color={C.verde}/><KPI emoji="+" label="Ganancia" value={fmt(gm+gmy+pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+CAFE_PRODS.reduce((b,prod)=>b+(prod.ganMayo*(p.cantidades[prod.id]||0)),0),0))} sub="rogeles+cafe" color={C.naranja}/></div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}><KPI emoji="V" label="Ventas hoy" value={hoy.length} sub="operaciones" color={C.rosa}/><KPI emoji="P" label="Pendientes" value={pend.length} sub="sin cobrar" color={pend.length>0?C.rojo:C.verde}/></div>
-          <Card title="Stock actual">{<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{SIZES.map(s=><div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:C.bg,borderRadius:10,padding:"10px 14px",border:`1px solid ${C.border}`}}><span style={{fontSize:13,color:C.marronLight}}>{s}</span><span style={{fontWeight:"bold",color:sc(stock[s]),fontSize:22}}>{stock[s]}</span></div>)}</div>}</Card>
-          {pend.length>0&&<Card title="⚠ Pendientes" titleColor={C.rojo} borderColor={`${C.rojo}33`}>{pend.slice(0,4).map(v=><div key={v.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,background:C.bg,borderRadius:10,padding:"10px 12px",border:`1px solid ${C.border}`}}><div><div style={{fontSize:13,fontWeight:"bold"}}>{v.cliente}</div><div style={{fontSize:11,color:C.marronLight}}>{v.tamano} x{v.cantidad} · {v.retira||"—"}</div></div><div style={{textAlign:"right"}}><div style={{fontSize:13,fontWeight:"bold",color:C.naranja}}>{fmt(v.precio)}</div><button onClick={()=>cobrar(v.id)} style={sb(C.verde)}>Cobrar ✓</button></div></div>)}{pend.length>4&&<div style={{textAlign:"center",fontSize:11,color:C.marronLight}}>+{pend.length-4} más</div>}</Card>}
-          <Card title={`Pedido ${sem}`} titleColor={C.rosa}>{SIZES.map(s=><div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:`1px solid ${C.border}`}}><span style={{fontSize:13,color:C.marronLight}}>{s}</span><span style={{fontWeight:"bold",color:con[s]>0?C.marron:C.border}}>{con[s]} u.</span></div>)}<div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:`1px solid ${C.crema}`}}><span style={{fontSize:12,color:C.marronLight}}>{ps.length}/20 puntos</span><span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gmy)}</span></div></Card>
-        </div>}
-
-        {tab==="ventas"&&<div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}><ST noTop>Ventas</ST><button onClick={()=>setSvf(v=>!v)} style={mb(C.rosa)}>{svf?"✕ Cerrar":"+ Nueva venta"}</button></div>
-          {svf&&<Card title="Nueva venta" titleColor={C.rosa}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>{["minorista","mayorista"].map(t=><button key={t} onClick={()=>setVf(f=>({...f,tipo:t}))} style={{padding:10,borderRadius:10,border:`2px solid ${vf.tipo===t?C.rosa:C.border}`,cursor:"pointer",fontWeight:"bold",fontSize:13,background:vf.tipo===t?C.rosaPaleBg:C.bgCard,color:vf.tipo===t?C.rosa:C.marronLight}}>{t==="minorista"?"Minorista":"Mayorista"}</button>)}</div>
-            <input placeholder="Nombre *" value={vf.cliente} onChange={e=>setVf(f=>({...f,cliente:e.target.value}))} style={inp()}/>
-            <input placeholder="Celular (opcional)" value={vf.celular} onChange={e=>setVf(f=>({...f,celular:e.target.value}))} style={inp()}/>
-            <Lbl>Tamaño</Lbl>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>{SIZES.map(s=><button key={s} onClick={()=>setVf(f=>({...f,tamano:s}))} style={{padding:10,borderRadius:10,border:`2px solid ${vf.tamano===s?C.rosa:C.border}`,cursor:"pointer",fontSize:12,background:vf.tamano===s?C.rosaPaleBg:C.bgCard,color:vf.tamano===s?C.rosa:C.marronLight,textAlign:"left"}}><div style={{fontWeight:"bold"}}>{s}</div><div style={{fontSize:10,opacity:0.75}}>{fmt(pv(s,vf.tipo))}</div></button>)}</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><div><Lbl>Cantidad</Lbl><input type="number" min="1" value={vf.cantidad} onChange={e=>setVf(f=>({...f,cantidad:Math.max(1,parseInt(e.target.value)||1)}))} style={inp()}/></div><div><Lbl>Retira</Lbl><input placeholder="ej: viernes" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/></div></div>
-            <div style={{background:C.rosaPaleBg,borderRadius:12,padding:12,marginBottom:12}}><Fil label="Total:" valor={fmt(pv(vf.tamano,vf.tipo)*vf.cantidad)} vc={C.naranja}/><Fil label="Ganancia:" valor={fmt(gan(vf.tamano,vf.tipo,vf.cantidad))} vc={C.verde}/></div>
-            <label style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,fontSize:13,cursor:"pointer",color:C.marronLight}}><input type="checkbox" checked={vf.pagado} onChange={e=>setVf(f=>({...f,pagado:e.target.checked}))} style={{accentColor:C.rosa,width:16,height:16}}/>Ya cobrado</label>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button onClick={()=>setSvf(false)} style={ob()}>Cancelar</button><button onClick={regVenta} style={fb(C.rosa)}>Registrar</button></div>
-          </Card>}
-          {ventas.length===0&&!svf&&<Vac emoji="R" text="No hay ventas registradas"/>}
-          {ventas.map(v=><div key={v.id} style={{background:C.bgCard,borderRadius:14,padding:14,marginBottom:10,border:`1px solid ${v.pagado?`${C.verde}44`:`${C.rojo}33`}`}}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{flex:1}}><div style={{fontWeight:"bold",fontSize:14}}>{v.cliente}</div><div style={{fontSize:11,color:C.marronLight}}>{v.tamano} x{v.cantidad} · {v.tipo} · {v.fecha}{v.retira&&` · ${v.retira}`}</div>{v.celular&&<div style={{fontSize:11,color:C.marronLight}}>{v.celular}</div>}</div><div style={{textAlign:"right",marginLeft:10}}><div style={{fontWeight:"bold",color:C.naranja,fontSize:15}}>{fmt(v.precio)}</div><div style={{fontSize:11,color:C.verde}}>+{fmt(v.ganancia)}</div>{!v.pagado?<button onClick={()=>cobrar(v.id)} style={sb(C.verde)}>Cobrar ✓</button>:<div style={{fontSize:10,color:C.verde,marginTop:4}}>✓ Pagado</div>}</div></div></div>)}
-        </div>}
-
-        {tab==="stock"&&<div>
-          <ST>Control de Stock</ST>
-          {SIZES.map(s=><div key={s} style={{background:C.bgCard,borderRadius:16,padding:16,marginBottom:12,border:`1px solid ${C.border}`}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:18,fontWeight:"bold"}}>{s}</div><div style={{fontSize:11,color:C.marronLight}}>Min: {fmt(PM[s])} · May: {fmt(PMay[s])}</div></div><div style={{textAlign:"center"}}><div style={{fontSize:46,fontWeight:"bold",color:sc(stock[s]),lineHeight:1}}>{stock[s]}</div><div style={{fontSize:10,color:C.marronLight}}>unidades</div></div></div>
-            <div style={{display:"flex",gap:8,marginTop:12}}><button onClick={()=>setStock(p=>({...p,[s]:Math.max(0,p[s]-1)}))} style={{flex:1,padding:11,borderRadius:10,border:`1px solid ${C.border}`,background:C.bg,color:C.marron,fontSize:20,cursor:"pointer",fontWeight:"bold"}}>−</button><button onClick={()=>setStock(p=>({...p,[s]:p[s]+1}))} style={{flex:1,padding:11,borderRadius:10,border:"none",background:C.rosa,color:"#fff",fontSize:20,cursor:"pointer",fontWeight:"bold"}}>+</button></div>
-            <div style={{display:"flex",gap:8,marginTop:8,alignItems:"center"}}><input type="number" min="0" placeholder="Agregar..." value={rv[s]||""} onChange={e=>setRv(p=>({...p,[s]:parseInt(e.target.value)||0}))} style={{...inp(),marginBottom:0,flex:1,fontSize:12}}/><button onClick={()=>{if(rv[s]>0){setStock(p=>({...p,[s]:p[s]+rv[s]}));setRv(p=>({...p,[s]:0}));toast2(`+${rv[s]} ${s} cargados`);}}} style={{padding:"10px 14px",borderRadius:10,border:"none",background:C.verde,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold",whiteSpace:"nowrap"}}>Cargar pedido</button></div>
-          </div>)}
-
-          {/* Stock Cherry Season */}
-          <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
-            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Stock CHERRYSEASON</div>
-            {CAFE_PRODS.map(p=>{
-              const cant=stockCafe[p.id]||0;
-              const col=cant===0?C.rojo:cant<=3?C.naranja:C.verde;
-              return <div key={p.id} style={{background:C.bgCard,borderRadius:14,padding:14,marginBottom:10,border:"1px solid #E8C5C0"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <div><div style={{fontSize:14,fontWeight:"bold",color:C.marron}}>{p.nombre}</div><div style={{fontSize:11,color:C.marronLight}}>Costo: {fmt(p.costo)}</div></div>
-                  <div style={{textAlign:"center"}}><div style={{fontSize:40,fontWeight:"bold",color:col,lineHeight:1}}>{cant}</div><div style={{fontSize:10,color:C.marronLight}}>u.</div></div>
-                </div>
-                <div style={{display:"flex",gap:8,marginTop:10}}>
-                  <button onClick={()=>setStockCafe(s=>({...s,[p.id]:Math.max(0,(s[p.id]||0)-1)}))} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:C.bg,color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>-</button>
-                  <button onClick={()=>setStockCafe(s=>({...s,[p.id]:(s[p.id]||0)+1}))} style={{flex:1,padding:10,borderRadius:10,border:"none",background:"#C0392B",color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button>
-                </div>
-                <div style={{display:"flex",gap:8,marginTop:8,alignItems:"center"}}>
-                  <input type="number" min="0" placeholder="Agregar..." value={rvCafe[p.id]||""} onChange={e=>setRvCafe(s=>({...s,[p.id]:parseInt(e.target.value)||0}))}
-                    style={{flex:1,padding:"9px 12px",borderRadius:10,background:C.bgInput,border:"1px solid "+C.border,color:C.marron,fontSize:12,boxSizing:"border-box"}}/>
-                  <button onClick={()=>{if(rvCafe[p.id]>0){setStockCafe(s=>({...s,[p.id]:(s[p.id]||0)+rvCafe[p.id]}));setRvCafe(s=>({...s,[p.id]:0}));toast2(rvCafe[p.id]+" "+p.nombre+" cargados");}}}
-                    style={{padding:"9px 12px",borderRadius:10,border:"none",background:C.verde,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold",whiteSpace:"nowrap"}}>Cargar</button>
-                </div>
-              </div>;
-            })}
+        {/* DASHBOARD */}
+        {tab==="dashboard" && <div>
+          <ST>Resumen del dia</ST>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <KPI label="Total Caja" value={fmt(caja)} sub="cobrado" color={C.verde}/>
+            <KPI label="Ganancia Total" value={fmt(gmi+gma+ganCafe)} sub="rogeles+cafe" color={C.naranja}/>
           </div>
-        </div>}
-
-
-
-
-        
-
-        {tab==="cafe"&&(()=>{
-          const semCafe = (()=>{ const d=new Date(); const day=d.getDay(); const diff=day===0?-6:1-day; const lun=new Date(d); lun.setDate(d.getDate()+diff); const dom=new Date(lun); dom.setDate(lun.getDate()+6); const f=x=>x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"}); return "Pedido semanal "+f(lun)+" - "+f(dom); })();
-          const psCafe = pedsCafe.filter(p=>p.semana===semCafe);
-          const esV = cafeForm.punto.toLowerCase().includes("valle escondido");
-          const con = {}; CAFE_PRODS.forEach(p=>{con[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0);});
-          const ganC = psCafe.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+CAFE_PRODS.reduce((b,prod)=>b+(prod.ganMayo*(p.cantidades[prod.id]||0)),0),0);
-          const invV = psCafe.filter(p=>p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+CAFE_PRODS.reduce((b,prod)=>b+(prod.costo*(p.cantidades[prod.id]||0)),0),0);
-          const setCant = (id,delta) => setCafeForm(f=>({...f,cantidades:{...f.cantidades,[id]:Math.max(0,(f.cantidades[id]||0)+delta)}}));
-          const agregar = () => {
-            const tot=CAFE_PRODS.reduce((a,p)=>a+(cafeForm.cantidades[p.id]||0),0);
-            if(tot===0){toast2("Ingresa al menos un producto",false);return;}
-            for(const cp of CAFE_PRODS.filter(p=>p.tipo==="capsula")){
-              const c=cafeForm.cantidades[cp.id]||0;
-              if(c>0&&c<cp.min){toast2("Minimo "+cp.min+" cajas de capsulas",false);return;}
-            }
-            const gan=esV?0:CAFE_PRODS.reduce((a,p)=>a+(p.ganMayo*(cafeForm.cantidades[p.id]||0)),0);
-            setPedsCafe(prev=>[{...cafeForm,id:Date.now(),semana:semCafe,ganancia:gan},...prev]);
-            setCafeForm({punto:PUNTOS[0],cantidades:{}});
-            setShowCafe(false);
-            toast2("Pedido cafe guardado");
-          };
-          const cerrarCafe = () => {
-            const tot=CAFE_PRODS.reduce((a,p)=>a+con[p.id],0);
-            if(tot===0){toast2("No hay pedidos de cafe",false);return;}
-            let det="";
-            psCafe.forEach(p=>{const ls=CAFE_PRODS.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.nombre+": "+p.cantidades[prod.id]);if(ls.length>0)det+="
-"+p.punto.toUpperCase()+"
-"+ls.join("
-")+"
-";});
-            const tots="
-TOTAL:
-"+CAFE_PRODS.filter(p=>con[p.id]>0).map(p=>"- "+p.nombre+": "+con[p.id]).join("
-");
-            window.open("https://wa.me/5493513128283?text="+encodeURIComponent("Pedido CHERRYSEASON
-"+det+tots+"
-
-Gracias!"),"_blank");
-            toast2("Pedido cafe enviado");
-          };
-          const rs = {display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,background:C.bg,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border};
-          return <div>
-            <div style={{background:"#8B2010",padding:"20px 16px",margin:"0 -14px",marginBottom:16,textAlign:"center"}}>
-              <div style={{fontSize:9,letterSpacing:4,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",marginBottom:4}}>Cafe de Especialidad</div>
-              <div style={{fontSize:24,fontWeight:"bold",color:"#fff",letterSpacing:3}}>CHERRYSEASON</div>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
-              <button onClick={()=>setShowCafe(v=>!v)} style={{padding:11,borderRadius:12,border:"none",background:"#C0392B",color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:13}}>{showCafe?"Cerrar":"+ Cargar pedido"}</button>
-              <button onClick={cerrarCafe} style={{padding:11,borderRadius:12,border:"none",background:C.marron,color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:12}}>Cerrar pedido</button>
-            </div>
-            <div style={{background:C.bgCard,borderRadius:16,padding:16,marginBottom:14,border:"1px solid #E8C5C0"}}>
-              <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Consolidado — {semCafe}</div>
-              {CAFE_PRODS.map(p=><div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #F5E5E0"}}><span style={{fontSize:12,color:C.marronLight}}>{p.nombre}</span><span style={{fontWeight:"bold",color:con[p.id]>0?C.marron:"#E8C5C0"}}>{con[p.id]} u.</span></div>)}
-              <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid #E8C5C0"}}>
-                <span style={{fontSize:12,color:C.marronLight}}>{psCafe.length} puntos</span>
-                <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(ganC)}</span>
-              </div>
-              {invV>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:6,background:"#FDE8EC",borderRadius:8,padding:"6px 10px"}}>
-                <span style={{fontSize:11,color:C.marronLight}}>Inv. Valle Escondido:</span>
-                <span style={{fontSize:12,color:"#C0392B",fontWeight:"bold"}}>{fmt(invV)}</span>
-              </div>}
-            </div>
-            {showCafe&&<div style={{background:C.bgCard,borderRadius:16,padding:16,marginBottom:14,border:"1px solid #E8C5C0"}}>
-              <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Cargar pedido cafe</div>
-              <div style={{fontSize:12,color:C.marronLight,marginBottom:6}}>Punto de venta</div>
-              <select value={cafeForm.punto} onChange={e=>setCafeForm(f=>({...f,punto:e.target.value}))} style={{width:"100%",padding:"11px 13px",borderRadius:10,background:C.bgInput,border:"1px solid "+C.border,color:C.marron,fontSize:13,marginBottom:14,boxSizing:"border-box"}}>
-                {PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}
-              </select>
-              <div style={{fontSize:10,color:C.marronLight,fontWeight:"bold",textTransform:"uppercase",marginBottom:8}}>Cafe en grano</div>
-              {CAFE_PRODS.filter(p=>p.tipo==="grano").map(prod=>{
-                const precio=esV?prod.costo:prod.mayo; const cant=cafeForm.cantidades[prod.id]||0;
-                return <div key={prod.id} style={rs}>
-                  <div style={{flex:1}}><div style={{fontSize:12,fontWeight:"bold",color:C.marron}}>{prod.nombre}</div><div style={{fontSize:10,color:C.marronLight}}>{esV?fmt(precio)+" (costo)":fmt(precio)}</div></div>
-                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                    <button onClick={()=>setCant(prod.id,-1)} style={{width:32,height:32,borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.marron,fontSize:16,cursor:"pointer",fontWeight:"bold"}}>-</button>
-                    <span style={{width:24,textAlign:"center",fontSize:18,fontWeight:"bold",color:C.marron}}>{cant}</span>
-                    <button onClick={()=>setCant(prod.id,1)} style={{width:32,height:32,borderRadius:8,border:"none",background:"#C0392B",color:"#fff",fontSize:16,cursor:"pointer",fontWeight:"bold"}}>+</button>
-                  </div>
-                  <span style={{fontSize:11,color:C.naranja,width:70,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cant)}</span>
-                </div>;
-              })}
-              <div style={{fontSize:10,color:C.marronLight,fontWeight:"bold",textTransform:"uppercase",marginBottom:8,marginTop:8}}>Capsulas (min. 6 cajas)</div>
-              {CAFE_PRODS.filter(p=>p.tipo==="capsula").map(prod=>{
-                const precio=esV?prod.costo:prod.mayo; const cant=cafeForm.cantidades[prod.id]||0;
-                return <div key={prod.id} style={rs}>
-                  <div style={{flex:1}}><div style={{fontSize:12,fontWeight:"bold",color:C.marron}}>{prod.nombre}</div><div style={{fontSize:10,color:C.marronLight}}>{esV?fmt(precio)+" (costo)":fmt(precio)+" min 6"}</div></div>
-                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                    <button onClick={()=>setCant(prod.id,-1)} style={{width:32,height:32,borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.marron,fontSize:16,cursor:"pointer",fontWeight:"bold"}}>-</button>
-                    <span style={{width:24,textAlign:"center",fontSize:18,fontWeight:"bold",color:C.marron}}>{cant}</span>
-                    <button onClick={()=>setCant(prod.id,1)} style={{width:32,height:32,borderRadius:8,border:"none",background:"#C0392B",color:"#fff",fontSize:16,cursor:"pointer",fontWeight:"bold"}}>+</button>
-                  </div>
-                  <span style={{fontSize:11,color:C.naranja,width:70,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cant)}</span>
-                </div>;
-              })}
-              <div style={{background:"#FDE8EC",borderRadius:12,padding:12,marginBottom:12}}>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
-                  <span style={{color:C.marronLight}}>Total:</span>
-                  <span style={{fontWeight:"bold",color:C.naranja}}>{fmt(CAFE_PRODS.reduce((a,p)=>a+((esV?p.costo:p.mayo)*(cafeForm.cantidades[p.id]||0)),0))}</span>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+            <KPI label="Ventas hoy" value={hoy.length} sub="operaciones" color={C.rosa}/>
+            <KPI label="Pendientes" value={pend.length} sub="sin cobrar" color={pend.length>0?C.rojo:C.verde}/>
+          </div>
+          <Card title="Stock actual">
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {SIZES.map(s => (
+                <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:C.bg,borderRadius:10,padding:"10px 14px",border:"1px solid "+C.border}}>
+                  <span style={{fontSize:13,color:C.marronL}}>{s}</span>
+                  <span style={{fontWeight:"bold",color:sc(stock[s]),fontSize:22}}>{stock[s]}</span>
                 </div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                <button onClick={()=>setShowCafe(false)} style={{padding:13,borderRadius:12,border:"1px solid "+C.border,background:"transparent",color:C.marronLight,cursor:"pointer",fontSize:13}}>Cancelar</button>
-                <button onClick={agregar} style={{padding:13,borderRadius:12,border:"none",background:"#C0392B",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:"bold"}}>Guardar</button>
-              </div>
-            </div>}
-            {pedsCafe.length===0&&!showCafe&&<Vac emoji="CS" text="No hay pedidos de cafe esta semana"/>}
-            {pedsCafe.map(p=><div key={p.id} style={{background:C.bgCard,borderRadius:14,padding:14,marginBottom:10,border:"1px solid #E8C5C0"}}>
-              <div style={{display:"flex",justifyContent:"space-between"}}>
+              ))}
+            </div>
+          </Card>
+          {pend.length>0 && <Card title="Pendientes de cobro" titleColor={C.rojo} borderColor={C.rojo+"33"}>
+            {pend.slice(0,4).map(v => (
+              <div key={v.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,background:C.bg,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
                 <div>
-                  <div style={{fontWeight:"bold",fontSize:14,color:C.marron}}>{p.punto}</div>
-                  <div style={{fontSize:11,color:C.marronLight,marginTop:4}}>{CAFE_PRODS.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.nombre+": "+p.cantidades[prod.id]).join(" / ")}</div>
-                  <div style={{fontSize:10,color:"#E8A0A8",marginTop:2}}>{p.semana}</div>
+                  <div style={{fontSize:13,fontWeight:"bold"}}>{v.cliente}</div>
+                  <div style={{fontSize:11,color:C.marronL}}>{v.tamano} x{v.cantidad} - {v.retira||"-"}</div>
                 </div>
                 <div style={{textAlign:"right"}}>
-                  {p.ganancia>0&&<div style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>}
-                  {p.ganancia===0&&<div style={{fontSize:11,color:C.marronLight}}>Valle Escondido</div>}
+                  <div style={{fontSize:13,fontWeight:"bold",color:C.naranja}}>{fmt(v.precio)}</div>
+                  <button onClick={()=>cobrar(v.id)} style={btnSm(C.verde)}>Cobrar</button>
                 </div>
               </div>
-            </div>)}
-          </div>;
-        })()}
-        {tab==="historial"&&<HistorialTab anioVista={anioVista} setAnioVista={setAnioVista}/>}
-
-                {tab==="stats"&&(()=>{
-          const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-          const anio=new Date().getFullYear();
-          // Agrupar ventas minoristas por mes
-          const minoMes=Array(12).fill(0).map((_,m)=>{
-            const vv=ventas.filter(v=>{ try{ const p=v.fecha.split("/"); return parseInt(p[1])-1===m && parseInt(p[2])===anio && v.tipo==="minorista"; }catch{return false;} });
-            return { gan:vv.reduce((a,v)=>a+v.ganancia,0), Entero:vv.filter(v=>v.tamano==="Entero").reduce((a,v)=>a+v.cantidad,0), Medio:vv.filter(v=>v.tamano==="Medio").reduce((a,v)=>a+v.cantidad,0), Cuarto:vv.filter(v=>v.tamano==="Cuarto").reduce((a,v)=>a+v.cantidad,0), Rogelito:vv.filter(v=>v.tamano==="Rogelito").reduce((a,v)=>a+v.cantidad,0) };
-          });
-          // Agrupar pedidos mayoristas por mes (usar semana/año)
-          const mayoMes=Array(12).fill(0).map((_,m)=>{
-            const pp=peds.filter(p=>{ try{ const yr=parseInt(p.semana.split("/")[1].trim()); if(yr!==anio) return false; const sem=parseInt(p.semana.split(" ")[1]); const d=new Date(anio,0,1+(sem-1)*7); return d.getMonth()===m; }catch{return false;} });
-            return { gan:pp.reduce((a,p)=>a+p.ganancia,0), Entero:pp.reduce((a,p)=>a+(p.Entero||0),0), Medio:pp.reduce((a,p)=>a+(p.Medio||0),0), Cuarto:pp.reduce((a,p)=>a+(p.Cuarto||0),0), Rogelito:pp.reduce((a,p)=>a+(p.Rogelito||0),0) };
-          });
-          // Ranking tamaños minorista
-          const totalPorTam={Entero:ventas.filter(v=>v.tamano==="Entero"&&v.tipo==="minorista").reduce((a,v)=>a+v.cantidad,0),Medio:ventas.filter(v=>v.tamano==="Medio"&&v.tipo==="minorista").reduce((a,v)=>a+v.cantidad,0),Cuarto:ventas.filter(v=>v.tamano==="Cuarto"&&v.tipo==="minorista").reduce((a,v)=>a+v.cantidad,0),Rogelito:ventas.filter(v=>v.tamano==="Rogelito"&&v.tipo==="minorista").reduce((a,v)=>a+v.cantidad,0)};
-          const rankTam=Object.entries(totalPorTam).sort((a,b)=>b[1]-a[1]);
-          // Ranking puntos mayoristas
-          const puntosMap={};
-          peds.forEach(p=>{ if(!puntosMap[p.punto]) puntosMap[p.punto]={gan:0,pedidos:0}; puntosMap[p.punto].gan+=p.ganancia; puntosMap[p.punto].pedidos+=1; });
-          const rankPuntos=Object.entries(puntosMap).sort((a,b)=>b[1].gan-a[1].gan).slice(0,10);
-          // Max para grafico
-          const maxGan=Math.max(...minoMes.map(m=>m.gan),...mayoMes.map(m=>m.gan),1);
-          return <div>
-            <ST>Estadísticas {anio}</ST>
-
-            {/* Gráfico de barras */}
-            <Card title="Ganancia mensual" titleColor={C.rosa}>
-              <div style={{display:"flex",gap:4,alignItems:"flex-end",height:120,marginBottom:8}}>
-                {MESES.map((mes,i)=>{
-                  const gMino=minoMes[i].gan; const gMayo=mayoMes[i].gan;
-                  const hMino=gMino>0?Math.max(8,Math.round((gMino/maxGan)*100)):2;
-                  const hMayo=gMayo>0?Math.max(8,Math.round((gMayo/maxGan)*100)):2;
-                  return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                    <div style={{width:"100%",display:"flex",gap:1,alignItems:"flex-end",height:100}}>
-                      <div style={{flex:1,background:C.rosa,borderRadius:"3px 3px 0 0",height:hMino+"px",opacity:0.85}}/>
-                      <div style={{flex:1,background:C.verde,borderRadius:"3px 3px 0 0",height:hMayo+"px",opacity:0.85}}/>
-                    </div>
-                    <div style={{fontSize:7,color:C.marronLight,textAlign:"center"}}>{mes.slice(0,3)}</div>
-                  </div>;
-                })}
+            ))}
+          </Card>}
+          <Card title={"Pedido "+sem} titleColor={C.rosa}>
+            {SIZES.map(s => (
+              <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
+                <span style={{fontSize:13,color:C.marronL}}>{s}</span>
+                <span style={{fontWeight:"bold",color:con[s]>0?C.marron:C.border}}>{con[s]} u.</span>
               </div>
-              <div style={{display:"flex",gap:16,justifyContent:"center",marginTop:4}}>
-                <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:C.rosa,borderRadius:2}}/><span style={{fontSize:10,color:C.marronLight}}>Minorista</span></div>
-                <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:C.verde,borderRadius:2}}/><span style={{fontSize:10,color:C.marronLight}}>Mayorista</span></div>
-              </div>
-            </Card>
-
-            {/* Tabla mes a mes */}
-            <Card title="Tabla mensual" titleColor={C.rosa}>
-              <div style={{overflowX:"auto"}}>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-                  <thead>
-                    <tr style={{borderBottom:`2px solid ${C.border}`}}>
-                      <th style={{textAlign:"left",padding:"6px 4px",color:C.marronLight,fontWeight:"bold"}}>Mes</th>
-                      <th style={{textAlign:"right",padding:"6px 4px",color:C.rosa,fontWeight:"bold"}}>G.Mino</th>
-                      <th style={{textAlign:"right",padding:"6px 4px",color:C.verde,fontWeight:"bold"}}>G.Mayo</th>
-                      <th style={{textAlign:"right",padding:"6px 4px",color:C.naranja,fontWeight:"bold"}}>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {MESES.map((m,i)=>( (minoMes[i].gan>0||mayoMes[i].gan>0) &&
-                      <tr key={i} style={{borderBottom:`1px solid ${C.border}`}}>
-                        <td style={{padding:"6px 4px",color:C.marron,fontWeight:"bold"}}>{m}</td>
-                        <td style={{textAlign:"right",padding:"6px 4px",color:C.rosa}}>{fmt(minoMes[i].gan)}</td>
-                        <td style={{textAlign:"right",padding:"6px 4px",color:C.verde}}>{fmt(mayoMes[i].gan)}</td>
-                        <td style={{textAlign:"right",padding:"6px 4px",color:C.naranja,fontWeight:"bold"}}>{fmt(minoMes[i].gan+mayoMes[i].gan)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-
-            {/* Ranking tamaños */}
-            <Card title="Ranking tamaños minorista" titleColor={C.rosa}>
-              {rankTam.map(([tam,cant],i)=>{
-                const max=rankTam[0][1]||1;
-                return <div key={tam} style={{marginBottom:10}}>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <span style={{fontSize:13,fontWeight:"bold",color:C.marron}}>#{i+1} {tam}</span>
-                    <span style={{fontSize:13,fontWeight:"bold",color:C.rosa}}>{cant} u.</span>
-                  </div>
-                  <div style={{background:C.border,borderRadius:6,height:8}}>
-                    <div style={{background:C.rosa,borderRadius:6,height:8,width:`${Math.round((cant/max)*100)}%`,transition:"width .3s"}}/>
-                  </div>
-                </div>;
-              })}
-            </Card>
-
-            {/* Ranking puntos mayoristas */}
-            <Card title="Top puntos mayoristas" titleColor={C.verde}>
-              {rankPuntos.length===0&&<div style={{textAlign:"center",color:C.marronLight,fontSize:13,padding:16}}>Sin datos aún</div>}
-              {rankPuntos.map(([punto,data],i)=>{
-                const max=rankPuntos[0][1].gan||1;
-                return <div key={punto} style={{marginBottom:10}}>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <span style={{fontSize:12,fontWeight:"bold",color:C.marron}}>#{i+1} {punto}</span>
-                    <span style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>{fmt(data.gan)}</span>
-                  </div>
-                  <div style={{background:C.border,borderRadius:6,height:8}}>
-                    <div style={{background:C.verde,borderRadius:6,height:8,width:`${Math.round((data.gan/max)*100)}%`,transition:"width .3s"}}/>
-                  </div>
-                  <div style={{fontSize:10,color:C.marronLight,marginTop:2}}>{data.pedidos} pedido{data.pedidos!==1?"s":""}</div>
-                </div>;
-              })}
-            </Card>
-          </div>;
-        })()}
-        {tab==="ganancia"&&<div>
-          <ST>Ganancia del mes</ST>
-          <div style={{fontSize:11,color:C.marronLight,marginBottom:16,letterSpacing:1}}>{new Date().toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase()} · Se resetea el 1 de cada mes</div>
-          <Card title="Ganancia Minorista" titleColor={C.rosa}>
-            <div style={{textAlign:"center",padding:"20px 0"}}>
-              <div style={{fontSize:11,color:C.marronLight,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Total del mes</div>
-              <div style={{fontSize:42,fontWeight:"bold",color:C.rosa}}>{fmt(gm)}</div>
-              <div style={{fontSize:12,color:C.marronLight,marginTop:8}}>Ventas directas al público</div>
-            </div>
-            <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,marginTop:4}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Enteros vendidos</span><span style={{fontWeight:"bold"}}>{ventasMes.filter(v=>v.tipo==="minorista"&&v.tamano==="Entero").reduce((a,v)=>a+v.cantidad,0)} u.</span></div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Medios vendidos</span><span style={{fontWeight:"bold"}}>{ventasMes.filter(v=>v.tipo==="minorista"&&v.tamano==="Medio").reduce((a,v)=>a+v.cantidad,0)} u.</span></div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Cuartos vendidos</span><span style={{fontWeight:"bold"}}>{ventasMes.filter(v=>v.tipo==="minorista"&&v.tamano==="Cuarto").reduce((a,v)=>a+v.cantidad,0)} u.</span></div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:C.marronLight}}>Rogelitos vendidos</span><span style={{fontWeight:"bold"}}>{ventasMes.filter(v=>v.tipo==="minorista"&&v.tamano==="Rogelito").reduce((a,v)=>a+v.cantidad,0)} u.</span></div>
+            ))}
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid "+C.crema}}>
+              <span style={{fontSize:12,color:C.marronL}}>{ps.length}/20 puntos</span>
+              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gma)}</span>
             </div>
           </Card>
-          <Card title="Ganancia Mayorista" titleColor={C.verde}>
-            <div style={{textAlign:"center",padding:"20px 0"}}>
-              <div style={{fontSize:11,color:C.marronLight,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Total del mes</div>
-              <div style={{fontSize:42,fontWeight:"bold",color:C.verde}}>{fmt(gmyMes)}</div>
-              <div style={{fontSize:12,color:C.marronLight,marginTop:8}}>Pedidos de los 20 puntos</div>
-            </div>
-            <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,marginTop:4}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Puntos activos este mes</span><span style={{fontWeight:"bold"}}>{new Set(peds.map(p=>p.punto)).size}</span></div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:C.marronLight}}>Pedidos registrados</span><span style={{fontWeight:"bold"}}>{peds.length}</span></div>
-            </div>
-          </Card>
-          {(()=>{
-            const ganCafeMes=pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+CAFE_PRODS.reduce((b,prod)=>b+(prod.ganMayo*(p.cantidades[prod.id]||0)),0),0);
-            return <Card title="Total combinado" titleColor={C.naranja}>
-              <div style={{textAlign:"center",padding:"20px 0"}}>
-                <div style={{fontSize:11,color:C.marronLight,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Ganancia total del mes</div>
-                <div style={{fontSize:42,fontWeight:"bold",color:C.naranja}}>{fmt(gm+gmyMes+ganCafeMes)}</div>
-              </div>
-              <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,marginTop:4}}>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Minorista rogeles</span><span style={{fontWeight:"bold",color:C.rosa}}>{fmt(gm)}</span></div>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronLight}}>Mayorista rogeles</span><span style={{fontWeight:"bold",color:C.verde}}>{fmt(gmyMes)}</span></div>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:C.marronLight}}>Cafe Cherry Season</span><span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafeMes)}</span></div>
-              </div>
-            </Card>;
-          })()}
         </div>}
 
-        {tab==="mayoristas"&&<div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}><ST noTop>Pedidos Mayoristas</ST><button onClick={()=>setSpf(v=>!v)} style={mb(C.rosa)}>{spf?"✕ Cerrar":"+ Cargar pedido"}</button></div>
-          <Card title={`Consolidado — ${sem}`} titleColor={C.rosa}>
-            {SIZES.map(s=><div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:`1px solid ${C.border}`}}><span style={{fontSize:13,color:C.marronLight}}>{s==="Rogelito"?"Caja Rogelito":s}</span><span style={{fontWeight:"bold",color:con[s]>0?C.marron:C.border}}>{con[s]} u.</span></div>)}
-            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:`1px solid ${C.crema}`}}><span style={{fontSize:12,color:C.marronLight}}>{ps.length}/20 puntos</span><span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gmy)}</span></div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
-              <button onClick={enviarPedido} style={{padding:13,borderRadius:12,border:"none",background:C.marron,color:"#fff",fontSize:12,fontWeight:"bold",cursor:"pointer",lineHeight:1.3}}>Enviar pedido a Rodri</button>
-              <button onClick={enviarRepartida} style={{padding:13,borderRadius:12,border:"none",background:C.rosa,color:"#fff",fontSize:12,fontWeight:"bold",cursor:"pointer",lineHeight:1.3}}>Enviar repartida</button>
-            </div>
-          </Card>
-          {spf&&<Card title="Cargar pedido de punto" titleColor={C.rosa}>
-            <Lbl>Punto de venta</Lbl>
-            <select value={pf.punto} onChange={e=>setPf(f=>({...f,punto:e.target.value}))} style={{...inp(),marginBottom:14}}>{PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}</select>
-            <Lbl>Cantidades</Lbl>
-            {SIZES.map(s=>{
-              const esValle=pf.punto.toLowerCase().includes("valle escondido");
-              const precioMostrar=esValle?COSTO[s]:PMay[s];
-              const labelPrecio=esValle?"(precio costo)":"";
-              return <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,background:C.bg,borderRadius:10,padding:"10px 12px",border:`1px solid ${C.border}`}}>
-                <div style={{width:90}}>
-                  <div style={{fontSize:13,fontWeight:"bold"}}>{s==="Rogelito"?"Caja Rogelito":s}</div>
-                  <div style={{fontSize:10,color:C.marronLight}}>{fmt(precioMostrar)} {labelPrecio}</div>
-                </div>
-                <div style={{display:"flex",gap:12,alignItems:"center"}}>
-                  <button onClick={()=>setPf(f=>({...f,[s]:Math.max(0,(f[s]||0)-1)}))} style={{width:36,height:36,borderRadius:8,border:`1px solid ${C.border}`,background:C.bgCard,color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>−</button>
-                  <span style={{width:28,textAlign:"center",fontSize:20,fontWeight:"bold"}}>{pf[s]||0}</span>
-                  <button onClick={()=>setPf(f=>({...f,[s]:(f[s]||0)+1}))} style={{width:36,height:36,borderRadius:8,border:"none",background:C.rosa,color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button>
-                </div>
-                <span style={{fontSize:12,color:C.naranja,width:80,textAlign:"right",fontWeight:"bold"}}>{fmt(precioMostrar*(pf[s]||0))}</span>
-              </div>;
-            })}
-            <div style={{background:C.rosaPaleBg,borderRadius:12,padding:12,marginBottom:12}}><Fil label="Ganancia:" valor={fmt(SIZES.reduce((a,s)=>a+gan(s,"mayorista",pf[s]||0),0))} vc={C.verde}/></div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button onClick={()=>setSpf(false)} style={ob()}>Cancelar</button><button onClick={addPed} style={fb(C.rosa)}>Guardar</button></div>
-          </Card>}
-          {peds.length===0&&!spf&&<Vac emoji="M" text="No hay pedidos esta semana"/>}
-          {peds.map(p=><div key={p.id} style={{background:C.bgCard,borderRadius:14,padding:14,marginBottom:10,border:`1px solid ${C.border}`}}><div style={{display:"flex",justifyContent:"space-between"}}><div><div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div><div style={{fontSize:11,color:C.marronLight,marginTop:4}}>{SIZES.filter(s=>p[s]>0).map(s=>`${s}: ${p[s]}`).join(" · ")}</div><div style={{fontSize:10,color:C.rosaLight,marginTop:2}}>{p.semana}</div></div><div style={{textAlign:"right"}}><div style={{fontSize:14,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div></div></div></div>)}
-
-          <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
-            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>CHERRYSEASON</div>
+        {/* VENTAS */}
+        {tab==="ventas" && <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}>
+            <ST noTop>Ventas</ST>
+            <button onClick={()=>setSvf(v=>!v)} style={btnMain(C.rosa)}>{svf?"Cerrar":"+ Nueva venta"}</button>
+          </div>
+          {svf && <Card title="Nueva venta" titleColor={C.rosa}>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-              <button onClick={()=>setShowCafe(v=>!v)} style={{padding:10,borderRadius:12,border:"none",background:"#C0392B",color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:12}}>{showCafe?"Cerrar":"+ Pedido cafe"}</button>
-              <button onClick={()=>setTab("cafe")} style={{padding:10,borderRadius:12,border:"2px solid #C0392B",background:"transparent",color:"#C0392B",fontWeight:"bold",cursor:"pointer",fontSize:12}}>Ver panel cafe</button>
+              {["minorista","mayorista"].map(t => (
+                <button key={t} onClick={()=>setVf(f=>({...f,tipo:t}))}
+                  style={{padding:10,borderRadius:10,border:"2px solid "+(vf.tipo===t?C.rosa:C.border),cursor:"pointer",fontWeight:"bold",fontSize:13,background:vf.tipo===t?C.rosaBg:C.card,color:vf.tipo===t?C.rosa:C.marronL}}>
+                  {t==="minorista"?"Minorista":"Mayorista"}
+                </button>
+              ))}
             </div>
-            {(()=>{
-              const semC=(()=>{const d=new Date();const day=d.getDay();const diff=day===0?-6:1-day;const lun=new Date(d);lun.setDate(d.getDate()+diff);const dom=new Date(lun);dom.setDate(lun.getDate()+6);const f=x=>x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});return "Pedido semanal "+f(lun)+" - "+f(dom);})();
-              const psC=pedsCafe.filter(p=>p.semana===semC);
-              const ganC=psC.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+CAFE_PRODS.reduce((b,prod)=>b+(prod.ganMayo*(p.cantidades[prod.id]||0)),0),0);
-              const conC={};CAFE_PRODS.forEach(p=>{conC[p.id]=psC.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0);});
-              return <div style={{background:"#FDF6F0",borderRadius:12,padding:12,border:"1px solid #E8C5C0"}}>
-                {CAFE_PRODS.map(p=><div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #F5E5E0"}}><span style={{fontSize:11,color:"#8B6070"}}>{p.nombre}</span><span style={{fontWeight:"bold",fontSize:11,color:conC[p.id]>0?"#5C3340":"#E8C5C0"}}>{conC[p.id]} u.</span></div>)}
-                <div style={{display:"flex",justifyContent:"space-between",marginTop:8,paddingTop:6,borderTop:"1px solid #E8C5C0"}}>
-                  <span style={{fontSize:11,color:"#8B6070"}}>{psC.filter(p=>!p.punto.toLowerCase().includes("valle")).length} puntos</span>
-                  <span style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(ganC)}</span>
+            <input placeholder="Nombre *" value={vf.cliente} onChange={e=>setVf(f=>({...f,cliente:e.target.value}))} style={inp()}/>
+            <input placeholder="Celular (opcional)" value={vf.celular} onChange={e=>setVf(f=>({...f,celular:e.target.value}))} style={inp()}/>
+            <Lbl>Tamano</Lbl>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              {SIZES.map(s => (
+                <button key={s} onClick={()=>setVf(f=>({...f,tamano:s}))}
+                  style={{padding:10,borderRadius:10,border:"2px solid "+(vf.tamano===s?C.rosa:C.border),cursor:"pointer",fontSize:12,background:vf.tamano===s?C.rosaBg:C.card,color:vf.tamano===s?C.rosa:C.marronL,textAlign:"left"}}>
+                  <div style={{fontWeight:"bold"}}>{s}</div>
+                  <div style={{fontSize:10,opacity:0.75}}>{fmt(pv(s,vf.tipo))}</div>
+                </button>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div><Lbl>Cantidad</Lbl><input type="number" min="1" value={vf.cantidad} onChange={e=>setVf(f=>({...f,cantidad:Math.max(1,parseInt(e.target.value)||1)}))} style={inp()}/></div>
+              <div><Lbl>Retira</Lbl><input placeholder="ej: viernes" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/></div>
+            </div>
+            <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                <span style={{color:C.marronL}}>Total:</span>
+                <span style={{fontWeight:"bold",color:C.naranja}}>{fmt(pv(vf.tamano,vf.tipo)*vf.cantidad)}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                <span style={{color:C.marronL}}>Ganancia:</span>
+                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(gan(vf.tamano,vf.tipo,vf.cantidad))}</span>
+              </div>
+            </div>
+            <label style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,fontSize:13,cursor:"pointer",color:C.marronL}}>
+              <input type="checkbox" checked={vf.pagado} onChange={e=>setVf(f=>({...f,pagado:e.target.checked}))} style={{accentColor:C.rosa,width:16,height:16}}/>
+              Ya cobrado
+            </label>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <button onClick={()=>setSvf(false)} style={btnOut()}>Cancelar</button>
+              <button onClick={regVenta} style={btnFill(C.rosa)}>Registrar</button>
+            </div>
+          </Card>}
+          {ventas.length===0 && !svf && <Empty text="No hay ventas registradas"/>}
+          {ventas.map(v => (
+            <div key={v.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+(v.pagado?C.verde+"44":C.rojo+"33")}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:"bold",fontSize:14}}>{v.cliente}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:3}}>{v.tamano} x{v.cantidad} - {v.tipo} - {v.fecha}{v.retira?" - "+v.retira:""}</div>
+                  {v.celular && <div style={{fontSize:11,color:C.marronL}}>{v.celular}</div>}
                 </div>
-              </div>;
-            })()}
+                <div style={{textAlign:"right",marginLeft:10}}>
+                  <div style={{fontWeight:"bold",color:C.naranja,fontSize:15}}>{fmt(v.precio)}</div>
+                  <div style={{fontSize:11,color:C.verde}}>+{fmt(v.ganancia)}</div>
+                  {!v.pagado ? <button onClick={()=>cobrar(v.id)} style={btnSm(C.verde)}>Cobrar</button> : <div style={{fontSize:10,color:C.verde,marginTop:4}}>Pagado</div>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>}
+
+        {/* STOCK */}
+        {tab==="stock" && <div>
+          <ST>Control de Stock</ST>
+          {SIZES.map(s => (
+            <div key={s} style={{background:C.card,borderRadius:16,padding:16,marginBottom:12,border:"1px solid "+C.border}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:18,fontWeight:"bold"}}>{s}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:2}}>Min: {fmt(PM[s])} - May: {fmt(PMay[s])}</div>
+                </div>
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontSize:46,fontWeight:"bold",color:sc(stock[s]),lineHeight:1}}>{stock[s]}</div>
+                  <div style={{fontSize:10,color:C.marronL}}>unidades</div>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:8,marginTop:12}}>
+                <button onClick={()=>setStock(p=>({...p,[s]:Math.max(0,p[s]-1)}))} style={{flex:1,padding:11,borderRadius:10,border:"1px solid "+C.border,background:C.bg,color:C.marron,fontSize:20,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                <button onClick={()=>setStock(p=>({...p,[s]:p[s]+1}))} style={{flex:1,padding:11,borderRadius:10,border:"none",background:C.rosa,color:"#fff",fontSize:20,cursor:"pointer",fontWeight:"bold"}}>+</button>
+              </div>
+              <div style={{display:"flex",gap:8,marginTop:8,alignItems:"center"}}>
+                <input type="number" min="0" placeholder="Agregar..." value={rv[s]||""} onChange={e=>setRv(p=>({...p,[s]:parseInt(e.target.value)||0}))}
+                  style={{...inp(),marginBottom:0,flex:1,fontSize:12}}/>
+                <button onClick={()=>{if(rv[s]>0){setStock(p=>({...p,[s]:p[s]+rv[s]}));setRv(p=>({...p,[s]:0}));showT("+"+rv[s]+" "+s+" cargados");}}}
+                  style={{padding:"10px 14px",borderRadius:10,border:"none",background:C.verde,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold",whiteSpace:"nowrap"}}>Cargar</button>
+              </div>
+            </div>
+          ))}
+
+          {/* CAFE STOCK */}
+          <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
+            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Stock CHERRYSEASON</div>
+            {CAFE.map(p => {
+              const cant = stockCafe[p.id]||0;
+              const color = cant===0 ? C.rojo : cant<=3 ? C.naranja : C.verde;
+              return (
+                <div key={p.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid #E8C5C0"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div>
+                      <div style={{fontSize:14,fontWeight:"bold"}}>{p.n}</div>
+                      <div style={{fontSize:11,color:C.marronL,marginTop:2}}>{p.t==="capsula"?"min. 6 cajas":""}</div>
+                    </div>
+                    <div style={{textAlign:"center"}}>
+                      <div style={{fontSize:40,fontWeight:"bold",color,lineHeight:1}}>{cant}</div>
+                      <div style={{fontSize:10,color:C.marronL}}>unidades</div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:8,marginTop:10}}>
+                    <button onClick={()=>setStockCafe(s=>({...s,[p.id]:Math.max(0,(s[p.id]||0)-1)}))} style={{flex:1,padding:10,borderRadius:10,border:"1px solid #E8C5C0",background:C.bg,color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                    <button onClick={()=>setStockCafe(s=>({...s,[p.id]:(s[p.id]||0)+1}))} style={{flex:1,padding:10,borderRadius:10,border:"none",background:"#C0392B",color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                  </div>
+                  <div style={{display:"flex",gap:8,marginTop:8,alignItems:"center"}}>
+                    <input type="number" min="0" placeholder="Agregar..." value={rvCafe[p.id]||""} onChange={e=>setRvCafe(s=>({...s,[p.id]:parseInt(e.target.value)||0}))}
+                      style={{...inp(),marginBottom:0,flex:1,fontSize:12}}/>
+                    <button onClick={()=>{if(rvCafe[p.id]>0){setStockCafe(s=>({...s,[p.id]:(s[p.id]||0)+rvCafe[p.id]}));setRvCafe(s=>({...s,[p.id]:0}));showT("+"+rvCafe[p.id]+" "+p.n+" cargados");}}}
+                      style={{padding:"9px 12px",borderRadius:10,border:"none",background:C.verde,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold",whiteSpace:"nowrap"}}>Cargar</button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>}
 
+        {/* MAYORISTAS */}
+        {tab==="mayoristas" && <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}>
+            <ST noTop>Pedidos Mayoristas</ST>
+            <button onClick={()=>setSpf(v=>!v)} style={btnMain(C.rosa)}>{spf?"Cerrar":"+ Cargar pedido"}</button>
+          </div>
+          <Card title={"Consolidado - "+sem} titleColor={C.rosa}>
+            {SIZES.map(s => (
+              <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
+                <span style={{fontSize:13,color:C.marronL}}>{s==="Rogelito"?"Caja Rogelito":s}</span>
+                <span style={{fontWeight:"bold",color:con[s]>0?C.marron:C.border}}>{con[s]} u.</span>
+              </div>
+            ))}
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid "+C.crema}}>
+              <span style={{fontSize:12,color:C.marronL}}>{ps.length}/20 puntos</span>
+              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gma)}</span>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
+              <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
+              <button onClick={enviarRepartida} style={{...btnFill(C.rosa),fontSize:11}}>Enviar repartida</button>
+            </div>
+          </Card>
+          {spf && <Card title="Cargar pedido de punto" titleColor={C.rosa}>
+            <Lbl>Punto de venta</Lbl>
+            <select value={pf.punto} onChange={e=>setPf(f=>({...f,punto:e.target.value}))}
+              style={{...inp(),marginBottom:14}}>
+              {PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+            <Lbl>Cantidades</Lbl>
+            {SIZES.map(s => {
+              const esV = pf.punto.toLowerCase().includes("valle");
+              const precio = esV ? COSTO[s] : PMay[s];
+              return (
+                <div key={s} style={rowStyle}>
+                  <div style={{width:90}}>
+                    <div style={{fontSize:13,fontWeight:"bold"}}>{s==="Rogelito"?"Caja Rogelito":s}</div>
+                    <div style={{fontSize:10,color:C.marronL}}>{esV?fmt(precio)+" (costo)":fmt(precio)}</div>
+                  </div>
+                  <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                    <button onClick={()=>setPf(f=>({...f,[s]:Math.max(0,(f[s]||0)-1)}))} style={{width:36,height:36,borderRadius:8,border:"1px solid "+C.border,background:C.card,color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                    <span style={{width:28,textAlign:"center",fontSize:20,fontWeight:"bold"}}>{pf[s]||0}</span>
+                    <button onClick={()=>setPf(f=>({...f,[s]:(f[s]||0)+1}))} style={{width:36,height:36,borderRadius:8,border:"none",background:C.rosa,color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                  </div>
+                  <span style={{fontSize:12,color:C.naranja,width:80,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*(pf[s]||0))}</span>
+                </div>
+              );
+            })}
+            <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                <span style={{color:C.marronL}}>Ganancia:</span>
+                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0))}</span>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <button onClick={()=>setSpf(false)} style={btnOut()}>Cancelar</button>
+              <button onClick={addPed} style={btnFill(C.rosa)}>Guardar</button>
+            </div>
+          </Card>}
+          {peds.length===0 && !spf && <Empty text="No hay pedidos esta semana"/>}
+          {peds.map(p => (
+            <div key={p.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+C.border}}>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{SIZES.filter(s=>p[s]>0).map(s=>s+": "+p[s]).join(" - ")}</div>
+                  <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:14,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* CAFE en Mayoristas */}
+          <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
+            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>CHERRYSEASON - Cafe</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              <button onClick={()=>setShowCafeForm(v=>!v)} style={{...btnFill("#C0392B"),fontSize:12}}>{showCafeForm?"Cerrar":"+ Pedido cafe"}</button>
+              <button onClick={cerrarCafe} style={{...btnFill(C.marron),fontSize:12}}>Cerrar pedido cafe</button>
+            </div>
+            <div style={{background:C.bg,borderRadius:12,padding:12,border:"1px solid #E8C5C0"}}>
+              {CAFE.map(p => (
+                <div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #F5E5E0"}}>
+                  <span style={{fontSize:11,color:C.marronL}}>{p.n}</span>
+                  <span style={{fontWeight:"bold",fontSize:11,color:conCafe[p.id]>0?C.marron:"#E8C5C0"}}>{conCafe[p.id]} u.</span>
+                </div>
+              ))}
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:8,paddingTop:6,borderTop:"1px solid #E8C5C0"}}>
+                <span style={{fontSize:11,color:C.marronL}}>{psCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).length} puntos</span>
+                <span style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(ganCafe)}</span>
+              </div>
+            </div>
+          </div>
+        </div>}
+
+        {/* CAFE */}
+        {tab==="cafe" && <div>
+          <div style={{background:"#8B2010",padding:"20px 16px",margin:"0 -14px",marginBottom:16,textAlign:"center"}}>
+            <div style={{fontSize:9,letterSpacing:4,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",marginBottom:4}}>Cafe de Especialidad</div>
+            <div style={{fontSize:24,fontWeight:"bold",color:"#fff",letterSpacing:3}}>CHERRYSEASON</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+            <button onClick={()=>setShowCafeForm(v=>!v)} style={{...btnFill("#C0392B"),fontSize:12}}>{showCafeForm?"Cerrar":"+ Cargar pedido"}</button>
+            <button onClick={cerrarCafe} style={{...btnFill(C.marron),fontSize:12}}>Cerrar pedido</button>
+          </div>
+          <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid #E8C5C0"}}>
+            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Consolidado - {sem}</div>
+            {CAFE.map(p => (
+              <div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #F5E5E0"}}>
+                <span style={{fontSize:12,color:C.marronL}}>{p.n}</span>
+                <span style={{fontWeight:"bold",color:conCafe[p.id]>0?C.marron:"#E8C5C0"}}>{conCafe[p.id]} u.</span>
+              </div>
+            ))}
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid #E8C5C0"}}>
+              <span style={{fontSize:12,color:C.marronL}}>{psCafe.length} puntos</span>
+              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(ganCafe)}</span>
+            </div>
+            {invValleCafe>0 && <div style={{display:"flex",justifyContent:"space-between",marginTop:6,background:"#FDE8EC",borderRadius:8,padding:"6px 10px"}}>
+              <span style={{fontSize:11,color:C.marronL}}>Inv. Valle Escondido:</span>
+              <span style={{fontSize:12,color:"#C0392B",fontWeight:"bold"}}>{fmt(invValleCafe)}</span>
+            </div>}
+          </div>
+          {showCafeForm && <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid #E8C5C0"}}>
+            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Cargar pedido cafe</div>
+            <Lbl>Punto de venta</Lbl>
+            <select value={cafeForm.punto} onChange={e=>setCafeForm(f=>({...f,punto:e.target.value}))}
+              style={{...inp(),marginBottom:14}}>
+              {PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+            {["grano","capsula"].map(tipo => (
+              <div key={tipo}>
+                <div style={{fontSize:10,color:C.marronL,fontWeight:"bold",textTransform:"uppercase",marginBottom:8,marginTop:tipo==="capsula"?12:0}}>
+                  {tipo==="grano"?"Cafe en grano":"Capsulas (min. 6 cajas)"}
+                </div>
+                {CAFE.filter(p=>p.t===tipo).map(prod => {
+                  const esV = cafeForm.punto.toLowerCase().includes("valle");
+                  const precio = esV ? prod.cv : prod.ma;
+                  const cant = cafeForm.cantidades[prod.id]||0;
+                  return (
+                    <div key={prod.id} style={rowStyle}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:12,fontWeight:"bold"}}>{prod.n}</div>
+                        <div style={{fontSize:10,color:C.marronL}}>{esV?fmt(precio)+" (costo)":fmt(precio)}</div>
+                      </div>
+                      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                        <button onClick={()=>setCantCafe(prod.id,-1)} style={{width:32,height:32,borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.marron,fontSize:16,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                        <span style={{width:24,textAlign:"center",fontSize:18,fontWeight:"bold"}}>{cant}</span>
+                        <button onClick={()=>setCantCafe(prod.id,1)} style={{width:32,height:32,borderRadius:8,border:"none",background:"#C0392B",color:"#fff",fontSize:16,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                      </div>
+                      <span style={{fontSize:11,color:C.naranja,width:70,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cant)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+            <div style={{background:"#FDE8EC",borderRadius:12,padding:12,marginBottom:12,marginTop:8}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                <span style={{color:C.marronL}}>Total:</span>
+                <span style={{fontWeight:"bold",color:C.naranja}}>{fmt(CAFE.reduce((a,p)=>{const esV=cafeForm.punto.toLowerCase().includes("valle");return a+((esV?p.cv:p.ma)*(cafeForm.cantidades[p.id]||0));},0))}</span>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <button onClick={()=>setShowCafeForm(false)} style={btnOut()}>Cancelar</button>
+              <button onClick={addPedCafe} style={btnFill("#C0392B")}>Guardar</button>
+            </div>
+          </div>}
+          {pedsCafe.length===0 && !showCafeForm && <Empty text="No hay pedidos de cafe esta semana"/>}
+          {pedsCafe.map(p => (
+            <div key={p.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid #E8C5C0"}}>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{CAFE.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.n+": "+p.cantidades[prod.id]).join(" / ")}</div>
+                  <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  {p.ganancia>0 && <div style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>}
+                  {p.ganancia===0 && <div style={{fontSize:11,color:C.marronL}}>Valle Escondido</div>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>}
+
+        {/* GANANCIA */}
+        {tab==="ganancia" && <div>
+          <ST>Ganancia del mes</ST>
+          <div style={{fontSize:11,color:C.marronL,marginBottom:16,letterSpacing:1}}>{new Date().toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase()}</div>
+          <Card title="Ganancia Minorista - Rogeles" titleColor={C.rosa}>
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:38,fontWeight:"bold",color:C.rosa}}>{fmt(gmi)}</div>
+              <div style={{fontSize:12,color:C.marronL,marginTop:6}}>Ventas directas al publico</div>
+            </div>
+          </Card>
+          <Card title="Ganancia Mayorista - Rogeles" titleColor={C.verde}>
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:38,fontWeight:"bold",color:C.verde}}>{fmt(gma)}</div>
+              <div style={{fontSize:12,color:C.marronL,marginTop:6}}>Pedidos de los 20 puntos</div>
+            </div>
+          </Card>
+          <Card title="Ganancia - Cafe Cherry Season" titleColor="#C0392B" borderColor="#E8C5C0">
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:38,fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafe)}</div>
+              <div style={{fontSize:12,color:C.marronL,marginTop:6}}>Pedidos de cafe esta semana</div>
+            </div>
+          </Card>
+          <Card title="TOTAL COMBINADO" titleColor={C.naranja}>
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gma+ganCafe)}</div>
+            </div>
+            <div style={{borderTop:"1px solid "+C.border,paddingTop:12,marginTop:4}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronL}}>Minorista rogeles</span><span style={{fontWeight:"bold",color:C.rosa}}>{fmt(gmi)}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}><span style={{color:C.marronL}}>Mayorista rogeles</span><span style={{fontWeight:"bold",color:C.verde}}>{fmt(gma)}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:C.marronL}}>Cafe Cherry Season</span><span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafe)}</span></div>
+            </div>
+          </Card>
+        </div>}
+
+        {/* HISTORIAL */}
+        {tab==="historial" && <HistorialTab anio={anio} setAnio={setAnio}/>}
+
       </div>
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:C.nav,borderTop:`1px solid ${C.border}`,display:"flex",padding:"10px 0 14px",zIndex:100,boxShadow:"0 -4px 20px rgba(196,104,122,0.12)"}}>
-        {tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,background:"none",border:"none",cursor:"pointer",padding:"4px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><span style={{fontSize:18,color:tab===t.id?C.rosa:C.crema}}>{t.icon}</span><span style={{fontSize:10,color:tab===t.id?C.rosa:C.marronLight,fontWeight:tab===t.id?"bold":"normal"}}>{t.label}</span>{tab===t.id&&<div style={{width:24,height:2.5,background:C.rosa,borderRadius:2}}/>}</button>)}
+
+      {/* Bottom Nav */}
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"#fff",borderTop:"1px solid "+C.border,display:"flex",padding:"10px 0 14px",zIndex:100,boxShadow:"0 -4px 20px rgba(196,104,122,0.12)"}}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)}
+            style={{flex:1,background:"none",border:"none",cursor:"pointer",padding:"4px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+            <span style={{fontSize:9,color:tab===t.id?C.rosa:C.marronL,fontWeight:tab===t.id?"bold":"normal",letterSpacing:0.3}}>{t.label}</span>
+            {tab===t.id && <div style={{width:20,height:2.5,background:C.rosa,borderRadius:2}}/>}
+          </button>
+        ))}
       </div>
     </div>
   );
 }
+
+function HistorialTab({anio, setAnio}) {
+  const H = anio==="2026" ? H2026 : H2025;
+  const maxTot = Math.max(...H.map(h=>h.tot));
+  const vp = (curr,prev) => prev===0?null:((curr-prev)/prev*100);
+  const Badge = ({val}) => {
+    if(val===null) return null;
+    const ok = val>=0;
+    return <span style={{fontSize:11,fontWeight:"bold",color:"#fff",background:ok?"#7BAE84":"#C0444A",borderRadius:6,padding:"2px 6px",marginLeft:6}}>{ok?"+":""}{val.toFixed(1)}%</span>;
+  };
+  return (
+    <div>
+      <div style={{fontSize:12,color:"#E8A0A8",letterSpacing:2.5,textTransform:"uppercase",paddingTop:20,marginBottom:14,fontWeight:"bold"}}>Historial</div>
+      <div style={{display:"flex",gap:8,marginBottom:16}}>
+        {["2026","2025"].map(a => (
+          <button key={a} onClick={()=>setAnio(a)}
+            style={{flex:1,padding:"10px 0",borderRadius:12,border:"2px solid "+(anio===a?"#C4687A":"#F0D0D8"),background:anio===a?"#FDE8EC":"#fff",color:anio===a?"#C4687A":"#8B6070",fontWeight:"bold",cursor:"pointer",fontSize:14}}>
+            {a}
+          </button>
+        ))}
+      </div>
+      <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+        <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Ganancia mensual {anio}</div>
+        <div style={{display:"flex",gap:4,alignItems:"flex-end",height:120,marginBottom:8}}>
+          {H.map((h,i) => {
+            const hMi = Math.max(4,Math.round((h.gmi/maxTot)*100));
+            const hMa = Math.max(4,Math.round((h.gma/maxTot)*100));
+            return (
+              <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                <div style={{width:"100%",display:"flex",gap:1,alignItems:"flex-end",height:100}}>
+                  <div style={{flex:1,background:"#C4687A",borderRadius:"3px 3px 0 0",height:hMi+"px"}}/>
+                  <div style={{flex:1,background:"#7BAE84",borderRadius:"3px 3px 0 0",height:hMa+"px"}}/>
+                </div>
+                <div style={{fontSize:7,color:"#8B6070",textAlign:"center"}}>{h.mes.slice(0,3)}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{display:"flex",gap:16,justifyContent:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#C4687A",borderRadius:2}}/><span style={{fontSize:10,color:"#8B6070"}}>Minorista</span></div>
+          <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#7BAE84",borderRadius:2}}/><span style={{fontSize:10,color:"#8B6070"}}>Mayorista</span></div>
+        </div>
+      </div>
+      <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+        <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Comparacion intermensual</div>
+        {H.map((h,i) => {
+          const prev = i>0?H[i-1]:null;
+          return (
+            <div key={h.mes} style={{background:"#FDF6F0",borderRadius:12,padding:12,marginBottom:10,border:"1px solid #F0D0D8"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <span style={{fontWeight:"bold",fontSize:14,color:"#5C3340"}}>{h.mes}</span>
+                <div style={{display:"flex",alignItems:"center"}}>
+                  <span style={{fontWeight:"bold",color:"#D4845A",fontSize:14}}>{new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(h.tot)}</span>
+                  <Badge val={prev?vp(h.tot,prev.tot):null}/>
+                </div>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}>
+                <span style={{color:"#8B6070"}}>Minorista</span>
+                <div style={{display:"flex",alignItems:"center"}}>
+                  <span style={{color:"#C4687A",fontWeight:"bold"}}>{new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(h.gmi)}</span>
+                  <Badge val={prev?vp(h.gmi,prev.gmi):null}/>
+                </div>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
+                <span style={{color:"#8B6070"}}>Mayorista</span>
+                <div style={{display:"flex",alignItems:"center"}}>
+                  <span style={{color:"#7BAE84",fontWeight:"bold"}}>{new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(h.gma)}</span>
+                  <Badge val={prev?vp(h.gma,prev.gma):null}/>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
