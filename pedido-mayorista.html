@@ -280,6 +280,83 @@
       </div>
     </div>
 
+    <!-- Toggle cafe -->
+    <div style="margin-bottom:20px">
+      <button onclick="toggleCafe()" id="cafe-toggle-btn" style="width:100%;padding:14px;border-radius:14px;border:2px solid #C0392B;background:#fff;color:#C0392B;font-size:15px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-bottom:12px;">
+        ☕ Agregar pedido CHERRYSEASON
+      </button>
+      <div id="cafe-section" style="display:none;">
+        <div style="background:linear-gradient(135deg,#8B2010,#C0392B);padding:16px;border-radius:14px;margin-bottom:12px;text-align:center;">
+          <div style="font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:4px;">Café de Especialidad</div>
+          <div style="font-size:22px;font-weight:bold;color:#fff;letter-spacing:2px;">CHERRYSEASON</div>
+        </div>
+        <div style="font-size:12px;color:#8B6070;font-weight:bold;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">☕ Café en grano</div>
+        <div class="size-grid">
+          <div class="size-card" id="cafe-card-peru250">
+            <div class="size-name" style="font-size:13px;">Perú Blend 250gr</div>
+            <div class="size-price" id="cafe-price-peru250">$19.320 c/u</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" onclick="cambiarCafe('peru250',-1)">−</button>
+              <span class="qty-val" id="cafe-val-peru250">0</span>
+              <button class="qty-btn plus" onclick="cambiarCafe('peru250',1)">+</button>
+            </div>
+          </div>
+          <div class="size-card" id="cafe-card-colombia250">
+            <div class="size-name" style="font-size:13px;">Colombia El Tambo 250gr</div>
+            <div class="size-price" id="cafe-price-colombia250">$22.260 c/u</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" onclick="cambiarCafe('colombia250',-1)">−</button>
+              <span class="qty-val" id="cafe-val-colombia250">0</span>
+              <button class="qty-btn plus" onclick="cambiarCafe('colombia250',1)">+</button>
+            </div>
+          </div>
+          <div class="size-card" id="cafe-card-guatemala250">
+            <div class="size-name" style="font-size:13px;">Guatemala Anaeróbico 250gr</div>
+            <div class="size-price" id="cafe-price-guatemala250">$25.200 c/u</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" onclick="cambiarCafe('guatemala250',-1)">−</button>
+              <span class="qty-val" id="cafe-val-guatemala250">0</span>
+              <button class="qty-btn plus" onclick="cambiarCafe('guatemala250',1)">+</button>
+            </div>
+          </div>
+          <div class="size-card" id="cafe-card-peru1kg">
+            <div class="size-name" style="font-size:13px;">Perú Blend 1kg</div>
+            <div class="size-price" id="cafe-price-peru1kg">$46.369 c/u</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" onclick="cambiarCafe('peru1kg',-1)">−</button>
+              <span class="qty-val" id="cafe-val-peru1kg">0</span>
+              <button class="qty-btn plus" onclick="cambiarCafe('peru1kg',1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#8B6070;font-weight:bold;letter-spacing:2px;text-transform:uppercase;margin:12px 0 8px;">💊 Cápsulas (mínimo 6 cajas)</div>
+        <div class="size-grid">
+          <div class="size-card" id="cafe-card-capscolombia">
+            <div class="size-name" style="font-size:13px;">Cápsulas Colombia x10</div>
+            <div class="size-price" id="cafe-price-capscolombia">$14.760 · mín 6 cajas</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" onclick="cambiarCafe('capscolombia',-1)">−</button>
+              <span class="qty-val" id="cafe-val-capscolombia">0</span>
+              <button class="qty-btn plus" onclick="cambiarCafe('capscolombia',1)">+</button>
+            </div>
+          </div>
+          <div class="size-card" id="cafe-card-capsperu">
+            <div class="size-name" style="font-size:13px;">Cápsulas Perú Blend x10</div>
+            <div class="size-price" id="cafe-price-capsperu">$14.760 · mín 6 cajas</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" onclick="cambiarCafe('capsperu',-1)">−</button>
+              <span class="qty-val" id="cafe-val-capsperu">0</span>
+              <button class="qty-btn plus" onclick="cambiarCafe('capsperu',1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="summary" id="cafe-summary" style="margin-top:12px;display:none;">
+          <div class="summary-title" style="color:#C0392B;">Tu pedido de café</div>
+          <div id="cafe-summary-content"></div>
+        </div>
+      </div>
+    </div>
+
     <button class="submit-btn" onclick="enviar()">Confirmar pedido ✓</button>
 
   </div>
@@ -309,12 +386,12 @@
 </div>
 
 <script>
-  // ── Precios mayorista reales (marzo 2026) ──
+  // -- Precios mayorista reales (marzo 2026) --
   const PRECIOS = {
     entero:   { label: "Entero",   precio: 56940 },
     medio:    { label: "Medio",    precio: 35100 },
     cuarto:   { label: "Cuarto",   precio: 24180 },
-    rogelito: { label: "Rogelito", precio: 40560, nota: "x6 unidades · $8.667 c/u" },
+    rogelito: { label: "Rogelito", precio: 40560, nota: "x6 unidades . $8.667 c/u" },
   };
 
   const WA_NUMERO = "5493513128283";
@@ -332,6 +409,7 @@
   function actualizarPrecios() {
     const punto = document.getElementById("punto").value;
     const esValle = punto.toLowerCase().includes("valle escondido");
+    // Rogeles
     Object.keys(PRECIOS).forEach(k => {
       const p = PRECIOS[k];
       const el = document.getElementById(`price-${k}`);
@@ -339,14 +417,23 @@
         if(esValle) {
           el.textContent = "Precio interno";
         } else {
-          el.textContent = p.precio ? "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.nota ? " · " + p.nota : "") : "";
+          el.textContent = p.precio ? "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.nota ? " . " + p.nota : "") : "";
+        }
+      }
+    });
+    // Cafe - ocultar precios para Valle Escondido
+    Object.keys(CAFE_PRODS).forEach(k => {
+      const el = document.getElementById(`cafe-price-${k}`);
+      if(el) {
+        if(esValle) {
+          el.textContent = "Precio interno";
+        } else {
+          const p = CAFE_PRODS[k];
+          el.textContent = "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.minimo>1 ? ` . mín ${p.minimo} cajas` : "");
         }
       }
     });
   }
-
-  // Mostrar precios iniciales
-  actualizarPrecios();
 
   // Actualizar cuando cambia el punto
   document.getElementById("punto").addEventListener("change", actualizarPrecios);
@@ -364,13 +451,13 @@
     const items = Object.entries(cantidades).filter(([, v]) => v > 0);
 
     if (items.length === 0) {
-      cont.innerHTML = '<div class="summary-empty">Todavía no cargaste productos</div>';
+      cont.innerHTML = '<div class="summary-empty">Todavia no cargaste productos</div>';
       return;
     }
 
     cont.innerHTML = items.map(([k, v]) => {
       const p = PRECIOS[k];
-      const subtotal = p.precio ? "$" + (p.precio * v).toLocaleString("es-AR") : "—";
+      const subtotal = p.precio ? "$" + (p.precio * v).toLocaleString("es-AR") : "-";
       return `<div class="summary-row">
         <span class="summary-label">${p.label} x${v}</span>
         <span class="summary-val">${subtotal}</span>
@@ -385,6 +472,47 @@
         <span style="font-weight:700;color:#C4687A;font-size:15px">$${total.toLocaleString("es-AR")}</span>
       </div>`;
     }
+  }
+
+  // -- CAFE --
+  const CAFE_PRODS = {
+    peru250:     {nombre:"Peru Blend 250gr",        precio:19320, minimo:1},
+    colombia250: {nombre:"Colombia El Tambo 250gr", precio:22260, minimo:1},
+    guatemala250:{nombre:"Guatemala Anaeróbico 250gr",precio:25200,minimo:1},
+    peru1kg:     {nombre:"Peru Blend 1kg",           precio:46369, minimo:1},
+    capscolombia:{nombre:"Capsulas Colombia x10",    precio:14760, minimo:6},
+    capsperu:    {nombre:"Capsulas Peru Blend x10",  precio:14760, minimo:6},
+  };
+  const cantidadesCafe = {peru250:0,colombia250:0,guatemala250:0,peru1kg:0,capscolombia:0,capsperu:0};
+  let cafeVisible = false;
+
+  // Mostrar precios iniciales (despues de definir CAFE_PRODS)
+  actualizarPrecios();
+
+  function toggleCafe() {
+    cafeVisible = !cafeVisible;
+    document.getElementById("cafe-section").style.display = cafeVisible ? "block" : "none";
+    document.getElementById("cafe-toggle-btn").style.background = cafeVisible ? "#C0392B" : "#fff";
+    document.getElementById("cafe-toggle-btn").style.color = cafeVisible ? "#fff" : "#C0392B";
+  }
+
+  function cambiarCafe(id, delta) {
+    cantidadesCafe[id] = Math.max(0, cantidadesCafe[id] + delta);
+    document.getElementById("cafe-val-"+id).textContent = cantidadesCafe[id];
+    const card = document.getElementById("cafe-card-"+id);
+    card.classList.toggle("active", cantidadesCafe[id]>0);
+    actualizarResumenCafe();
+  }
+
+  function actualizarResumenCafe() {
+    const items = Object.entries(cantidadesCafe).filter(([,v])=>v>0);
+    const summaryDiv = document.getElementById("cafe-summary");
+    const contentDiv = document.getElementById("cafe-summary-content");
+    if(items.length===0){summaryDiv.style.display="none";return;}
+    summaryDiv.style.display="block";
+    const total = items.reduce((a,[k,v])=>a+(CAFE_PRODS[k].precio*v),0);
+    contentDiv.innerHTML = items.map(([k,v])=>`<div class="summary-row"><span class="summary-label">${CAFE_PRODS[k].nombre} x${v}</span><span class="summary-val">$${(CAFE_PRODS[k].precio*v).toLocaleString("es-AR")}</span></div>`).join("") +
+      `<div class="summary-row" style="margin-top:6px;border-top:1.5px solid rgba(192,57,43,0.2);padding-top:6px"><span style="font-weight:700">Total cafe</span><span style="font-weight:700;color:#C0392B;font-size:15px">$${total.toLocaleString("es-AR")}</span></div>`;
   }
 
   let _msgPunto = "";
@@ -431,14 +559,32 @@
 
     // Armar mensaje de WhatsApp
     const tel = document.getElementById("telefono").value.trim();
-    const msg = `🥐 *PEDIDO SEMANAL — Los Rogeles de Marcela*\n\n` +
-      `📍 *Punto:* ${punto}\n` +
-      `👤 *Contacto:* ${contacto}${tel ? `\n📱 *Tel:* ${tel}` : ""}\n` +
-      `📅 *Semana:* ${semana}\n\n` +
+    const msg = ` *PEDIDO SEMANAL - Los Rogeles de Marcela*\n\n` +
+      ` *Punto:* ${punto}\n` +
+      ` *Contacto:* ${contacto}${tel ? `\n *Tel:* ${tel}` : ""}\n` +
+      ` *Semana:* ${semana}\n\n` +
       `*Pedido:*\n` +
-      items.map(([k, v]) => `• ${PRECIOS[k].label}: ${v} unid.`).join("\n") +
-      (total > 0 ? `\n\n💰 *Total: $${total.toLocaleString("es-AR")}*` : "") +
-      `\n\n✅ Pedido confirmado`;
+      items.map(([k, v]) => `- ${PRECIOS[k].label}: ${v} unid.`).join("\n") +
+      (total > 0 ? `\n\n *Total: $${total.toLocaleString("es-AR")}*` : "") +
+      `\n\n Pedido confirmado`;
+
+    // Validar minimo capsulas
+    const capsIds = ["capscolombia","capsperu"];
+    for(const cid of capsIds) {
+      const cv = cantidadesCafe[cid];
+      if(cv>0 && cv<CAFE_PRODS[cid].minimo) {
+        alert(`Minimo ${CAFE_PRODS[cid].minimo} cajas de ${CAFE_PRODS[cid].nombre}`);
+        return;
+      }
+    }
+
+    // Agregar cafe al mensaje si hay pedido
+    const cafeItems = Object.entries(cantidadesCafe).filter(([,v])=>v>0);
+    if(cafeItems.length>0) {
+      const cafeLineas = cafeItems.map(([k,v])=>`- ${CAFE_PRODS[k].nombre}: ${v}`).join("\n");
+      const cafeTotal = cafeItems.reduce((a,[k,v])=>a+(CAFE_PRODS[k].precio*v),0);
+      msg += `\n\n *PEDIDO CHERRYSEASON:*\n`+cafeLineas+`\n Total cafe: $${cafeTotal.toLocaleString("es-AR")}`;
+    }
 
     const waUrl = `https://wa.me/${WA_NUMERO}?text=${encodeURIComponent(msg)}`;
     document.getElementById("wa-btn").onclick = () => window.open(waUrl, "_blank");
