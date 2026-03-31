@@ -186,8 +186,9 @@ function CalendarioEntregas({ventas, calMes, calAnio, setCalMes, setCalAnio}) {
           if(!dia) return <div key={i}/>;
           const tieneEntrega = fechasEntrega[dia] && fechasEntrega[dia].length>0;
           const esHoy = dia===hoy.getDate() && calMes===hoy.getMonth() && calAnio===hoy.getFullYear();
-          const todasCobradas = tieneEntrega && fechasEntrega[dia].every(v=>v.pagado);
-          const bgColor = tieneEntrega && !todasCobradas ? "#7BAE84" : tieneEntrega && todasCobradas ? "#C5E0CB" : esHoy ? "#F5D0D6" : "transparent";
+          const todasEntregadas = tieneEntrega && fechasEntrega[dia].every(v=>v.entregado);
+          const algunasPendientes = tieneEntrega && fechasEntrega[dia].some(v=>!v.entregado);
+          const bgColor = algunasPendientes ? "#7BAE84" : todasEntregadas ? "#C5E0CB" : esHoy ? "#F5D0D6" : "transparent";
           const textColor = tieneEntrega ? "#fff" : esHoy ? "#C4687A" : "#5C3340";
           return (
             <div key={i} onClick={()=>tieneEntrega?setDiaSelec(diaSelec===dia?null:dia):null}
@@ -270,6 +271,7 @@ function App() {
   const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [calMes, setCalMes] = useState(new Date().getMonth());
   const [calAnio, setCalAnio] = useState(new Date().getFullYear());
+  const [filtroVentas, setFiltroVentas] = useState('todas');
 
   useEffect(() => {
     const d = ld();
@@ -603,8 +605,23 @@ function App() {
               <button onClick={regVenta} style={btnFill(C.rosa)}>Registrar</button>
             </div>
           </Card>}
+          {/* Filtros */}
+          <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+            {[{id:"todas",label:"Todas"},{id:"pendientes",label:"Sin entregar"},{id:"senia",label:"Con senia"},{id:"entregadas",label:"Entregadas"}].map(f=>(
+              <button key={f.id} onClick={()=>setFiltroVentas(f.id)}
+                style={{padding:"6px 12px",borderRadius:20,border:"2px solid "+(filtroVentas===f.id?C.rosa:C.border),background:filtroVentas===f.id?C.rosaBg:"transparent",color:filtroVentas===f.id?C.rosa:C.marronL,fontSize:11,cursor:"pointer",fontWeight:filtroVentas===f.id?"bold":"normal"}}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+
           {ventas.length===0 && !svf && <Empty text="No hay ventas registradas"/>}
-          {ventas.map(v => (
+          {ventas.filter(v=>{
+            if(filtroVentas==="pendientes") return !v.entregado;
+            if(filtroVentas==="senia") return (v.senia||0)>0 && !v.pagado;
+            if(filtroVentas==="entregadas") return v.entregado;
+            return true;
+          }).map(v => (
             <div key={v.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+(v.pagado?C.verde+"44":C.rojo+"33")}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                 <div style={{flex:1}}>
@@ -616,11 +633,12 @@ function App() {
                   <div style={{fontWeight:"bold",color:C.naranja,fontSize:15}}>{fmt(v.precio)}</div>
                   <div style={{fontSize:11,color:C.verde}}>+{fmt(v.ganancia)}</div>
                   {!v.pagado && <button onClick={()=>cobrar(v.id)} style={btnSm(C.verde)}>Cobrar</button>}
-                  {v.pagado && !v.entregado && <button onClick={()=>setVentas(p=>p.map(x=>x.id===v.id?{...x,entregado:true}:x))} style={btnSm("#7B68EE")}>Entregado</button>}
-                  {v.pagado && v.entregado && <div style={{fontSize:10,color:"#7B68EE",marginTop:4}}>Entregado</div>}
+                  {v.pagado && !v.entregado && <button onClick={()=>setVentas(p=>p.map(x=>x.id===v.id?{...x,entregado:true}:x))} style={{...btnSm("#7B68EE"),background:"#7B68EE"}}>Entregado</button>}
+                  {v.pagado && v.entregado && <div style={{fontSize:10,color:"#7B68EE",marginTop:4,fontWeight:"bold"}}>Entregado</div>}
                   {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s))setVentas(p=>p.map(x=>x.id===v.id?{...x,senia:(x.senia||0)+parseInt(s)}:x));}} style={btnSm(C.naranja)}>Senia</button>}
-                  {!v.pagado && v.senia>0 && <div style={{fontSize:10,color:C.naranja,marginTop:2}}>Senia: {fmt(v.senia)}</div>}
-                  {!v.pagado && v.senia>0 && <div style={{fontSize:10,color:C.rojo,fontWeight:"bold"}}>Saldo: {fmt(v.precio-v.senia)}</div>}
+                  {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.naranja,marginTop:2}}>Senia: {fmt(v.senia)}</div>}
+                  {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.rojo,fontWeight:"bold"}}>Saldo: {fmt(v.precio-v.senia)}</div>}
+                  {!v.entregado && v.retira && <div style={{fontSize:9,color:C.marronL,marginTop:2}}>Retira: {v.retira}</div>}
                 </div>
               </div>
             </div>
