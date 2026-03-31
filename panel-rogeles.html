@@ -137,7 +137,7 @@ function Empty({text}) {
 }
 
 
-function CalendarioEntregas({ventas, calMes, calAnio, setCalMes, setCalAnio}) {
+function CalendarioEntregas({ventas, setVentas, calMes, calAnio, setCalMes, setCalAnio}) {
   const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
   const hoy = new Date();
   const [diaSelec, setDiaSelec] = useState(null);
@@ -214,38 +214,41 @@ function CalendarioEntregas({ventas, calMes, calAnio, setCalMes, setCalAnio}) {
           {ventasDia.map(v => {
             const saldo = v.precio - (v.senia||0);
             return (
-              <div key={v.id} style={{background:"#FDF6F0",borderRadius:12,padding:12,marginBottom:10,border:"1px solid "+(v.pagado?"#7BAE84":"#F0D0D8")}}>
+              <div key={v.id} style={{background:"#FDF6F0",borderRadius:12,padding:12,marginBottom:10,border:"1px solid "+(v.entregado?"#C5E0CB":v.pagado?"#7BAE8444":"#F0D0D8")}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
                   <div>
                     <div style={{fontSize:14,fontWeight:"bold",color:"#5C3340"}}>{v.cliente}</div>
                     {v.celular && <div style={{fontSize:11,color:"#8B6070",marginTop:2}}>{v.celular}</div>}
                   </div>
-                  <div style={{background:v.pagado?"#7BAE84":v.entregado?"#7B68EE":"#E8A0A8",color:"#fff",borderRadius:20,padding:"3px 10px",fontSize:10,fontWeight:"bold"}}>
-                    {v.pagado?"Pagado":v.entregado?"Entregado":"Pendiente"}
+                  <div style={{background:v.entregado?"#7B68EE":v.pagado?"#7BAE84":"#E8A0A8",color:"#fff",borderRadius:20,padding:"3px 10px",fontSize:10,fontWeight:"bold"}}>
+                    {v.entregado?"Entregado":v.pagado?"Pagado":"Pendiente"}
                   </div>
                 </div>
                 <div style={{fontSize:12,color:"#5C3340",marginBottom:6}}>
                   <span style={{fontWeight:"bold"}}>{v.tamano}</span> x{v.cantidad} - {v.tipo}
-                  {v.cafeCantidades && Object.values(v.cafeCantidades).some(c=>c>0) && (
-                    <div style={{fontSize:11,color:"#C0392B",marginTop:2}}>
-                      + Cafe: {Object.entries(v.cafeCantidades||{}).filter(([,c])=>c>0).map(([id,c])=>id+": "+c).join(", ")}
-                    </div>
-                  )}
                 </div>
-                <div style={{borderTop:"1px solid #F0D0D8",paddingTop:6,marginTop:4}}>
+                <div style={{borderTop:"1px solid #F0D0D8",paddingTop:6,marginTop:4,marginBottom:8}}>
                   <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:2}}>
                     <span style={{color:"#8B6070"}}>Total:</span>
                     <span style={{fontWeight:"bold",color:"#D4845A"}}>{fmt2(v.precio)}</span>
                   </div>
                   {(v.senia||0)>0 && <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:2}}>
-                    <span style={{color:"#8B6070"}}>Senia entregada:</span>
+                    <span style={{color:"#8B6070"}}>Senia:</span>
                     <span style={{fontWeight:"bold",color:"#7BAE84"}}>{fmt2(v.senia)}</span>
                   </div>}
-                  {!v.pagado && (v.senia||0)>0 && <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
-                    <span style={{color:"#C0444A",fontWeight:"bold"}}>Saldo a cobrar:</span>
-                    <span style={{fontWeight:"bold",color:"#C0444A",fontSize:14}}>{fmt2(saldo)}</span>
+                  {!v.pagado && (v.senia||0)>0 && <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                    <span style={{color:"#C0444A",fontWeight:"bold"}}>Saldo:</span>
+                    <span style={{fontWeight:"bold",color:"#C0444A"}}>{fmt2(saldo)}</span>
                   </div>}
-                  {v.pagado && <div style={{fontSize:11,color:"#7BAE84",fontWeight:"bold",marginTop:2}}>Pagado completo</div>}
+                </div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {!v.pagado && <button onClick={()=>setVentas(p=>p.map(x=>x.id===v.id?{...x,pagado:true}:x))}
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#7BAE84",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Cobrar</button>}
+                  {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s))setVentas(p=>p.map(x=>x.id===v.id?{...x,senia:(x.senia||0)+parseInt(s)}:x));}}
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#D4845A",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Senia</button>}
+                  {!v.entregado && <button onClick={()=>setVentas(p=>p.map(x=>x.id===v.id?{...x,entregado:true}:x))}
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#7B68EE",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Entregado</button>}
+                  {v.entregado && <div style={{fontSize:11,color:"#7B68EE",fontWeight:"bold",padding:"7px 0",textAlign:"center",flex:1}}>Ya entregado</div>}
                 </div>
               </div>
             );
@@ -444,12 +447,14 @@ function App() {
     <div style={{background:C.bg,minHeight:"100vh",color:C.marron,maxWidth:430,margin:"0 auto",paddingBottom:88}}>
 
       {/* Header */}
-      <div style={{background:"linear-gradient(160deg,"+C.rosaPale+" 0%,"+C.rosaL+" 60%,"+C.rosa+" 100%)",padding:"28px 22px 22px",position:"relative",overflow:"hidden"}}>
-        <div style={{fontSize:10,letterSpacing:4,color:"rgba(92,51,64,0.6)",textTransform:"uppercase",marginBottom:4}}>Sistema de Gestion</div>
-        <div style={{fontSize:13,fontStyle:"italic",color:C.marron,opacity:0.7,fontFamily:"'Playfair Display',serif"}}>Los</div>
-        <div style={{fontSize:32,fontWeight:"bold",color:C.marron,lineHeight:1,fontFamily:"'Playfair Display',serif"}}>rogeles</div>
-        <div style={{fontSize:14,letterSpacing:6,color:C.marron,opacity:0.75,textTransform:"uppercase",marginBottom:8}}>de Marcela</div>
-        <div style={{fontSize:11,color:C.marron,opacity:0.6}}>Valle Escondido - {new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</div>
+      <div style={{background:"linear-gradient(160deg,"+C.rosaPale+" 0%,"+C.rosaL+" 60%,"+C.rosa+" 100%)",padding:"20px 22px",position:"relative",overflow:"hidden",display:"flex",alignItems:"center",gap:16}}>
+        <img src="Copia_de_LRDM_-_Logo.jpg" alt="Los Rogeles de Marcela" style={{width:80,height:80,borderRadius:"50%",objectFit:"cover",border:"2px solid rgba(255,255,255,0.5)",flexShrink:0}}/>
+        <div>
+          <div style={{fontSize:10,letterSpacing:3,color:"rgba(92,51,64,0.6)",textTransform:"uppercase",marginBottom:2}}>Sistema de Gestion</div>
+          <div style={{fontSize:22,fontWeight:"bold",color:C.marron,lineHeight:1.1,fontFamily:"'Playfair Display',serif"}}>Los rogeles</div>
+          <div style={{fontSize:12,letterSpacing:4,color:C.marron,opacity:0.75,textTransform:"uppercase",marginBottom:6}}>de Marcela</div>
+          <div style={{fontSize:10,color:C.marron,opacity:0.6}}>Valle Escondido - {new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</div>
+        </div>
       </div>
 
       {/* Toast */}
@@ -505,7 +510,7 @@ function App() {
               </div>
             ))}
           </Card>}
-          <CalendarioEntregas ventas={ventas} calMes={calMes} calAnio={calAnio} setCalMes={setCalMes} setCalAnio={setCalAnio}/>
+          <CalendarioEntregas ventas={ventas} setVentas={setVentas} calMes={calMes} calAnio={calAnio} setCalMes={setCalMes} setCalAnio={setCalAnio}/>
           <Card title={sem} titleColor={C.rosa}>
             {SIZES.map(s => (
               <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
