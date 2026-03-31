@@ -86,6 +86,8 @@ const sdCafe = d => { try { localStorage.setItem(SK_CAFE,JSON.stringify(d)); } c
 const ldStockCafe = () => { try { const r=localStorage.getItem(SK_STOCK_CAFE); if(r) return JSON.parse(r); } catch{} return {peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}; };
 const sdStockCafe = d => { try { localStorage.setItem(SK_STOCK_CAFE,JSON.stringify(d)); } catch{} };
 
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyNfAicx6zEvi45ZuJchDQVRKZG6WoM0UbCy6pisEt03L4-prmGNl2Q8iHyLgikvZxE/exec";
+
 const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 
 const getSem = () => {
@@ -426,6 +428,49 @@ function App() {
     showT("Pedido cafe enviado");
   };
 
+  const sincronizarSheets = async () => {
+    try {
+      showT("Sincronizando...");
+      const res = await fetch(SHEETS_URL);
+      const json = await res.json();
+      if(!json.ok || !json.data) { showT("Error al sincronizar",false); return; }
+      let nuevos = 0;
+      const pedsCopy = [...peds];
+      json.data.forEach(row => {
+        const yaExiste = pedsCopy.some(p => p.punto===row.punto && p.semana===row.semana);
+        if(!yaExiste) {
+          const esValle = row.punto.toLowerCase().includes("valle");
+          const g = esValle ? 0 : (
+            (parseInt(row.entero)||0)*GMay.ENTERO +
+            (parseInt(row.medio)||0)*GMay.MEDIANO +
+            (parseInt(row.cuarto)||0)*GMay.PEQUENO +
+            (parseInt(row.porcion)||0)*GMay.PORCION
+          );
+          pedsCopy.unshift({
+            id: Date.now()+nuevos,
+            punto: row.punto,
+            semana: row.semana,
+            ENTERO: parseInt(row.entero)||0,
+            MEDIANO: parseInt(row.medio)||0,
+            PEQUENO: parseInt(row.cuarto)||0,
+            PORCION: parseInt(row.porcion)||0,
+            ganancia: g,
+            contacto: row.contacto||""
+          });
+          nuevos++;
+        }
+      });
+      if(nuevos>0) {
+        setPeds(pedsCopy);
+        showT(nuevos+" pedido(s) importados!");
+      } else {
+        showT("Todo al dia, sin pedidos nuevos");
+      }
+    } catch(e) {
+      showT("Error de conexion",false);
+    }
+  };
+
   const setCantCafe = (id,delta) => {
     const prev = cafeForm.cantidades[id]||0;
     setCafeForm(f => ({...f,cantidades:{...f.cantidades,[id]:Math.max(0,prev+delta)}}));
@@ -722,6 +767,9 @@ function App() {
             <ST noTop>Pedidos Mayoristas</ST>
             <button onClick={()=>setSpf(v=>!v)} style={btnMain(C.rosa)}>{spf?"Cerrar":"+ Cargar pedido"}</button>
           </div>
+          <button onClick={sincronizarSheets} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid "+C.rosa,background:C.rosaBg,color:C.rosa,fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
+            Sincronizar pedidos del formulario
+          </button>
           <Card title={"Consolidado - "+sem} titleColor={C.rosa}>
             {SIZES.map(s => (
               <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
