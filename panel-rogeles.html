@@ -86,7 +86,7 @@ const sdCafe = d => { try { localStorage.setItem(SK_CAFE,JSON.stringify(d)); } c
 const ldStockCafe = () => { try { const r=localStorage.getItem(SK_STOCK_CAFE); if(r) return JSON.parse(r); } catch{} return {peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}; };
 const sdStockCafe = d => { try { localStorage.setItem(SK_STOCK_CAFE,JSON.stringify(d)); } catch{} };
 
-const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyNfAicx6zEvi45ZuJchDQVRKZG6WoM0UbCy6pisEt03L4-prmGNl2Q8iHyLgikvZxE/exec";
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwmacCxHbAhqhCmjGXiN-8SRwS848XvwQ1AMCrmPeM20IHtpvzmf3sk0kZ_nwkAlK4o/exec";
 
 const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 
