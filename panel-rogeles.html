@@ -428,47 +428,57 @@ function App() {
     showT("Pedido cafe enviado");
   };
 
-  const sincronizarSheets = async () => {
-    try {
-      showT("Sincronizando...");
-      const res = await fetch(SHEETS_URL);
-      const json = await res.json();
+  const procesarPedidosSheets = React.useCallback((data, pedsCopy) => {
+    let nuevos = 0;
+    data.forEach(row => {
+      if(!row.punto || !row.semana) return;
+      const yaExiste = pedsCopy.some(p => p.punto===row.punto && p.semana===row.semana);
+      if(!yaExiste) {
+        const esValle = row.punto.toLowerCase().includes("valle");
+        const g = esValle ? 0 : (
+          (parseInt(row.entero)||0)*GMay.ENTERO +
+          (parseInt(row.medio)||0)*GMay.MEDIANO +
+          (parseInt(row.cuarto)||0)*GMay.PEQUENO +
+          (parseInt(row.porcion)||0)*GMay.PORCION
+        );
+        pedsCopy.unshift({
+          id: Date.now()+nuevos,
+          punto: row.punto,
+          semana: row.semana,
+          ENTERO: parseInt(row.entero)||0,
+          MEDIANO: parseInt(row.medio)||0,
+          PEQUENO: parseInt(row.cuarto)||0,
+          PORCION: parseInt(row.porcion)||0,
+          ganancia: g,
+          contacto: row.contacto||""
+        });
+        nuevos++;
+      }
+    });
+    return nuevos;
+  }, []);
+
+  const sincronizarSheets = () => {
+    showT("Sincronizando...");
+    const callbackName = "sheetsCallback_"+Date.now();
+    window[callbackName] = (json) => {
+      delete window[callbackName];
+      document.getElementById("sheets-script")&&document.getElementById("sheets-script").remove();
       if(!json.ok || !json.data) { showT("Error al sincronizar",false); return; }
-      let nuevos = 0;
       const pedsCopy = [...peds];
-      json.data.forEach(row => {
-        const yaExiste = pedsCopy.some(p => p.punto===row.punto && p.semana===row.semana);
-        if(!yaExiste) {
-          const esValle = row.punto.toLowerCase().includes("valle");
-          const g = esValle ? 0 : (
-            (parseInt(row.entero)||0)*GMay.ENTERO +
-            (parseInt(row.medio)||0)*GMay.MEDIANO +
-            (parseInt(row.cuarto)||0)*GMay.PEQUENO +
-            (parseInt(row.porcion)||0)*GMay.PORCION
-          );
-          pedsCopy.unshift({
-            id: Date.now()+nuevos,
-            punto: row.punto,
-            semana: row.semana,
-            ENTERO: parseInt(row.entero)||0,
-            MEDIANO: parseInt(row.medio)||0,
-            PEQUENO: parseInt(row.cuarto)||0,
-            PORCION: parseInt(row.porcion)||0,
-            ganancia: g,
-            contacto: row.contacto||""
-          });
-          nuevos++;
-        }
-      });
+      const nuevos = procesarPedidosSheets(json.data, pedsCopy);
       if(nuevos>0) {
         setPeds(pedsCopy);
         showT(nuevos+" pedido(s) importados!");
       } else {
         showT("Todo al dia, sin pedidos nuevos");
       }
-    } catch(e) {
-      showT("Error de conexion",false);
-    }
+    };
+    const script = document.createElement("script");
+    script.id = "sheets-script";
+    script.src = SHEETS_URL+"?callback="+callbackName;
+    script.onerror = () => { showT("Error de conexion",false); };
+    document.body.appendChild(script);
   };
 
   const setCantCafe = (id,delta) => {
