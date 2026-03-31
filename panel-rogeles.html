@@ -150,10 +150,14 @@ function CalendarioEntregas({ventas, calMes, calAnio, setCalMes, setCalAnio}) {
   ventas.forEach(v => {
     if(!v.retira) return;
     try {
-      const d = new Date(v.retira);
-      if(isNaN(d.getTime())) return;
-      if(d.getMonth()===calMes && d.getFullYear()===calAnio) {
-        const dia = d.getDate();
+      const parts = v.retira.split("-");
+      if(parts.length!==3) return;
+      const anioR = parseInt(parts[0]);
+      const mesR = parseInt(parts[1])-1;
+      const diaR = parseInt(parts[2]);
+      if(isNaN(anioR)||isNaN(mesR)||isNaN(diaR)) return;
+      if(mesR===calMes && anioR===calAnio) {
+        const dia = diaR;
         if(!fechasEntrega[dia]) fechasEntrega[dia] = [];
         fechasEntrega[dia].push(v);
       }
