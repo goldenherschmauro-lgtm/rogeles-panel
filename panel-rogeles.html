@@ -25,7 +25,7 @@ const C = {
 };
 
 // Rogeles data
-const SIZES = ["ENTERO","MEDIANO","PEQUENO","PORCION"];
+const SIZES = ["ENTERO","MEDIANO","PEQUEÑO","PORCION"];
 const PM = {ENTERO:73000, MEDIANO:45000, PEQUENO:31000, PORCION:9000};
 const PMay = {ENTERO:56940, MEDIANO:35100, PEQUENO:24180, PORCION:40560};
 const COSTO = {ENTERO:48050, MEDIANO:29150, PEQUENO:20350, PORCION:37600};
@@ -267,10 +267,20 @@ function App() {
   const regVenta = () => {
     if(!vf.cliente.trim()) { showT("Ingresa el nombre del cliente",false); return; }
     if(stock[vf.tamano]<vf.cantidad) { showT("Stock insuficiente",false); return; }
-    const v = {...vf, id:Date.now(), precio:pv(vf.tamano,vf.tipo)*vf.cantidad, ganancia:gan(vf.tamano,vf.tipo,vf.cantidad)};
+    const ganCafeVenta = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.gm:p.gma)*((vf.cafeCantidades||{})[p.id]||0)),0);
+    const precioTotal = pv(vf.tamano,vf.tipo)*vf.cantidad + CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*((vf.cafeCantidades||{})[p.id]||0)),0);
+    const v = {...vf, id:Date.now(), precio:precioTotal, ganancia:gan(vf.tamano,vf.tipo,vf.cantidad)+ganCafeVenta};
     setVentas(p => [v,...p]);
     setStock(p => ({...p,[vf.tamano]:p[vf.tamano]-vf.cantidad}));
-    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
+    // Descontar stock cafe
+    if(vf.cafeCantidades) {
+      setStockCafe(s => {
+        const ns = {...s};
+        CAFE.forEach(p => { if(vf.cafeCantidades[p.id]>0) ns[p.id]=Math.max(0,(ns[p.id]||0)-vf.cafeCantidades[p.id]); });
+        return ns;
+      });
+    }
+    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
     setSvf(false);
     showT("Venta registrada");
   };
@@ -449,7 +459,7 @@ function App() {
             ))}
           </Card>}
           <CalendarioEntregas ventas={ventas} calMes={calMes} calAnio={calAnio} setCalMes={setCalMes} setCalAnio={setCalAnio}/>
-          <Card title={"Pedido "+sem} titleColor={C.rosa}>
+          <Card title={sem} titleColor={C.rosa}>
             {SIZES.map(s => (
               <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
                 <span style={{fontSize:13,color:C.marronL}}>{s}</span>
@@ -463,6 +473,13 @@ function App() {
             {ganCafe>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:11}}>
               <span style={{color:"#C0392B"}}>Inc. cafe Cherry Season</span>
               <span style={{color:"#C0392B",fontWeight:"bold"}}>{fmt(ganCafe)}</span>
+            </div>}
+            {psCafe.length>0&&<div style={{marginTop:10,paddingTop:8,borderTop:"1px solid #E8C5C0"}}>
+              <div style={{fontSize:10,color:"#C0392B",fontWeight:"bold",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Cherry Season</div>
+              {CAFE.map(p=>conCafe[p.id]>0?<div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:"1px solid #F5E5E0"}}>
+                <span style={{fontSize:11,color:"#8B6070"}}>{p.n}</span>
+                <span style={{fontWeight:"bold",fontSize:11,color:"#5C3340"}}>{conCafe[p.id]} u.</span>
+              </div>:null)}
             </div>}
           </Card>
         </div>}
@@ -498,14 +515,42 @@ function App() {
               <div><Lbl>Cantidad</Lbl><input type="number" min="1" value={vf.cantidad} onChange={e=>setVf(f=>({...f,cantidad:Math.max(1,parseInt(e.target.value)||1)}))} style={inp()}/></div>
               <div><Lbl>Fecha retira</Lbl><input type="date" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/></div>
             </div>
+            {/* Cafe en ventas */}
+            <div style={{marginTop:4,marginBottom:8}}>
+              <div style={{fontSize:10,color:"#C0392B",fontWeight:"bold",textTransform:"uppercase",letterSpacing:1,marginBottom:6,marginTop:8}}>Agregar cafe Cherry Season (opcional)</div>
+              {CAFE.map(prod => {
+                const precio = vf.tipo==="minorista" ? prod.mi : prod.ma;
+                const cantCafeVenta = vf.cafeCantidades ? (vf.cafeCantidades[prod.id]||0) : 0;
+                return (
+                  <div key={prod.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,background:"#FDF6F0",borderRadius:8,padding:"8px 10px",border:"1px solid #E8C5C0"}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:11,fontWeight:"bold",color:"#5C3340"}}>{prod.n}</div>
+                      <div style={{fontSize:9,color:"#8B6070"}}>{fmt(precio)}</div>
+                    </div>
+                    <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                      <button onClick={()=>setVf(f=>({...f,cafeCantidades:{...(f.cafeCantidades||{}), [prod.id]:Math.max(0,(f.cafeCantidades?.[prod.id]||0)-1)}}))}
+                        style={{width:26,height:26,borderRadius:6,border:"1px solid #E8C5C0",background:"#fff",color:"#5C3340",fontSize:14,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                      <span style={{width:20,textAlign:"center",fontSize:14,fontWeight:"bold",color:"#5C3340"}}>{cantCafeVenta}</span>
+                      <button onClick={()=>setVf(f=>({...f,cafeCantidades:{...(f.cafeCantidades||{}), [prod.id]:(f.cafeCantidades?.[prod.id]||0)+1}}))}
+                        style={{width:26,height:26,borderRadius:6,border:"none",background:"#C0392B",color:"#fff",fontSize:14,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                    </div>
+                    <span style={{fontSize:10,color:"#D4845A",width:60,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cantCafeVenta)}</span>
+                  </div>
+                );
+              })}
+            </div>
             <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
-                <span style={{color:C.marronL}}>Total:</span>
+                <span style={{color:C.marronL}}>Total rogeles:</span>
                 <span style={{fontWeight:"bold",color:C.naranja}}>{fmt(pv(vf.tamano,vf.tipo)*vf.cantidad)}</span>
               </div>
+              {vf.cafeCantidades && CAFE.some(p=>(vf.cafeCantidades[p.id]||0)>0) && <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                <span style={{color:C.marronL}}>Total cafe:</span>
+                <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*(vf.cafeCantidades?.[p.id]||0)),0))}</span>
+              </div>}
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
                 <span style={{color:C.marronL}}>Ganancia:</span>
-                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(gan(vf.tamano,vf.tipo,vf.cantidad))}</span>
+                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(gan(vf.tamano,vf.tipo,vf.cantidad)+CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.gm:p.gma)*(vf.cafeCantidades?.[p.id]||0)),0))}</span>
               </div>
             </div>
             <label style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,fontSize:13,cursor:"pointer",color:C.marronL}}>
@@ -618,6 +663,13 @@ function App() {
             {ganCafe>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:11}}>
               <span style={{color:"#C0392B"}}>Inc. cafe Cherry Season</span>
               <span style={{color:"#C0392B",fontWeight:"bold"}}>{fmt(ganCafe)}</span>
+            </div>}
+            {psCafe.length>0&&<div style={{marginTop:10,paddingTop:8,borderTop:"1px solid #E8C5C0"}}>
+              <div style={{fontSize:10,color:"#C0392B",fontWeight:"bold",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Cherry Season</div>
+              {CAFE.map(p=>conCafe[p.id]>0?<div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:"1px solid #F5E5E0"}}>
+                <span style={{fontSize:11,color:"#8B6070"}}>{p.n}</span>
+                <span style={{fontWeight:"bold",fontSize:11,color:"#5C3340"}}>{conCafe[p.id]} u.</span>
+              </div>:null)}
             </div>}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
               <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
@@ -790,54 +842,48 @@ function App() {
         {tab==="ganancia" && <div>
           <ST>Ganancia del mes</ST>
           <div style={{fontSize:11,color:C.marronL,marginBottom:16,letterSpacing:1}}>{new Date().toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase()}</div>
-          <Card title="Ganancia Minorista - Rogeles" titleColor={C.rosa}>
-            <div style={{textAlign:"center",padding:"16px 0"}}>
-              <div style={{fontSize:38,fontWeight:"bold",color:C.rosa}}>{fmt(gmi)}</div>
-              <div style={{fontSize:12,color:C.marronL,marginTop:6}}>Ventas directas al publico</div>
-            </div>
-          </Card>
-          <Card title="Ganancia Mayorista - Rogeles" titleColor={C.verde}>
-            <div style={{textAlign:"center",padding:"16px 0"}}>
-              <div style={{fontSize:38,fontWeight:"bold",color:C.verde}}>{fmt(gma)}</div>
-              <div style={{fontSize:12,color:C.marronL,marginTop:6}}>Pedidos de los 20 puntos</div>
-            </div>
-          </Card>
-          <Card title="Ganancia - Cafe Cherry Season" titleColor="#C0392B" borderColor="#E8C5C0">
-            {(()=>{
-              const ganCafeMino = pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+CAFE.reduce((b,prod)=>b+(prod.gm*(p.cantidades[prod.id]||0)),0),0);
-              const ganCafeMayo = pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+CAFE.reduce((b,prod)=>b+(prod.gma*(p.cantidades[prod.id]||0)),0),0);
-              return <div>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8,paddingBottom:8,borderBottom:"1px solid #E8C5C0"}}>
-                  <span style={{color:C.marronL}}>Minorista cafe</span>
-                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafeMino)}</span>
-                </div>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:12,paddingBottom:12,borderBottom:"1px solid #E8C5C0"}}>
-                  <span style={{color:C.marronL}}>Mayorista cafe</span>
-                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafeMayo)}</span>
-                </div>
-                <div style={{textAlign:"center",paddingBottom:8}}>
-                  <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Total cafe</div>
-                  <div style={{fontSize:36,fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafe)}</div>
-                </div>
-              </div>;
-            })()}
-          </Card>
+          {/* GANANCIA ROGELES */}
           <Card title="Ganancia ROGELES" titleColor={C.rosa}>
             <div style={{textAlign:"center",padding:"12px 0"}}>
               <div style={{fontSize:38,fontWeight:"bold",color:C.rosa}}>{fmt(gmi+gma)}</div>
               <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Minorista + Mayorista</div>
             </div>
             <div style={{borderTop:"1px solid "+C.border,paddingTop:10,marginTop:4}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:C.marronL}}>Minorista</span><span style={{fontWeight:"bold",color:C.rosa}}>{fmt(gmi)}</span></div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}><span style={{color:C.marronL}}>Mayorista</span><span style={{fontWeight:"bold",color:C.verde}}>{fmt(gma)}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}>
+                <span style={{color:C.marronL}}>Minorista rogeles</span>
+                <span style={{fontWeight:"bold",color:C.rosa}}>{fmt(gmi)}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                <span style={{color:C.marronL}}>Mayorista rogeles</span>
+                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(gma)}</span>
+              </div>
             </div>
           </Card>
-          <Card title="Ganancia CAFE Cherry Season" titleColor="#C0392B" borderColor="#E8C5C0">
-            <div style={{textAlign:"center",padding:"12px 0"}}>
-              <div style={{fontSize:38,fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafe)}</div>
-              <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Pedidos mayoristas cafe</div>
-            </div>
-          </Card>
+
+          {/* GANANCIA CAFE */}
+          {(()=>{
+            const ganCafeMino = ventas.filter(v=>v.cafeCantidades).reduce((a,v)=>a+CAFE.reduce((b,p)=>b+(p.gm*((v.cafeCantidades||{})[p.id]||0)),0),0);
+            const ganCafeMayo = pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+CAFE.reduce((b,prod)=>b+(prod.gma*(p.cantidades[prod.id]||0)),0),0);
+            const totalCafe = ganCafeMino + ganCafeMayo;
+            return <Card title="Ganancia CAFE Cherry Season" titleColor="#C0392B" borderColor="#E8C5C0">
+              <div style={{textAlign:"center",padding:"12px 0"}}>
+                <div style={{fontSize:38,fontWeight:"bold",color:"#C0392B"}}>{fmt(totalCafe)}</div>
+                <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Minorista + Mayorista</div>
+              </div>
+              <div style={{borderTop:"1px solid #E8C5C0",paddingTop:10,marginTop:4}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}>
+                  <span style={{color:C.marronL}}>Minorista cafe</span>
+                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafeMino)}</span>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                  <span style={{color:C.marronL}}>Mayorista cafe</span>
+                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafeMayo)}</span>
+                </div>
+              </div>
+            </Card>;
+          })()}
+
+          {/* TOTAL GENERAL */}
           <Card title="TOTAL GENERAL" titleColor={C.naranja}>
             <div style={{textAlign:"center",padding:"12px 0"}}>
               <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gma+ganCafe)}</div>
