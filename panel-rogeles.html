@@ -280,7 +280,7 @@ function App() {
         return ns;
       });
     }
-    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
+    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,entregado:false,senia:0,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
     setSvf(false);
     showT("Venta registrada");
   };
@@ -574,7 +574,12 @@ function App() {
                 <div style={{textAlign:"right",marginLeft:10}}>
                   <div style={{fontWeight:"bold",color:C.naranja,fontSize:15}}>{fmt(v.precio)}</div>
                   <div style={{fontSize:11,color:C.verde}}>+{fmt(v.ganancia)}</div>
-                  {!v.pagado ? <button onClick={()=>cobrar(v.id)} style={btnSm(C.verde)}>Cobrar</button> : <div style={{fontSize:10,color:C.verde,marginTop:4}}>Pagado</div>}
+                  {!v.pagado && <button onClick={()=>cobrar(v.id)} style={btnSm(C.verde)}>Cobrar</button>}
+                  {v.pagado && !v.entregado && <button onClick={()=>setVentas(p=>p.map(x=>x.id===v.id?{...x,entregado:true}:x))} style={btnSm("#7B68EE")}>Entregado</button>}
+                  {v.pagado && v.entregado && <div style={{fontSize:10,color:"#7B68EE",marginTop:4}}>Entregado</div>}
+                  {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s))setVentas(p=>p.map(x=>x.id===v.id?{...x,senia:(x.senia||0)+parseInt(s)}:x));}} style={btnSm(C.naranja)}>Senia</button>}
+                  {!v.pagado && v.senia>0 && <div style={{fontSize:10,color:C.naranja,marginTop:2}}>Senia: {fmt(v.senia)}</div>}
+                  {!v.pagado && v.senia>0 && <div style={{fontSize:10,color:C.rojo,fontWeight:"bold"}}>Saldo: {fmt(v.precio-v.senia)}</div>}
                 </div>
               </div>
             </div>
