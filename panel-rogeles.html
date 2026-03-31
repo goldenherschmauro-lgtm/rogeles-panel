@@ -192,7 +192,7 @@ function CalendarioEntregas({ventas, calMes, calAnio, setCalMes, setCalAnio}) {
           const esHoy = dia===hoy.getDate() && calMes===hoy.getMonth() && calAnio===hoy.getFullYear();
           const todasEntregadas = tieneEntrega && fechasEntrega[dia].every(v=>v.entregado);
           const algunasPendientes = tieneEntrega && fechasEntrega[dia].some(v=>!v.entregado);
-          const bgColor = algunasPendientes ? "#7BAE84" : todasEntregadas ? "#C5E0CB" : esHoy ? "#F5D0D6" : "transparent";
+          const bgColor = algunasPendientes ? "#7BAE84" : esHoy ? "#F5D0D6" : "transparent";
           const textColor = tieneEntrega ? "#fff" : esHoy ? "#C4687A" : "#5C3340";
           return (
             <div key={i} onClick={()=>tieneEntrega?setDiaSelec(diaSelec===dia?null:dia):null}
