@@ -399,22 +399,45 @@ function App() {
 
   const regVenta = () => {
     if(!vf.cliente.trim()) { showT("Ingresa el nombre del cliente",false); return; }
-    if(stock[vf.tamano]<vf.cantidad) { showT("Stock insuficiente",false); return; }
+    const cants = vf.cantidades || {};
+    const totalUnidades = SIZES.reduce((a,s)=>a+(cants[s]||0),0);
+    const totalCafeUnidades = CAFE.reduce((a,p)=>a+((vf.cafeCantidades||{})[p.id]||0),0);
+    if(totalUnidades===0 && totalCafeUnidades===0) { showT("Agrega al menos un producto",false); return; }
+    for(const s of SIZES) {
+      if((cants[s]||0)>0 && stock[s]<(cants[s]||0)) { showT("Stock insuficiente de "+s,false); return; }
+    }
+    const descuento = vf.descuento||0;
+    const totalRogeles = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(cants[s]||0)),0);
+    const totalCafe = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*((vf.cafeCantidades||{})[p.id]||0)),0);
+    const ganRogeles = SIZES.reduce((a,s)=>a+((vf.tipo==="minorista"?GM[s]:GMay[s])*(cants[s]||0)),0);
     const ganCafeVenta = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.gm:p.gma)*((vf.cafeCantidades||{})[p.id]||0)),0);
-    const precioTotal = pv(vf.tamano,vf.tipo)*vf.cantidad + CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*((vf.cafeCantidades||{})[p.id]||0)),0);
-    const v = {...vf, id:Date.now(), precio:precioTotal, ganancia:gan(vf.tamano,vf.tipo,vf.cantidad)+ganCafeVenta};
+    const resumen = SIZES.filter(s=>(cants[s]||0)>0).map(s=>s+" x"+cants[s]).join(", ");
+    const v = {
+      ...vf,
+      id: Date.now(),
+      tamano: resumen||"Cafe",
+      cantidad: totalUnidades,
+      precio: totalRogeles+totalCafe-descuento,
+      ganancia: ganRogeles+ganCafeVenta-descuento,
+      cantidades: cants
+    };
     setVentas(p => [v,...p]);
-    setStock(p => ({...p,[vf.tamano]:p[vf.tamano]-parseInt(vf.cantidad)}));
+    // Descontar stock rogeles
+    setStock(p => {
+      const ns = {...p};
+      SIZES.forEach(s => { if((cants[s]||0)>0) ns[s]=ns[s]-(cants[s]||0); });
+      return ns;
+    });
     postSheets({tipo:"venta", ...v});
     // Descontar stock cafe
     if(vf.cafeCantidades) {
       setStockCafe(s => {
         const ns = {...s};
-        CAFE.forEach(p => { if(vf.cafeCantidades[p.id]>0) ns[p.id]=Math.max(0,(ns[p.id]||0)-vf.cafeCantidades[p.id]); });
+        CAFE.forEach(p => { if((vf.cafeCantidades[p.id]||0)>0) ns[p.id]=Math.max(0,(ns[p.id]||0)-(vf.cafeCantidades[p.id]||0)); });
         return ns;
       });
     }
-    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,entregado:false,senia:0,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
+    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,cantidades:{},retira:"",pagado:false,entregado:false,senia:0,descuento:0,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
     setSvf(false);
     showT("Venta registrada");
   };
@@ -786,20 +809,36 @@ function App() {
                 );
               })}
             </div>
-            <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
-                <span style={{color:C.marronL}}>Total rogeles:</span>
-                <span style={{fontWeight:"bold",color:C.naranja}}>{fmt(pv(vf.tamano,vf.tipo)*vf.cantidad)}</span>
-              </div>
-              {vf.cafeCantidades && CAFE.some(p=>(vf.cafeCantidades[p.id]||0)>0) && <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
-                <span style={{color:C.marronL}}>Total cafe:</span>
-                <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*(vf.cafeCantidades?.[p.id]||0)),0))}</span>
-              </div>}
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
-                <span style={{color:C.marronL}}>Ganancia:</span>
-                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(gan(vf.tamano,vf.tipo,vf.cantidad)+CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.gm:p.gma)*(vf.cafeCantidades?.[p.id]||0)),0))}</span>
-              </div>
-            </div>
+            {(()=>{
+              const totalRogeles = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(vf.cantidades?.[s]||0)),0);
+              const totalCafe = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*(vf.cafeCantidades?.[p.id]||0)),0);
+              const descuento = vf.descuento||0;
+              const totalFinal = totalRogeles + totalCafe - descuento;
+              const ganRogeles = SIZES.reduce((a,s)=>a+((vf.tipo==="minorista"?GM[s]:GMay[s])*(vf.cantidades?.[s]||0)),0);
+              const ganCafe = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.gm:p.gma)*(vf.cafeCantidades?.[p.id]||0)),0);
+              return <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                  <span style={{color:C.marronL}}>Total rogeles:</span>
+                  <span style={{fontWeight:"bold",color:C.naranja}}>{fmt(totalRogeles)}</span>
+                </div>
+                {totalCafe>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                  <span style={{color:C.marronL}}>Total cafe:</span>
+                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(totalCafe)}</span>
+                </div>}
+                {descuento>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                  <span style={{color:C.marronL}}>Descuento:</span>
+                  <span style={{fontWeight:"bold",color:C.rojo}}>-{fmt(descuento)}</span>
+                </div>}
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:14,borderTop:"1px solid "+C.border,paddingTop:6,marginTop:4}}>
+                  <span style={{color:C.marron,fontWeight:"bold"}}>TOTAL:</span>
+                  <span style={{fontWeight:"bold",color:C.naranja,fontSize:16}}>{fmt(totalFinal)}</span>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginTop:4}}>
+                  <span style={{color:C.marronL}}>Ganancia:</span>
+                  <span style={{fontWeight:"bold",color:C.verde}}>{fmt(ganRogeles+ganCafe-descuento)}</span>
+                </div>
+              </div>;
+            })()}
             <label style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,fontSize:13,cursor:"pointer",color:C.marronL}}>
               <input type="checkbox" checked={vf.pagado} onChange={e=>setVf(f=>({...f,pagado:e.target.checked}))} style={{accentColor:C.rosa,width:16,height:16}}/>
               Ya cobrado
@@ -831,7 +870,7 @@ function App() {
                 <div style={{flex:1}}>
                   <div style={{fontWeight:"bold",fontSize:14}}>{v.cliente}</div>
                   <div style={{fontSize:11,color:C.marronL,marginTop:3}}>{v.tamano} x{v.cantidad} - {v.tipo} - {v.fecha}{v.retira?" - "+v.retira:""}</div>
-                  {v.celular && <div style={{fontSize:11,color:C.marronL}}>{v.celular}</div>}
+                  {v.celular && <a href={"https://wa.me/54"+v.celular.replace(/\D/g,"")} target="_blank" style={{fontSize:11,color:"#25D366",fontWeight:"bold",textDecoration:"none",display:"block",marginTop:2}}>WA: {v.celular}</a>}
                 </div>
                 <div style={{textAlign:"right",marginLeft:10}}>
                   <div style={{fontWeight:"bold",color:C.naranja,fontSize:15}}>{fmt(v.precio)}</div>
