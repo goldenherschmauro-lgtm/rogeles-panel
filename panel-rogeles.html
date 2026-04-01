@@ -771,19 +771,28 @@ function App() {
             </div>
             <input placeholder="Nombre *" value={vf.cliente} onChange={e=>setVf(f=>({...f,cliente:e.target.value}))} style={inp()}/>
             <input placeholder="Celular (opcional)" value={vf.celular} onChange={e=>setVf(f=>({...f,celular:e.target.value}))} style={inp()}/>
-            <Lbl>Tamaño</Lbl>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-              {SIZES.map(s => (
-                <button key={s} onClick={()=>setVf(f=>({...f,tamano:s}))}
-                  style={{padding:10,borderRadius:10,border:"2px solid "+(vf.tamano===s?C.rosa:C.border),cursor:"pointer",fontSize:12,background:vf.tamano===s?C.rosaBg:C.card,color:vf.tamano===s?C.rosa:C.marronL,textAlign:"left"}}>
-                  <div style={{fontWeight:"bold"}}>{s}</div>
-                  <div style={{fontSize:10,opacity:0.75}}>{fmt(pv(s,vf.tipo))}</div>
-                </button>
-              ))}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <div><Lbl>Cantidad</Lbl><input type="number" min="1" value={vf.cantidad} onChange={e=>setVf(f=>({...f,cantidad:Math.max(1,parseInt(e.target.value)||1)}))} style={inp()}/></div>
+            <Lbl>Rogeles (cantidad por tamano)</Lbl>
+            {SIZES.map(s => {
+              const precio = pv(s,vf.tipo);
+              const cant = vf.cantidades ? (vf.cantidades[s]||0) : 0;
+              return <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,background:C.bg,borderRadius:10,padding:"8px 12px",border:"1px solid "+C.border}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:"bold",color:C.marron}}>{s}</div>
+                  <div style={{fontSize:10,color:C.marronL}}>{fmt(precio)}</div>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <button onClick={()=>setVf(f=>({...f,cantidades:{...(f.cantidades||{}),[s]:Math.max(0,(f.cantidades?.[s]||0)-1)}}))}
+                    style={{width:32,height:32,borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                  <span style={{width:24,textAlign:"center",fontSize:18,fontWeight:"bold"}}>{cant}</span>
+                  <button onClick={()=>setVf(f=>({...f,cantidades:{...(f.cantidades||{}),[s]:(f.cantidades?.[s]||0)+1}}))}
+                    style={{width:32,height:32,borderRadius:8,border:"none",background:C.rosa,color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                </div>
+                <span style={{fontSize:11,color:C.naranja,width:70,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cant)}</span>
+              </div>;
+            })}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:4}}>
               <div><Lbl>Fecha retira</Lbl><input type="date" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/></div>
+              <div><Lbl>Descuento $</Lbl><input type="number" min="0" placeholder="0" value={vf.descuento||""} onChange={e=>setVf(f=>({...f,descuento:parseInt(e.target.value)||0}))} style={inp()}/></div>
             </div>
             {/* Cafe en ventas */}
             <div style={{marginTop:4,marginBottom:8}}>
