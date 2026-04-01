@@ -87,6 +87,15 @@ const fbSet = (path, data) => db.ref(path).set(data).catch(e=>console.log("FB er
 const fbUpdate = (path, data) => db.ref(path).update(data).catch(e=>console.log("FB error:",e));
 const fbRemove = (path) => db.ref(path).remove().catch(e=>console.log("FB error:",e));
 const postSheets = (data) => { fetch(SHEETS_URL, {method:"POST", body:JSON.stringify(data)}).catch(()=>{}); };
+const fetchSheets = (tipo, callback) => {
+  const name = "cb_"+Date.now();
+  window[name] = (json) => { delete window[name]; const s=document.getElementById("s-script"); if(s) s.remove(); callback(json); };
+  const s = document.createElement("script");
+  s.id = "s-script";
+  s.src = SHEETS_URL+"?tipo="+tipo+"&callback="+name;
+  s.onerror = () => callback({ok:false});
+  document.body.appendChild(s);
+};
 
 const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxIyL8fYXhQoLp0x1prQYkZCXzOGYkL9Non99Zvd1tRCnld7nFgvXqZSo-3BeNYNqfR/exec";
 
