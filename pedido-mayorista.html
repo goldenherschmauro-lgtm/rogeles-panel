@@ -162,6 +162,13 @@
     box-shadow: 0 4px 16px rgba(37,211,102,0.3);
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = { databaseURL: "https://los-rogeles-de-marcela-default-rtdb.firebaseio.com" };
+firebase.initializeApp(firebaseConfig);
+const dbFB = firebase.database();
+</script>
 </head>
 <body>
 
@@ -585,6 +592,27 @@
       const cafeTotal = cafeItems.reduce((a,[k,v])=>a+(CAFE_PRODS[k].precio*v),0);
       msg += "\n\nPEDIDO CHERRYSEASON:\n"+cafeLineas+"\nTotal cafe: $"+cafeTotal.toLocaleString("es-AR");
     }
+
+    // Guardar en Firebase para sincronizacion en tiempo real
+    const pedidoFB = {
+      id: Date.now(),
+      punto: punto,
+      contacto: contacto,
+      semana: semana,
+      ENTERO: cantidades.entero||0,
+      MEDIANO: cantidades.medio||0,
+      PEQUENO: cantidades.cuarto||0,
+      PORCION: cantidades.rogelito||0,
+      fecha: new Date().toISOString()
+    };
+    const esValle = punto.toLowerCase().includes("valle escondido");
+    if(!esValle) {
+      const GMay = {ENTERO:8890, MEDIANO:5950, PEQUENO:3830, PORCION:2960};
+      pedidoFB.ganancia = (pedidoFB.ENTERO*GMay.ENTERO) + (pedidoFB.MEDIANO*GMay.MEDIANO) + (pedidoFB.PEQUENO*GMay.PEQUENO) + (pedidoFB.PORCION*GMay.PORCION);
+    } else {
+      pedidoFB.ganancia = 0;
+    }
+    dbFB.ref("peds/"+pedidoFB.id).set(pedidoFB).catch(e=>console.log("FB error:",e));
 
     const waUrl = `https://wa.me/${WA_NUMERO}?text=${encodeURIComponent(msg)}`;
     document.getElementById("wa-btn").onclick = () => window.open(waUrl, "_blank");
