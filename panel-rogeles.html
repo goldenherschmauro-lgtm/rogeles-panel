@@ -7,6 +7,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = { databaseURL: "https://los-rogeles-de-marcela-default-rtdb.firebaseio.com" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background: #FDF6F0; font-family: 'Lato', sans-serif; }</style>
 </head>
@@ -75,32 +82,11 @@ const H2026 = [
   {mes:"Marzo",   gmi:1815205, gma:5486990, tot:7302195, caja:5186300, mE:0,  mM:0,  mC:0,  mP:0,  myE:408, myM:377, myC:0,  myP:37},
 ];
 
-// Storage helpers - localStorage backup + Sheets sync
-const SK = "rogeles_v4";
-const SK_CAFE = "cafe_peds_v1";
-const SK_STOCK_CAFE = "cafe_stock_v1";
-const ld = () => { try { const r=localStorage.getItem(SK); if(r) return JSON.parse(r); } catch{} return null; };
-const sd = d => { try { localStorage.setItem(SK,JSON.stringify(d)); } catch{} };
-const ldCafe = () => { try { const r=localStorage.getItem(SK_CAFE); if(r) return JSON.parse(r); } catch{} return []; };
-const sdCafe = d => { try { localStorage.setItem(SK_CAFE,JSON.stringify(d)); } catch{} };
-const ldStockCafe = () => { try { const r=localStorage.getItem(SK_STOCK_CAFE); if(r) return JSON.parse(r); } catch{} return {peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}; };
-const sdStockCafe = d => { try { localStorage.setItem(SK_STOCK_CAFE,JSON.stringify(d)); } catch{} };
-
-// Post to Sheets
-const postSheets = (data) => {
-  fetch(SHEETS_URL, {method:"POST", body:JSON.stringify(data)}).catch(()=>{});
-};
-
-// JSONP fetch from Sheets
-const fetchSheets = (tipo, callback) => {
-  const name = "cb_"+Date.now();
-  window[name] = (json) => { delete window[name]; document.getElementById("s-script")&&document.getElementById("s-script").remove(); callback(json); };
-  const s = document.createElement("script");
-  s.id = "s-script";
-  s.src = SHEETS_URL+"?tipo="+tipo+"&callback="+name;
-  s.onerror = () => callback({ok:false});
-  document.body.appendChild(s);
-};
+// Firebase helpers
+const fbSet = (path, data) => db.ref(path).set(data).catch(e=>console.log("FB error:",e));
+const fbUpdate = (path, data) => db.ref(path).update(data).catch(e=>console.log("FB error:",e));
+const fbRemove = (path) => db.ref(path).remove().catch(e=>console.log("FB error:",e));
+const postSheets = (data) => { fetch(SHEETS_URL, {method:"POST", body:JSON.stringify(data)}).catch(()=>{}); };
 
 const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxIyL8fYXhQoLp0x1prQYkZCXzOGYkL9Non99Zvd1tRCnld7nFgvXqZSo-3BeNYNqfR/exec";
 
@@ -264,7 +250,7 @@ function CalendarioEntregas({ventas, setVentas, calMes, calAnio, setCalMes, setC
                     style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#7BAE84",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Cobrar</button>}
                   {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s))setVentas(p=>p.map(x=>x.id===v.id?{...x,senia:(x.senia||0)+parseInt(s)}:x));}}
                     style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#D4845A",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Senia</button>}
-                  {!v.entregado && <button onClick={()=>setVentas(p=>p.map(x=>x.id===v.id?{...x,entregado:true}:x))}
+                  {!v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:true})}
                     style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#7B68EE",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Entregado</button>}
                   {v.entregado && <div style={{fontSize:11,color:"#7B68EE",fontWeight:"bold",padding:"7px 0",textAlign:"center",flex:1}}>Ya entregado</div>}
                 </div>
@@ -298,25 +284,51 @@ function App() {
   const [calAnio, setCalAnio] = useState(new Date().getFullYear());
   const [filtroVentas, setFiltroVentas] = useState('todas');
 
+  // Firebase listeners - sync in real time
   useEffect(() => {
-    const d = ld();
-    if(d) { if(d.stock) setStock(d.stock); if(d.ventas) setVentas(d.ventas); if(d.peds) setPeds(d.peds); }
-    setPedsCafe(ldCafe());
-    setStockCafe(ldStockCafe());
+    // Listen to stock
+    const refStock = db.ref("stock");
+    refStock.on("value", snap => { const v=snap.val(); if(v) setStock(v); });
+    // Listen to stockCafe
+    const refStockCafe = db.ref("stockCafe");
+    refStockCafe.on("value", snap => { const v=snap.val(); if(v) setStockCafe(v); });
+    // Listen to ventas
+    const refVentas = db.ref("ventas");
+    refVentas.on("value", snap => {
+      const v=snap.val();
+      if(v) setVentas(Object.values(v).sort((a,b)=>b.id-a.id));
+      else setVentas([]);
+    });
+    // Listen to peds mayoristas
+    const refPeds = db.ref("peds");
+    refPeds.on("value", snap => {
+      const v=snap.val();
+      if(v) setPeds(Object.values(v).sort((a,b)=>b.id-a.id));
+      else setPeds([]);
+    });
+    // Listen to pedsCafe
+    const refPedsCafe = db.ref("pedsCafe");
+    refPedsCafe.on("value", snap => {
+      const v=snap.val();
+      if(v) setPedsCafe(Object.values(v).sort((a,b)=>b.id-a.id));
+      else setPedsCafe([]);
+    });
+    return () => {
+      refStock.off(); refStockCafe.off(); refVentas.off(); refPeds.off(); refPedsCafe.off();
+    };
   }, []);
 
-  useEffect(() => { sd({stock,ventas,peds}); }, [stock,ventas,peds]);
-  useEffect(() => { sdCafe(pedsCafe); }, [pedsCafe]);
-  useEffect(() => { sdStockCafe(stockCafe); }, [stockCafe]);
-
-  // Sync stock to Sheets when it changes
+  // Save stock to Firebase when changed (debounced)
   const stockTimer = React.useRef(null);
   useEffect(() => {
     clearTimeout(stockTimer.current);
-    stockTimer.current = setTimeout(() => {
-      postSheets({tipo:"stock", ...stock, ...stockCafe});
-    }, 2000);
-  }, [stock, stockCafe]);
+    stockTimer.current = setTimeout(() => { fbSet("stock", stock); }, 1500);
+  }, [stock]);
+  const stockCafeTimer = React.useRef(null);
+  useEffect(() => {
+    clearTimeout(stockCafeTimer.current);
+    stockCafeTimer.current = setTimeout(() => { fbSet("stockCafe", stockCafe); }, 1500);
+  }, [stockCafe]);
 
   // Auto-sync every 30 seconds
   useEffect(() => {
@@ -422,7 +434,7 @@ function App() {
       ganancia: ganRogeles+ganCafeVenta-descuento,
       cantidades: cants
     };
-    setVentas(p => [v,...p]);
+    fbSet("ventas/"+v.id, v);
     // Descontar stock rogeles
     setStock(p => {
       const ns = {...p};
@@ -444,7 +456,7 @@ function App() {
   };
 
   const cobrar = id => {
-    setVentas(p => p.map(v => { if(v.id===id){postSheets({tipo:"update_venta",id,pagado:true,entregado:v.entregado||false,senia:v.senia||0});return {...v,pagado:true};} return v; }));
+    fbUpdate("ventas/"+id, {pagado:true});
     showT("Cobrado");
   };
 
@@ -452,7 +464,7 @@ function App() {
     const v = ventas.find(x=>x.id===id);
     if(!v) return;
     if(!window.confirm("Anular la venta de "+v.cliente+"? Se devuelve el stock.")) return;
-    setVentas(p => p.filter(x=>x.id!==id));
+    fbRemove("ventas/"+id);
     setStock(p => ({...p,[v.tamano]:p[v.tamano]+v.cantidad}));
     if(v.cafeCantidades) {
       setStockCafe(s => {
@@ -469,7 +481,8 @@ function App() {
     if(tot===0) { showT("Ingresa al menos un producto",false); return; }
     const esV = pf.punto.toLowerCase().includes("valle");
     const g = esV ? 0 : SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0);
-    setPeds(p => [{...pf,id:Date.now(),semana:sem,ganancia:g},...p]);
+    const newPed = {...pf,id:Date.now(),semana:sem,ganancia:g};
+    fbSet("peds/"+newPed.id, newPed);
     setPf({punto:PUNTOS[0],ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
     setSpf(false);
     showT("Pedido guardado");
@@ -532,7 +545,8 @@ function App() {
     }
     const esV = cafeForm.punto.toLowerCase().includes("valle");
     const g = esV ? 0 : CAFE.reduce((a,p)=>a+(p.gma*(cafeForm.cantidades[p.id]||0)),0);
-    setPedsCafe(prev => [{...cafeForm,id:Date.now(),semana:sem,ganancia:g},...prev]);
+    const newPedCafe = {...cafeForm,id:Date.now(),semana:sem,ganancia:g};
+    fbSet("pedsCafe/"+newPedCafe.id, newPedCafe);
     setCafeForm({punto:PUNTOS[0],cantidades:{}});
     setShowCafeForm(false);
     showT("Pedido cafe guardado");
@@ -584,59 +598,42 @@ function App() {
   }, []);
 
   const sincronizarSheets = () => {
-    showT("Sincronizando...");
-    // Sync pedidos mayoristas
-    fetchSheets("pedidos", (json) => {
-      if(json.ok && json.data) {
-        const pedsCopy = [...peds];
-        const nuevos = procesarPedidosSheets(json.data, pedsCopy);
-        if(nuevos>0) setPeds(pedsCopy);
-      }
-    });
-    // Sync stock
-    fetchSheets("stock", (json) => {
-      if(json.ok && json.data && Object.keys(json.data).length>0) {
-        const d = json.data;
-        setStock({
-          ENTERO: parseInt(d.ENTERO)||0,
-          MEDIANO: parseInt(d.MEDIANO)||0,
-          PEQUENO: parseInt(d.PEQUENO)||0,
-          PORCION: parseInt(d.PORCION)||0
-        });
-        setStockCafe({
-          peru250: parseInt(d.peru250)||0,
-          col250: parseInt(d.col250)||0,
-          guat250: parseInt(d.guat250)||0,
-          peru1kg: parseInt(d.peru1kg)||0,
-          capscol: parseInt(d.capscol)||0,
-          capsperu: parseInt(d.capsperu)||0
-        });
-      }
-    });
-    // Sync ventas
-    fetchSheets("ventas", (json) => {
-      if(json.ok && json.data && json.data.length>0) {
-        const ventasSheets = json.data.map(v => ({
-          id: v.id,
-          cliente: v.cliente,
-          celular: v.celular||"",
-          tamano: v.tamano,
-          cantidad: parseInt(v.cantidad)||1,
-          tipo: v.tipo,
-          precio: parseInt(v.precio)||0,
-          ganancia: parseInt(v.ganancia)||0,
-          pagado: v.pagado===true||v.pagado==="TRUE",
-          entregado: v.entregado===true||v.entregado==="TRUE",
-          senia: parseInt(v.senia)||0,
-          retira: v.retira||"",
-          fecha: v.fecha||""
-        }));
-        setVentas(ventasSheets);
-        showT("Sincronizado!");
-      } else {
-        showT("Sincronizado!");
-      }
-    });
+    showT("Sincronizando pedidos del formulario...");
+    const name = "cb_"+Date.now();
+    window[name] = (json) => {
+      delete window[name];
+      document.getElementById("s-script")&&document.getElementById("s-script").remove();
+      if(!json.ok || !json.data) { showT("Error al sincronizar",false); return; }
+      let nuevos = 0;
+      json.data.forEach(row => {
+        if(!row.punto || !row.semana) return;
+        const yaExiste = peds.some(p => p.punto===row.punto && p.semana===row.semana);
+        if(!yaExiste) {
+          const esValle = row.punto.toLowerCase().includes("valle");
+          const g = esValle ? 0 : (
+            (parseInt(row.entero)||0)*GMay.ENTERO +
+            (parseInt(row.medio)||0)*GMay.MEDIANO +
+            (parseInt(row.cuarto)||0)*GMay.PEQUENO +
+            (parseInt(row.porcion)||0)*GMay.PORCION
+          );
+          const newP = {
+            id: Date.now()+nuevos,
+            punto: row.punto, semana: row.semana,
+            ENTERO: parseInt(row.entero)||0, MEDIANO: parseInt(row.medio)||0,
+            PEQUENO: parseInt(row.cuarto)||0, PORCION: parseInt(row.porcion)||0,
+            ganancia: g, contacto: row.contacto||""
+          };
+          fbSet("peds/"+newP.id, newP);
+          nuevos++;
+        }
+      });
+      showT(nuevos>0 ? nuevos+" pedido(s) importados!" : "Todo al dia");
+    };
+    const s = document.createElement("script");
+    s.id = "s-script";
+    s.src = SHEETS_URL+"?tipo=pedidos&callback="+name;
+    s.onerror = () => showT("Error de conexion",false);
+    document.body.appendChild(s);
   };
 
   const setCantCafe = (id,delta) => {
@@ -688,7 +685,7 @@ function App() {
           </div>
           <Card title="Stock actual">
             <div style={{textAlign:"right",marginBottom:8}}>
-              <button onClick={()=>{if(window.confirm("Borrar TODO y arrancar en cero?")){localStorage.clear();location.reload();}}}
+              <button onClick={()=>{if(window.confirm("Borrar TODO y arrancar en cero?")){db.ref("/").remove().then(()=>{localStorage.clear();location.reload();});}}}
                 style={{fontSize:10,color:C.rojo,background:"transparent",border:"1px solid "+C.rojo,borderRadius:20,padding:"4px 12px",cursor:"pointer"}}>
                 Reset total
               </button>
@@ -890,9 +887,9 @@ function App() {
                   <div style={{fontWeight:"bold",color:C.naranja,fontSize:15}}>{fmt(v.precio)}</div>
                   <div style={{fontSize:11,color:C.verde}}>+{fmt(v.ganancia)}</div>
                   {!v.pagado && <button onClick={()=>cobrar(v.id)} style={btnSm(C.verde)}>Cobrar</button>}
-                  {v.pagado && !v.entregado && <button onClick={()=>setVentas(p=>p.map(x=>x.id===v.id?{...x,entregado:true}:x))} style={{...btnSm("#7B68EE"),background:"#7B68EE"}}>Entregado</button>}
+                  {v.pagado && !v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:true})} style={{...btnSm("#7B68EE"),background:"#7B68EE"}}>Entregado</button>}
                   {v.pagado && v.entregado && <div style={{fontSize:10,color:"#7B68EE",marginTop:4,fontWeight:"bold"}}>Entregado</div>}
-                  {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s))setVentas(p=>p.map(x=>x.id===v.id?{...x,senia:(x.senia||0)+parseInt(s)}:x));}} style={btnSm(C.naranja)}>Senia</button>}
+                  {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s)){const vv=ventas.find(x=>x.id===v.id);fbUpdate("ventas/"+v.id,{senia:(vv?.senia||0)+parseInt(s)});}}} style={btnSm(C.naranja)}>Senia</button>}
                   {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.naranja,marginTop:2}}>Senia: {fmt(v.senia)}</div>}
                   {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.rojo,fontWeight:"bold"}}>Saldo: {fmt(v.precio-v.senia)}</div>}
                   {!v.entregado && v.retira && <div style={{fontSize:9,color:C.marronL,marginTop:2}}>Retira: {v.retira}</div>}
