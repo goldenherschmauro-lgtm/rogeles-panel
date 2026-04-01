@@ -529,6 +529,12 @@ function App() {
             <KPI label="Pendientes" value={pend.length} sub="sin cobrar" color={pend.length>0?C.rojo:C.verde}/>
           </div>
           <Card title="Stock actual">
+            <div style={{textAlign:"right",marginBottom:8}}>
+              <button onClick={()=>{if(window.confirm("Borrar TODO y arrancar en cero?")){localStorage.clear();location.reload();}}}
+                style={{fontSize:10,color:C.rojo,background:"transparent",border:"1px solid "+C.rojo,borderRadius:20,padding:"4px 12px",cursor:"pointer"}}>
+                Reset total
+              </button>
+            </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
               {SIZES.map(s => (
                 <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:C.bg,borderRadius:10,padding:"10px 14px",border:"1px solid "+C.border}}>
