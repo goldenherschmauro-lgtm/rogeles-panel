@@ -410,7 +410,7 @@ function App() {
   const gma = peds.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+p.ganancia, 0);
   const ps = peds.filter(p => p.semana===sem);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
-  const sc = n => n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
+  const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
 
   // Cafe metrics
   const psCafe = pedsCafe.filter(p => p.semana===sem);
@@ -424,9 +424,7 @@ function App() {
     const totalUnidades = SIZES.reduce((a,s)=>a+(cants[s]||0),0);
     const totalCafeUnidades = CAFE.reduce((a,p)=>a+((vf.cafeCantidades||{})[p.id]||0),0);
     if(totalUnidades===0 && totalCafeUnidades===0) { showT("Agrega al menos un producto",false); return; }
-    for(const s of SIZES) {
-      if((cants[s]||0)>0 && stock[s]<(cants[s]||0)) { showT("Stock insuficiente de "+s,false); return; }
-    }
+    // Permitir venta aunque no haya stock (queda en negativo)
     const subtotalVenta = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(cants[s]||0)),0) + CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*((vf.cafeCantidades||{})[p.id]||0)),0);
     const descuento = Math.round(subtotalVenta * (vf.descuentoPct||0) / 100);
     const totalRogeles = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(cants[s]||0)),0);
