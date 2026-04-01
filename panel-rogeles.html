@@ -406,7 +406,8 @@ function App() {
     for(const s of SIZES) {
       if((cants[s]||0)>0 && stock[s]<(cants[s]||0)) { showT("Stock insuficiente de "+s,false); return; }
     }
-    const descuento = vf.descuento||0;
+    const subtotalVenta = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(cants[s]||0)),0) + CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*((vf.cafeCantidades||{})[p.id]||0)),0);
+    const descuento = Math.round(subtotalVenta * (vf.descuentoPct||0) / 100);
     const totalRogeles = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(cants[s]||0)),0);
     const totalCafe = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*((vf.cafeCantidades||{})[p.id]||0)),0);
     const ganRogeles = SIZES.reduce((a,s)=>a+((vf.tipo==="minorista"?GM[s]:GMay[s])*(cants[s]||0)),0);
@@ -437,7 +438,7 @@ function App() {
         return ns;
       });
     }
-    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,cantidades:{},retira:"",pagado:false,entregado:false,senia:0,descuento:0,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
+    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,cantidades:{},retira:"",pagado:false,entregado:false,senia:0,descuentoPct:0,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
     setSvf(false);
     showT("Venta registrada");
   };
@@ -790,9 +791,11 @@ function App() {
                 <span style={{fontSize:11,color:C.naranja,width:70,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cant)}</span>
               </div>;
             })}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:4}}>
-              <div><Lbl>Fecha retira</Lbl><input type="date" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/></div>
-              <div><Lbl>Descuento $</Lbl><input type="number" min="0" placeholder="0" value={vf.descuento||""} onChange={e=>setVf(f=>({...f,descuento:parseInt(e.target.value)||0}))} style={inp()}/></div>
+            <div style={{marginTop:4}}>
+              <Lbl>Fecha retira</Lbl>
+              <input type="date" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/>
+              <Lbl>Descuento %</Lbl>
+              <input type="number" min="0" max="100" placeholder="0%" value={vf.descuentoPct||""} onChange={e=>setVf(f=>({...f,descuentoPct:parseInt(e.target.value)||0}))} style={inp()}/>
             </div>
             {/* Cafe en ventas */}
             <div style={{marginTop:4,marginBottom:8}}>
@@ -821,8 +824,10 @@ function App() {
             {(()=>{
               const totalRogeles = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(vf.cantidades?.[s]||0)),0);
               const totalCafe = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*(vf.cafeCantidades?.[p.id]||0)),0);
-              const descuento = vf.descuento||0;
-              const totalFinal = totalRogeles + totalCafe - descuento;
+              const pct = vf.descuentoPct||0;
+              const subtotal = totalRogeles + totalCafe;
+              const descuento = Math.round(subtotal * pct / 100);
+              const totalFinal = subtotal - descuento;
               const ganRogeles = SIZES.reduce((a,s)=>a+((vf.tipo==="minorista"?GM[s]:GMay[s])*(vf.cantidades?.[s]||0)),0);
               const ganCafe = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.gm:p.gma)*(vf.cafeCantidades?.[p.id]||0)),0);
               return <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
@@ -834,8 +839,8 @@ function App() {
                   <span style={{color:C.marronL}}>Total cafe:</span>
                   <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(totalCafe)}</span>
                 </div>}
-                {descuento>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
-                  <span style={{color:C.marronL}}>Descuento:</span>
+                {pct>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                  <span style={{color:C.marronL}}>Descuento {pct}%:</span>
                   <span style={{fontWeight:"bold",color:C.rojo}}>-{fmt(descuento)}</span>
                 </div>}
                 <div style={{display:"flex",justifyContent:"space-between",fontSize:14,borderTop:"1px solid "+C.border,paddingTop:6,marginTop:4}}>
