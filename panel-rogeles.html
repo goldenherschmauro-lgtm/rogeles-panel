@@ -75,7 +75,7 @@ const H2026 = [
   {mes:"Marzo",   gmi:1815205, gma:5486990, tot:7302195, caja:5186300, mE:0,  mM:0,  mC:0,  mP:0,  myE:408, myM:377, myC:0,  myP:37},
 ];
 
-// Storage helpers
+// Storage helpers - localStorage backup + Sheets sync
 const SK = "rogeles_v4";
 const SK_CAFE = "cafe_peds_v1";
 const SK_STOCK_CAFE = "cafe_stock_v1";
@@ -86,7 +86,23 @@ const sdCafe = d => { try { localStorage.setItem(SK_CAFE,JSON.stringify(d)); } c
 const ldStockCafe = () => { try { const r=localStorage.getItem(SK_STOCK_CAFE); if(r) return JSON.parse(r); } catch{} return {peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}; };
 const sdStockCafe = d => { try { localStorage.setItem(SK_STOCK_CAFE,JSON.stringify(d)); } catch{} };
 
-const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwmacCxHbAhqhCmjGXiN-8SRwS848XvwQ1AMCrmPeM20IHtpvzmf3sk0kZ_nwkAlK4o/exec";
+// Post to Sheets
+const postSheets = (data) => {
+  fetch(SHEETS_URL, {method:"POST", body:JSON.stringify(data)}).catch(()=>{});
+};
+
+// JSONP fetch from Sheets
+const fetchSheets = (tipo, callback) => {
+  const name = "cb_"+Date.now();
+  window[name] = (json) => { delete window[name]; document.getElementById("s-script")&&document.getElementById("s-script").remove(); callback(json); };
+  const s = document.createElement("script");
+  s.id = "s-script";
+  s.src = SHEETS_URL+"?tipo="+tipo+"&callback="+name;
+  s.onerror = () => callback({ok:false});
+  document.body.appendChild(s);
+};
+
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxIyL8fYXhQoLp0x1prQYkZCXzOGYkL9Non99Zvd1tRCnld7nFgvXqZSo-3BeNYNqfR/exec";
 
 const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 
@@ -293,6 +309,15 @@ function App() {
   useEffect(() => { sdCafe(pedsCafe); }, [pedsCafe]);
   useEffect(() => { sdStockCafe(stockCafe); }, [stockCafe]);
 
+  // Sync stock to Sheets when it changes
+  const stockTimer = React.useRef(null);
+  useEffect(() => {
+    clearTimeout(stockTimer.current);
+    stockTimer.current = setTimeout(() => {
+      postSheets({tipo:"stock", ...stock, ...stockCafe});
+    }, 2000);
+  }, [stock, stockCafe]);
+
   const showT = (msg, ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),2500); };
   const pv = (t,tipo) => tipo==="minorista" ? PM[t] : PMay[t];
   const gan = (t,tipo,c) => (tipo==="minorista" ? GM[t] : GMay[t]) * c;
@@ -324,6 +349,7 @@ function App() {
     const v = {...vf, id:Date.now(), precio:precioTotal, ganancia:gan(vf.tamano,vf.tipo,vf.cantidad)+ganCafeVenta};
     setVentas(p => [v,...p]);
     setStock(p => ({...p,[vf.tamano]:p[vf.tamano]-vf.cantidad}));
+    postSheets({tipo:"venta", ...v});
     // Descontar stock cafe
     if(vf.cafeCantidades) {
       setStockCafe(s => {
@@ -337,7 +363,10 @@ function App() {
     showT("Venta registrada");
   };
 
-  const cobrar = id => { setVentas(p => p.map(v => v.id===id ? {...v,pagado:true} : v)); showT("Cobrado"); };
+  const cobrar = id => {
+    setVentas(p => p.map(v => { if(v.id===id){postSheets({tipo:"update_venta",id,pagado:true,entregado:v.entregado||false,senia:v.senia||0});return {...v,pagado:true};} return v; }));
+    showT("Cobrado");
+  };
 
   const addPed = () => {
     const tot = SIZES.reduce((a,s)=>a+(pf[s]||0),0);
@@ -460,25 +489,58 @@ function App() {
 
   const sincronizarSheets = () => {
     showT("Sincronizando...");
-    const callbackName = "sheetsCallback_"+Date.now();
-    window[callbackName] = (json) => {
-      delete window[callbackName];
-      document.getElementById("sheets-script")&&document.getElementById("sheets-script").remove();
-      if(!json.ok || !json.data) { showT("Error al sincronizar",false); return; }
-      const pedsCopy = [...peds];
-      const nuevos = procesarPedidosSheets(json.data, pedsCopy);
-      if(nuevos>0) {
-        setPeds(pedsCopy);
-        showT(nuevos+" pedido(s) importados!");
-      } else {
-        showT("Todo al dia, sin pedidos nuevos");
+    // Sync pedidos mayoristas
+    fetchSheets("pedidos", (json) => {
+      if(json.ok && json.data) {
+        const pedsCopy = [...peds];
+        const nuevos = procesarPedidosSheets(json.data, pedsCopy);
+        if(nuevos>0) setPeds(pedsCopy);
       }
-    };
-    const script = document.createElement("script");
-    script.id = "sheets-script";
-    script.src = SHEETS_URL+"?callback="+callbackName;
-    script.onerror = () => { showT("Error de conexion",false); };
-    document.body.appendChild(script);
+    });
+    // Sync stock
+    fetchSheets("stock", (json) => {
+      if(json.ok && json.data && Object.keys(json.data).length>0) {
+        const d = json.data;
+        setStock({
+          ENTERO: parseInt(d.ENTERO)||0,
+          MEDIANO: parseInt(d.MEDIANO)||0,
+          PEQUENO: parseInt(d.PEQUENO)||0,
+          PORCION: parseInt(d.PORCION)||0
+        });
+        setStockCafe({
+          peru250: parseInt(d.peru250)||0,
+          col250: parseInt(d.col250)||0,
+          guat250: parseInt(d.guat250)||0,
+          peru1kg: parseInt(d.peru1kg)||0,
+          capscol: parseInt(d.capscol)||0,
+          capsperu: parseInt(d.capsperu)||0
+        });
+      }
+    });
+    // Sync ventas
+    fetchSheets("ventas", (json) => {
+      if(json.ok && json.data && json.data.length>0) {
+        const ventasSheets = json.data.map(v => ({
+          id: v.id,
+          cliente: v.cliente,
+          celular: v.celular||"",
+          tamano: v.tamano,
+          cantidad: parseInt(v.cantidad)||1,
+          tipo: v.tipo,
+          precio: parseInt(v.precio)||0,
+          ganancia: parseInt(v.ganancia)||0,
+          pagado: v.pagado===true||v.pagado==="TRUE",
+          entregado: v.entregado===true||v.entregado==="TRUE",
+          senia: parseInt(v.senia)||0,
+          retira: v.retira||"",
+          fecha: v.fecha||""
+        }));
+        setVentas(ventasSheets);
+        showT("Sincronizado!");
+      } else {
+        showT("Sincronizado!");
+      }
+    });
   };
 
   const setCantCafe = (id,delta) => {
