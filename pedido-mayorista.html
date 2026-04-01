@@ -559,7 +559,7 @@
 
     // Armar mensaje de WhatsApp
     const tel = document.getElementById("telefono").value.trim();
-    const msg = ` *PEDIDO SEMANAL - Los Rogeles de Marcela*\n\n` +
+    let msg = ` *PEDIDO SEMANAL - Los Rogeles de Marcela*\n\n` +
       ` *Punto:* ${punto}\n` +
       ` *Contacto:* ${contacto}${tel ? `\n *Tel:* ${tel}` : ""}\n` +
       ` *Semana:* ${semana}\n\n` +
@@ -573,7 +573,7 @@
     for(const cid of capsIds) {
       const cv = cantidadesCafe[cid];
       if(cv>0 && cv<CAFE_PRODS[cid].minimo) {
-        alert(`Minimo ${CAFE_PRODS[cid].minimo} cajas de ${CAFE_PRODS[cid].nombre}`);
+        alert("Minimo "+CAFE_PRODS[cid].minimo+" cajas de "+CAFE_PRODS[cid].nombre);
         return;
       }
     }
@@ -581,9 +581,9 @@
     // Agregar cafe al mensaje si hay pedido
     const cafeItems = Object.entries(cantidadesCafe).filter(([,v])=>v>0);
     if(cafeItems.length>0) {
-      const cafeLineas = cafeItems.map(([k,v])=>`- ${CAFE_PRODS[k].nombre}: ${v}`).join("\n");
+      const cafeLineas = cafeItems.map(([k,v])=>"- "+CAFE_PRODS[k].nombre+": "+v).join("\n");
       const cafeTotal = cafeItems.reduce((a,[k,v])=>a+(CAFE_PRODS[k].precio*v),0);
-      msg += `\n\n *PEDIDO CHERRYSEASON:*\n`+cafeLineas+`\n Total cafe: $${cafeTotal.toLocaleString("es-AR")}`;
+      msg += "\n\nPEDIDO CHERRYSEASON:\n"+cafeLineas+"\nTotal cafe: $"+cafeTotal.toLocaleString("es-AR");
     }
 
     const waUrl = `https://wa.me/${WA_NUMERO}?text=${encodeURIComponent(msg)}`;
