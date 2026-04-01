@@ -318,6 +318,62 @@ function App() {
     }, 2000);
   }, [stock, stockCafe]);
 
+  // Auto-sync every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchSheets("stock", (json) => {
+        if(json.ok && json.data && Object.keys(json.data).length>0) {
+          const d = json.data;
+          setStock(prev => {
+            const ns = {ENTERO:parseInt(d.ENTERO)||0,MEDIANO:parseInt(d.MEDIANO)||0,PEQUENO:parseInt(d.PEQUENO)||0,PORCION:parseInt(d.PORCION)||0};
+            if(JSON.stringify(prev)===JSON.stringify(ns)) return prev;
+            return ns;
+          });
+          setStockCafe(prev => {
+            const ns = {peru250:parseInt(d.peru250)||0,col250:parseInt(d.col250)||0,guat250:parseInt(d.guat250)||0,peru1kg:parseInt(d.peru1kg)||0,capscol:parseInt(d.capscol)||0,capsperu:parseInt(d.capsperu)||0};
+            if(JSON.stringify(prev)===JSON.stringify(ns)) return prev;
+            return ns;
+          });
+        }
+      });
+      fetchSheets("ventas", (json) => {
+        if(json.ok && json.data && json.data.length>0) {
+          const ventasSheets = json.data.map(v => ({
+            id:v.id, cliente:v.cliente, celular:v.celular||"", tamano:v.tamano,
+            cantidad:parseInt(v.cantidad)||1, tipo:v.tipo, precio:parseInt(v.precio)||0,
+            ganancia:parseInt(v.ganancia)||0, pagado:v.pagado===true||v.pagado==="TRUE",
+            entregado:v.entregado===true||v.entregado==="TRUE", senia:parseInt(v.senia)||0,
+            retira:v.retira||"", fecha:v.fecha||""
+          }));
+          setVentas(prev => {
+            if(JSON.stringify(prev)===JSON.stringify(ventasSheets)) return prev;
+            return ventasSheets;
+          });
+        }
+      });
+      fetchSheets("pedidos", (json) => {
+        if(json.ok && json.data) {
+          setPeds(prev => {
+            const pedsCopy = [...prev];
+            let cambio = false;
+            json.data.forEach(row => {
+              if(!row.punto||!row.semana) return;
+              const yaExiste = pedsCopy.some(p=>p.punto===row.punto&&p.semana===row.semana);
+              if(!yaExiste) {
+                const esValle=row.punto.toLowerCase().includes("valle");
+                const g=esValle?0:((parseInt(row.entero)||0)*GMay.ENTERO+(parseInt(row.medio)||0)*GMay.MEDIANO+(parseInt(row.cuarto)||0)*GMay.PEQUENO+(parseInt(row.porcion)||0)*GMay.PORCION);
+                pedsCopy.unshift({id:Date.now(),punto:row.punto,semana:row.semana,ENTERO:parseInt(row.entero)||0,MEDIANO:parseInt(row.medio)||0,PEQUENO:parseInt(row.cuarto)||0,PORCION:parseInt(row.porcion)||0,ganancia:g,contacto:row.contacto||""});
+                cambio=true;
+              }
+            });
+            return cambio ? pedsCopy : prev;
+          });
+        }
+      });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const showT = (msg, ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),2500); };
   const pv = (t,tipo) => tipo==="minorista" ? PM[t] : PMay[t];
   const gan = (t,tipo,c) => (tipo==="minorista" ? GM[t] : GMay[t]) * c;
@@ -348,7 +404,7 @@ function App() {
     const precioTotal = pv(vf.tamano,vf.tipo)*vf.cantidad + CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*((vf.cafeCantidades||{})[p.id]||0)),0);
     const v = {...vf, id:Date.now(), precio:precioTotal, ganancia:gan(vf.tamano,vf.tipo,vf.cantidad)+ganCafeVenta};
     setVentas(p => [v,...p]);
-    setStock(p => ({...p,[vf.tamano]:p[vf.tamano]-vf.cantidad}));
+    setStock(p => ({...p,[vf.tamano]:p[vf.tamano]-parseInt(vf.cantidad)}));
     postSheets({tipo:"venta", ...v});
     // Descontar stock cafe
     if(vf.cafeCantidades) {
@@ -366,6 +422,22 @@ function App() {
   const cobrar = id => {
     setVentas(p => p.map(v => { if(v.id===id){postSheets({tipo:"update_venta",id,pagado:true,entregado:v.entregado||false,senia:v.senia||0});return {...v,pagado:true};} return v; }));
     showT("Cobrado");
+  };
+
+  const anularVenta = id => {
+    const v = ventas.find(x=>x.id===id);
+    if(!v) return;
+    if(!window.confirm("Anular la venta de "+v.cliente+"? Se devuelve el stock.")) return;
+    setVentas(p => p.filter(x=>x.id!==id));
+    setStock(p => ({...p,[v.tamano]:p[v.tamano]+v.cantidad}));
+    if(v.cafeCantidades) {
+      setStockCafe(s => {
+        const ns = {...s};
+        CAFE.forEach(p => { if((v.cafeCantidades[p.id]||0)>0) ns[p.id]=(ns[p.id]||0)+(v.cafeCantidades[p.id]||0); });
+        return ns;
+      });
+    }
+    showT("Venta anulada - stock devuelto");
   };
 
   const addPed = () => {
@@ -771,6 +843,7 @@ function App() {
                   {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.naranja,marginTop:2}}>Senia: {fmt(v.senia)}</div>}
                   {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.rojo,fontWeight:"bold"}}>Saldo: {fmt(v.precio-v.senia)}</div>}
                   {!v.entregado && v.retira && <div style={{fontSize:9,color:C.marronL,marginTop:2}}>Retira: {v.retira}</div>}
+                  {!v.pagado && <button onClick={()=>anularVenta(v.id)} style={btnSm(C.rojo)}>Anular</button>}
                 </div>
               </div>
             </div>
