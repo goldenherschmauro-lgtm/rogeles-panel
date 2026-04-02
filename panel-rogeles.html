@@ -291,7 +291,7 @@ function App() {
   const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [calMes, setCalMes] = useState(new Date().getMonth());
   const [calAnio, setCalAnio] = useState(new Date().getFullYear());
-  const [filtroVentas, setFiltroVentas] = useState('todas');
+  const [filtroVentas, setFiltroVentas] = useState('hoy');
   const [editVenta, setEditVenta] = useState(null);
   const [editForm, setEditForm] = useState({});
 
@@ -697,7 +697,7 @@ function App() {
             <KPI label="Ganancia Total" value={fmt(gmi+gma+ganCafe)} sub="rogeles+cafe" color={C.naranja}/>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
-            <div onClick={()=>setTab("ventas")} style={{cursor:"pointer"}}><KPI label="Ventas hoy" value={hoy.length} sub="toca para ver" color={C.rosa}/></div>
+            <div onClick={()=>{setTab("ventas");setFiltroVentas("hoy");}} style={{cursor:"pointer"}}><KPI label="Ventas hoy" value={hoy.length} sub="toca para ver" color={C.rosa}/></div>
             <KPI label="Pendientes" value={pend.length} sub="sin cobrar" color={pend.length>0?C.rojo:C.verde}/>
           </div>
           <Card title="Stock actual">
@@ -878,7 +878,7 @@ function App() {
           </Card>}
           {/* Filtros */}
           <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
-            {[{id:"todas",label:"Todas"},{id:"pendientes",label:"Sin entregar"},{id:"senia",label:"Con senia"},{id:"entregadas",label:"Entregadas"}].map(f=>(
+            {[{id:"hoy",label:"Hoy"},{id:"todas",label:"Todas"},{id:"pendientes",label:"Sin entregar"},{id:"senia",label:"Con senia"},{id:"entregadas",label:"Entregadas"}].map(f=>(
               <button key={f.id} onClick={()=>setFiltroVentas(f.id)}
                 style={{padding:"6px 12px",borderRadius:20,border:"2px solid "+(filtroVentas===f.id?C.rosa:C.border),background:filtroVentas===f.id?C.rosaBg:"transparent",color:filtroVentas===f.id?C.rosa:C.marronL,fontSize:11,cursor:"pointer",fontWeight:filtroVentas===f.id?"bold":"normal"}}>
                 {f.label}
@@ -888,6 +888,8 @@ function App() {
 
           {ventas.length===0 && !svf && <Empty text="No hay ventas registradas"/>}
           {ventas.filter(v=>{
+            const hoyStr = new Date().toLocaleDateString("es-AR");
+            if(filtroVentas==="hoy") return v.fecha===hoyStr;
             if(filtroVentas==="pendientes") return !v.entregado;
             if(filtroVentas==="senia") return (v.senia||0)>0 && !v.pagado;
             if(filtroVentas==="entregadas") return v.entregado;
@@ -1262,6 +1264,177 @@ function App() {
       </div>
     </div>
   );
+}
+
+
+function StatsTab({ventas}) {
+  const mesActual = new Date().getMonth();
+  const anioActual = new Date().getFullYear();
+  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+  const parseDate = (fecha) => {
+    if(!fecha) return null;
+    const p = fecha.split("/");
+    if(p.length===3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+    return new Date(fecha);
+  };
+
+  const ventasMes = ventas.filter(v => {
+    const d = parseDate(v.fecha);
+    return d && d.getMonth()===mesActual && d.getFullYear()===anioActual;
+  });
+
+  const getCant = (v, tipo) => {
+    if(v.cantidades) return v.cantidades[tipo]||0;
+    if(!v.tamano) return 0;
+    const t = v.tamano.toUpperCase();
+    const c = parseInt(v.cantidad)||1;
+    if(tipo==="ENTERO") return t.includes("ENTERO")?c:0;
+    if(tipo==="MEDIANO") return t.includes("MEDIANO")?c:0;
+    if(tipo==="PEQUENO") return (t.includes("PEQUENO")||t.includes("CUARTO"))?c:0;
+    if(tipo==="PORCION") return (t.includes("PORCION")||t.includes("ROGELITO"))?c:0;
+    return 0;
+  };
+
+  const porDia = {};
+  ventasMes.forEach(v => {
+    const d = parseDate(v.fecha);
+    if(!d) return;
+    const dia = d.getDate();
+    if(!porDia[dia]) porDia[dia]={total:0,gan:0,entero:0,mediano:0,pequeno:0,porcion:0,count:0,dow:d.getDay()};
+    porDia[dia].total += v.precio||0;
+    porDia[dia].gan += v.ganancia||0;
+    porDia[dia].count++;
+    porDia[dia].entero += getCant(v,"ENTERO");
+    porDia[dia].mediano += getCant(v,"MEDIANO");
+    porDia[dia].pequeno += getCant(v,"PEQUENO");
+    porDia[dia].porcion += getCant(v,"PORCION");
+  });
+
+  const porSemana = {1:0,2:0,3:0,4:0,5:0,6:0,0:0};
+  ventasMes.forEach(v => {
+    const d = parseDate(v.fecha);
+    if(d) porSemana[d.getDay()] += v.precio||0;
+  });
+
+  const dias = Object.keys(porDia).map(Number).sort((a,b)=>a-b);
+  const maxVenta = Math.max(...dias.map(d=>porDia[d].total), 1);
+  const maxSem = Math.max(...Object.values(porSemana), 1);
+  const totE = ventasMes.reduce((a,v)=>a+getCant(v,"ENTERO"),0);
+  const totM = ventasMes.reduce((a,v)=>a+getCant(v,"MEDIANO"),0);
+  const totP = ventasMes.reduce((a,v)=>a+getCant(v,"PEQUENO"),0);
+  const totPo = ventasMes.reduce((a,v)=>a+getCant(v,"PORCION"),0);
+  const totGan = ventasMes.reduce((a,v)=>a+(v.ganancia||0),0);
+  const findeVentas = porSemana[5]+porSemana[6]+porSemana[0];
+  const totalVentas = Object.values(porSemana).reduce((a,b)=>a+b,0);
+  const findePct = totalVentas>0 ? Math.round(findeVentas/totalVentas*100) : 0;
+  const dowNames = ["Dom","Lun","Mar","Mie","Jue","Vie","Sab"];
+
+  return <div style={{paddingBottom:20}}>
+    <div style={{fontSize:12,color:"#E8A0A8",letterSpacing:2.5,textTransform:"uppercase",paddingTop:20,marginBottom:14,fontWeight:"bold"}}>Estadisticas - {MESES[mesActual]} {anioActual}</div>
+
+    {/* Resumen */}
+    <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+        <div style={{background:"#FDF6F0",borderRadius:12,padding:12,textAlign:"center"}}>
+          <div style={{fontSize:28,fontWeight:"bold",color:"#C4687A"}}>{ventasMes.length}</div>
+          <div style={{fontSize:10,color:"#8B6070"}}>ventas del mes</div>
+        </div>
+        <div style={{background:"#FDF6F0",borderRadius:12,padding:12,textAlign:"center"}}>
+          <div style={{fontSize:22,fontWeight:"bold",color:"#7BAE84"}}>{fmt(totGan)}</div>
+          <div style={{fontSize:10,color:"#8B6070"}}>ganancia</div>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
+        {[["ENTERO",totE,"#C4687A"],["MEDIANO",totM,"#D4845A"],["PEQUENO",totP,"#7BAE84"],["PORCION",totPo,"#9B59B6"]].map(([n,v,col])=>(
+          <div key={n} style={{background:"#FDF6F0",borderRadius:10,padding:8,textAlign:"center"}}>
+            <div style={{fontSize:20,fontWeight:"bold",color:col}}>{v}</div>
+            <div style={{fontSize:8,color:"#8B6070"}}>{n}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Grafico por dia */}
+    <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+      <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Ventas por dia del mes</div>
+      {dias.length===0
+        ? <div style={{textAlign:"center",color:"#8B6070",fontSize:12,padding:20}}>Sin ventas este mes aun</div>
+        : <div style={{overflowX:"auto"}}>
+            <div style={{display:"flex",gap:3,alignItems:"flex-end",height:130,minWidth:dias.length*34}}>
+              {dias.map(dia=>{
+                const d=porDia[dia];
+                const h=Math.max(8,Math.round((d.total/maxVenta)*110));
+                const esFinde=d.dow===5||d.dow===6||d.dow===0;
+                return <div key={dia} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,flex:"0 0 30px"}}>
+                  <div style={{fontSize:7,color:"#8B6070"}}>{fmt(d.total).replace("$","").replace(".000","k").replace(",",".")}</div>
+                  <div style={{width:22,background:esFinde?"#C4687A":"#F5D0D6",borderRadius:"4px 4px 0 0",height:h+"px"}}/>
+                  <div style={{fontSize:9,color:esFinde?"#C4687A":"#8B6070",fontWeight:esFinde?"bold":"normal"}}>{dia}</div>
+                  <div style={{fontSize:7,color:"#8B6070"}}>{dowNames[d.dow]}</div>
+                </div>;
+              })}
+            </div>
+            <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:8}}>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#C4687A",borderRadius:2}}/><span style={{fontSize:9,color:"#8B6070"}}>Finde</span></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#F5D0D6",borderRadius:2}}/><span style={{fontSize:9,color:"#8B6070"}}>Semana</span></div>
+            </div>
+          </div>
+      }
+    </div>
+
+    {/* Grafico por dia de semana */}
+    <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+      <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Por dia de semana</div>
+      <div style={{display:"flex",gap:6,alignItems:"flex-end",height:100}}>
+        {[1,2,3,4,5,6,0].map(dow=>{
+          const val=porSemana[dow];
+          const h=Math.max(4,Math.round((val/maxSem)*80));
+          const esFinde=dow===5||dow===6||dow===0;
+          return <div key={dow} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+            <div style={{fontSize:7,color:"#8B6070"}}>{val>0?fmt(val).replace("$","").replace(".000","k"):""}</div>
+            <div style={{width:"100%",background:esFinde?"#C4687A":"#F5D0D6",borderRadius:"4px 4px 0 0",height:h+"px"}}/>
+            <div style={{fontSize:10,color:esFinde?"#C4687A":"#8B6070",fontWeight:esFinde?"bold":"normal"}}>{["Dom","Lun","Mar","Mie","Jue","Vie","Sab"][dow]}</div>
+          </div>;
+        })}
+      </div>
+    </div>
+
+    {/* Alerta pedido */}
+    {findePct>0&&<div style={{background:"#FFF8E1",borderRadius:16,padding:16,marginBottom:14,border:"2px solid #F59E0B"}}>
+      <div style={{fontSize:11,color:"#92400E",letterSpacing:2,textTransform:"uppercase",marginBottom:8,fontWeight:"bold"}}>Alerta de pedido</div>
+      <div style={{fontSize:13,color:"#92400E",marginBottom:8}}>El <strong>{findePct}%</strong> de tus ventas son Vie/Sab/Dom</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:8}}>
+        {[["ENTERO",Math.ceil(totE/Math.max(dias.length,1)*7)],["MEDIANO",Math.ceil(totM/Math.max(dias.length,1)*7)],["PEQUENO",Math.ceil(totP/Math.max(dias.length,1)*7)],["PORCION",Math.ceil(totPo/Math.max(dias.length,1)*7)]].map(([n,v])=>(
+          <div key={n} style={{background:"#FEF3C7",borderRadius:8,padding:"6px 10px",display:"flex",justifyContent:"space-between"}}>
+            <span style={{fontSize:11,color:"#78350F"}}>{n}</span>
+            <span style={{fontWeight:"bold",color:"#92400E"}}>{v} u.</span>
+          </div>
+        ))}
+      </div>
+    </div>}
+
+    {/* Top dias */}
+    {dias.length>0&&<div style={{background:"#fff",borderRadius:16,padding:16,border:"1px solid #F0D0D8"}}>
+      <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Mejores dias del mes</div>
+      {[...dias].sort((a,b)=>porDia[b].total-porDia[a].total).slice(0,5).map((dia,i)=>{
+        const d=porDia[dia];
+        const esFinde=d.dow===5||d.dow===6||d.dow===0;
+        return <div key={dia} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #F0D0D8"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:24,height:24,borderRadius:"50%",background:i===0?"#C4687A":"#F5D0D6",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:"bold",color:i===0?"#fff":"#C4687A"}}>{i+1}</div>
+            <div>
+              <div style={{fontSize:13,fontWeight:"bold",color:"#5C3340"}}>Dia {dia} - {dowNames[d.dow]}</div>
+              <div style={{fontSize:10,color:"#8B6070"}}>{d.count} ventas - E:{d.entero} M:{d.mediano} P:{d.pequeno} Po:{d.porcion}</div>
+            </div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:13,fontWeight:"bold",color:esFinde?"#C4687A":"#D4845A"}}>{fmt(d.total)}</div>
+            <div style={{fontSize:10,color:"#7BAE84"}}>+{fmt(d.gan)}</div>
+          </div>
+        </div>;
+      })}
+    </div>}
+  </div>;
 }
 
 function HistorialTab({anio, setAnio}) {
