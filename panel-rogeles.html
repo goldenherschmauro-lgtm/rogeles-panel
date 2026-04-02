@@ -79,7 +79,7 @@ const H2025 = [
 const H2026 = [
   {mes:"Enero",   gmi:1177820, gma:5209220, tot:6387040, caja:3365200, mE:35, mM:26, mC:12, mP:6,  myE:412, myM:326, myC:52, myP:30},
   {mes:"Febrero", gmi:2212669, gma:6325020, tot:8537689, caja:6321911, mE:70, mM:46, mC:6,  mP:11, myE:480, myM:446, myC:0,  myP:51},
-  {mes:"Marzo",   gmi:1815205, gma:5486990, tot:7302195, caja:5186300, mE:0,  mM:0,  mC:0,  mP:0,  myE:408, myM:377, myC:0,  myP:37},
+  {mes:"Marzo",   gmi:1999550, gma:5486990, tot:7486540, caja:5713000, mE:59, mM:45, mC:0,  mP:9,  myE:408, myM:377, myC:0,  myP:37},
 ];
 
 // Firebase helpers
@@ -292,6 +292,8 @@ function App() {
   const [calMes, setCalMes] = useState(new Date().getMonth());
   const [calAnio, setCalAnio] = useState(new Date().getFullYear());
   const [filtroVentas, setFiltroVentas] = useState('todas');
+  const [editVenta, setEditVenta] = useState(null);
+  const [editForm, setEditForm] = useState({});
 
   // Firebase listeners - sync in real time
   useEffect(() => {
@@ -643,6 +645,13 @@ function App() {
     document.body.appendChild(s);
   };
 
+  const guardarEdicion = () => {
+    fbUpdate("ventas/"+editVenta, editForm);
+    setEditVenta(null);
+    setEditForm({});
+    showT("Venta actualizada");
+  };
+
   const setCantCafe = (id,delta) => {
     const prev = cafeForm.cantidades[id]||0;
     setCafeForm(f => ({...f,cantidades:{...f.cantidades,[id]:Math.max(0,prev+delta)}}));
@@ -901,6 +910,19 @@ function App() {
                   {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.rojo,fontWeight:"bold"}}>Saldo: {fmt(v.precio-v.senia)}</div>}
                   {!v.entregado && v.retira && <div style={{fontSize:9,color:C.marronL,marginTop:2}}>Retira: {v.retira}</div>}
                   {!v.pagado && <button onClick={()=>anularVenta(v.id)} style={btnSm(C.rojo)}>Anular</button>}
+                  <button onClick={()=>{setEditVenta(v.id);setEditForm({cliente:v.cliente,celular:v.celular||"",retira:v.retira||"",precio:v.precio,tamano:v.tamano});}} style={btnSm("#6B7280")}>Editar</button>
+                  {editVenta===v.id&&<div style={{marginTop:8,background:"#F9FAFB",borderRadius:10,padding:10,border:"1px solid #E5E7EB"}}>
+                    <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Nombre</div>
+                    <input value={editForm.cliente||""} onChange={e=>setEditForm(f=>({...f,cliente:e.target.value}))} style={{...inp(),marginBottom:6,fontSize:12}}/>
+                    <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Celular</div>
+                    <input value={editForm.celular||""} onChange={e=>setEditForm(f=>({...f,celular:e.target.value}))} style={{...inp(),marginBottom:6,fontSize:12}}/>
+                    <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Fecha retira</div>
+                    <input type="date" value={editForm.retira||""} onChange={e=>setEditForm(f=>({...f,retira:e.target.value}))} style={{...inp(),marginBottom:8,fontSize:12}}/>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                      <button onClick={()=>{setEditVenta(null);setEditForm({});}} style={{padding:8,borderRadius:8,border:"1px solid #E5E7EB",background:"transparent",color:C.marronL,cursor:"pointer",fontSize:12}}>Cancelar</button>
+                      <button onClick={guardarEdicion} style={{padding:8,borderRadius:8,border:"none",background:C.rosa,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold"}}>Guardar</button>
+                    </div>
+                  </div>}
                 </div>
               </div>
             </div>
