@@ -236,7 +236,7 @@ const dbFB = firebase.database();
     <div class="size-grid">
       <!-- ENTERO -->
       <div class="size-card" id="card-entero">
-        <div class="size-name">Entero</div>
+        <div class="size-name">ENTERO</div>
         <div class="size-price" id="price-entero">Precio a confirmar</div>
         <div class="qty-control">
           <button class="qty-btn minus" onclick="cambiar('entero', -1)">−</button>
@@ -246,7 +246,7 @@ const dbFB = firebase.database();
       </div>
       <!-- MEDIO -->
       <div class="size-card" id="card-medio">
-        <div class="size-name">Medio</div>
+        <div class="size-name">MEDIANO</div>
         <div class="size-price" id="price-medio">Precio a confirmar</div>
         <div class="qty-control">
           <button class="qty-btn minus" onclick="cambiar('medio', -1)">−</button>
@@ -256,7 +256,7 @@ const dbFB = firebase.database();
       </div>
       <!-- CUARTO -->
       <div class="size-card" id="card-cuarto">
-        <div class="size-name">Cuarto</div>
+        <div class="size-name">PEQUENO</div>
         <div class="size-price" id="price-cuarto">Precio a confirmar</div>
         <div class="qty-control">
           <button class="qty-btn minus" onclick="cambiar('cuarto', -1)">−</button>
@@ -266,7 +266,7 @@ const dbFB = firebase.database();
       </div>
       <!-- ROGELITO -->
       <div class="size-card" id="card-rogelito">
-        <div class="size-name">Rogelito</div>
+        <div class="size-name">PORCION</div>
         <div class="size-price" id="price-rogelito">Precio a confirmar</div>
         <div class="qty-control">
           <button class="qty-btn minus" onclick="cambiar('rogelito', -1)">−</button>
@@ -395,10 +395,10 @@ const dbFB = firebase.database();
 <script>
   // -- Precios mayorista reales (marzo 2026) --
   const PRECIOS = {
-    entero:   { label: "Entero",   precio: 56940 },
-    medio:    { label: "Medio",    precio: 35100 },
-    cuarto:   { label: "Cuarto",   precio: 24180 },
-    rogelito: { label: "Rogelito", precio: 40560, nota: "x6 unidades . $8.667 c/u" },
+    entero:   { label: "ENTERO",   precio: 56940 },
+    medio:    { label: "MEDIANO",    precio: 35100 },
+    cuarto:   { label: "PEQUENO",   precio: 24180 },
+    rogelito: { label: "PORCION", precio: 40560, nota: "x6 unidades . $8.667 c/u" },
   };
 
   const WA_NUMERO = "5493513128283";
@@ -407,10 +407,10 @@ const dbFB = firebase.database();
   const cantidades = { entero: 0, medio: 0, cuarto: 0, rogelito: 0 };
 
   const PRECIOS_COSTO = {
-    entero:   { label: "Entero",   precio: 48050 },
-    medio:    { label: "Medio",    precio: 29150 },
-    cuarto:   { label: "Cuarto",   precio: 20350 },
-    rogelito: { label: "Rogelito", precio: 37600, nota: "x6 unidades" },
+    entero:   { label: "ENTERO",   precio: 48050 },
+    medio:    { label: "MEDIANO",    precio: 29150 },
+    cuarto:   { label: "PEQUENO",   precio: 20350 },
+    rogelito: { label: "PORCION", precio: 37600, nota: "x6 unidades" },
   };
 
   function actualizarPrecios() {
