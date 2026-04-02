@@ -697,7 +697,7 @@ function App() {
             <KPI label="Ganancia Total" value={fmt(gmi+gma+ganCafe)} sub="rogeles+cafe" color={C.naranja}/>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
-            <KPI label="Ventas hoy" value={hoy.length} sub="operaciones" color={C.rosa}/>
+            <div onClick={()=>setTab("ventas")} style={{cursor:"pointer"}}><KPI label="Ventas hoy" value={hoy.length} sub="toca para ver" color={C.rosa}/></div>
             <KPI label="Pendientes" value={pend.length} sub="sin cobrar" color={pend.length>0?C.rojo:C.verde}/>
           </div>
           <Card title="Stock actual">
@@ -785,7 +785,7 @@ function App() {
               ))}
             </div>
             <input placeholder="Nombre *" value={vf.cliente} onChange={e=>setVf(f=>({...f,cliente:e.target.value}))} style={inp()}/>
-            <input placeholder="Celular (opcional)" value={vf.celular} onChange={e=>setVf(f=>({...f,celular:e.target.value}))} style={inp()}/>
+            <input type="tel" placeholder="Celular (opcional)" value={vf.celular} onChange={e=>setVf(f=>({...f,celular:e.target.value}))} style={inp()}/>
             <Lbl>Rogeles (cantidad por tamano)</Lbl>
             {SIZES.map(s => {
               const precio = pv(s,vf.tipo);
