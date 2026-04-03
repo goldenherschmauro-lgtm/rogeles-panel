@@ -298,22 +298,16 @@ function App() {
 
   // Firebase listeners - sync in real time
   useEffect(() => {
-    // Stock listeners
-    const refStock = db.ref("stock");
-    refStock.on("value", snap => { 
-      const v=snap.val(); 
-      if(v && !ignoringStock.current) {
-        setStock(v);
-        stockLoaded.current = true;
-      }
+    // Stock: load once only
+    db.ref("stock").once("value").then(snap => {
+      const v = snap.val();
+      if(v) { setStock(v); stockLoaded.current = true; }
+      else setStock({ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
     });
-    const refStockCafe = db.ref("stockCafe");
-    refStockCafe.on("value", snap => { 
-      const v=snap.val(); 
-      if(v && !ignoringStockCafe.current) {
-        setStockCafe(v);
-        stockCafeLoaded.current = true;
-      }
+    db.ref("stockCafe").once("value").then(snap => {
+      const v = snap.val();
+      if(v) { setStockCafe(v); stockCafeLoaded.current = true; }
+      else setStockCafe({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
     });
     // Listen to ventas
     const refVentas = db.ref("ventas");
@@ -337,37 +331,15 @@ function App() {
       else setPedsCafe([]);
     });
     return () => {
-      refStock.off(); refStockCafe.off(); refVentas.off(); refPeds.off(); refPedsCafe.off();
+      refVentas.off(); refPeds.off(); refPedsCafe.off();
     };
   }, []);
 
-  // Save stock to Firebase - only after initial load
+  // Stock refs for manual save
+  const ignoringStock = React.useRef(false);
+  const ignoringStockCafe = React.useRef(false);
   const stockLoaded = React.useRef(false);
   const stockCafeLoaded = React.useRef(false);
-  const stockTimer = React.useRef(null);
-  const ignoringStock = React.useRef(false);
-  useEffect(() => {
-    if(!stockLoaded.current) return;
-    clearTimeout(stockTimer.current);
-    ignoringStock.current = true;
-    stockTimer.current = setTimeout(() => {
-      fbSet("stock", stock).then(() => {
-        setTimeout(() => { ignoringStock.current = false; }, 3000);
-      });
-    }, 1000);
-  }, [stock]);
-  const stockCafeTimer = React.useRef(null);
-  const ignoringStockCafe = React.useRef(false);
-  useEffect(() => {
-    if(!stockCafeLoaded.current) return;
-    clearTimeout(stockCafeTimer.current);
-    ignoringStockCafe.current = true;
-    stockCafeTimer.current = setTimeout(() => {
-      fbSet("stockCafe", stockCafe).then(() => {
-        setTimeout(() => { ignoringStockCafe.current = false; }, 3000);
-      });
-    }, 1000);
-  }, [stockCafe]);
 
   // Auto-sync every 30 seconds
   useEffect(() => {
@@ -472,10 +444,11 @@ function App() {
       cantidades: cants
     };
     fbSet("ventas/"+v.id, v);
-    // Descontar stock rogeles
+    // Descontar stock rogeles y guardar en Firebase
     setStock(p => {
       const ns = {...p};
-      SIZES.forEach(s => { if((cants[s]||0)>0) ns[s]=ns[s]-(cants[s]||0); });
+      SIZES.forEach(s => { if((cants[s]||0)>0) ns[s]=(ns[s]||0)-(cants[s]||0); });
+      setTimeout(() => fbSet("stock", ns), 500);
       return ns;
     });
     postSheets({tipo:"venta", ...v});
@@ -963,7 +936,13 @@ function App() {
 
         {/* STOCK */}
         {tab==="stock" && <div>
-          <ST>Control de Stock</ST>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}>
+            <ST noTop>Control de Stock</ST>
+            <button onClick={()=>{fbSet("stock",stock);fbSet("stockCafe",stockCafe);showT("Stock guardado!");}}
+              style={{padding:"8px 16px",borderRadius:12,border:"none",background:C.verde,color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:12}}>
+              Guardar stock
+            </button>
+          </div>
           {!stock && <div style={{textAlign:"center",padding:30,color:C.marronL}}>Cargando stock...</div>}
           {stock && SIZES.map(s => (
             <div key={s} style={{background:C.card,borderRadius:16,padding:16,marginBottom:12,border:"1px solid "+C.border}}>
