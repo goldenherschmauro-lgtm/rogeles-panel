@@ -300,10 +300,10 @@ function App() {
   useEffect(() => {
     // Listen to stock
     const refStock = db.ref("stock");
-    refStock.on("value", snap => { const v=snap.val(); if(v) setStock(v); });
+    refStock.on("value", snap => { const v=snap.val(); if(v && !ignoringStock.current) setStock(v); });
     // Listen to stockCafe
     const refStockCafe = db.ref("stockCafe");
-    refStockCafe.on("value", snap => { const v=snap.val(); if(v) setStockCafe(v); });
+    refStockCafe.on("value", snap => { const v=snap.val(); if(v && !ignoringStockCafe.current) setStockCafe(v); });
     // Listen to ventas
     const refVentas = db.ref("ventas");
     refVentas.on("value", snap => {
@@ -332,14 +332,26 @@ function App() {
 
   // Save stock to Firebase when changed (debounced)
   const stockTimer = React.useRef(null);
+  const ignoringStock = React.useRef(false);
   useEffect(() => {
     clearTimeout(stockTimer.current);
-    stockTimer.current = setTimeout(() => { fbSet("stock", stock); }, 1500);
+    ignoringStock.current = true;
+    stockTimer.current = setTimeout(() => {
+      fbSet("stock", stock).then(() => {
+        setTimeout(() => { ignoringStock.current = false; }, 1000);
+      });
+    }, 800);
   }, [stock]);
   const stockCafeTimer = React.useRef(null);
+  const ignoringStockCafe = React.useRef(false);
   useEffect(() => {
     clearTimeout(stockCafeTimer.current);
-    stockCafeTimer.current = setTimeout(() => { fbSet("stockCafe", stockCafe); }, 1500);
+    ignoringStockCafe.current = true;
+    stockCafeTimer.current = setTimeout(() => {
+      fbSet("stockCafe", stockCafe).then(() => {
+        setTimeout(() => { ignoringStockCafe.current = false; }, 1000);
+      });
+    }, 800);
   }, [stockCafe]);
 
   // Auto-sync every 30 seconds
