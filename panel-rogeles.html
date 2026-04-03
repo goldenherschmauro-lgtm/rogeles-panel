@@ -259,6 +259,7 @@ function CalendarioEntregas({ventas, setVentas, calMes, calAnio, setCalMes, setC
                     style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#7BAE84",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Cobrar</button>}
                   {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s))setVentas(p=>p.map(x=>x.id===v.id?{...x,senia:(x.senia||0)+parseInt(s)}:x));}}
                     style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#D4845A",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Senia</button>}
+                  {v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:false})} style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#8B6070",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Deshacer entrega</button>}
                   {!v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:true})}
                     style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#7B68EE",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Entregado</button>}
                   {v.entregado && <div style={{fontSize:11,color:"#7B68EE",fontWeight:"bold",padding:"7px 0",textAlign:"center",flex:1}}>Ya entregado</div>}
@@ -906,8 +907,9 @@ function App() {
                   <div style={{fontWeight:"bold",color:C.naranja,fontSize:15}}>{fmt(v.precio)}</div>
                   <div style={{fontSize:11,color:C.verde}}>+{fmt(v.ganancia)}</div>
                   {!v.pagado && <button onClick={()=>cobrar(v.id)} style={btnSm(C.verde)}>Cobrar</button>}
+                  {v.pagado && !v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{pagado:false})} style={{...btnSm("#8B6070"),background:"#9B9B9B"}}>Deshacer cobro</button>}
                   {v.pagado && !v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:true})} style={{...btnSm("#7B68EE"),background:"#7B68EE"}}>Entregado</button>}
-                  {v.pagado && v.entregado && <div style={{fontSize:10,color:"#7B68EE",marginTop:4,fontWeight:"bold"}}>Entregado</div>}
+                  {v.pagado && v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:false})} style={{...btnSm("#8B6070"),background:"#8B6070"}}>Deshacer entrega</button>}
                   {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s)){const vv=ventas.find(x=>x.id===v.id);fbUpdate("ventas/"+v.id,{senia:(vv?.senia||0)+parseInt(s)});}}} style={btnSm(C.naranja)}>Senia</button>}
                   {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.naranja,marginTop:2}}>Senia: {fmt(v.senia)}</div>}
                   {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.rojo,fontWeight:"bold"}}>Saldo: {fmt(v.precio-v.senia)}</div>}
@@ -1274,14 +1276,23 @@ function StatsTab({ventas}) {
 
   const parseDate = (fecha) => {
     if(!fecha) return null;
+    // Handle D/M/YYYY or DD/MM/YYYY
     const p = fecha.split("/");
-    if(p.length===3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-    return new Date(fecha);
+    if(p.length===3) {
+      const dia = parseInt(p[0]);
+      const mes = parseInt(p[1])-1;
+      const anio = parseInt(p[2]);
+      if(!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) return new Date(anio, mes, dia);
+    }
+    const d = new Date(fecha);
+    return isNaN(d.getTime()) ? null : d;
   };
 
   const ventasMes = ventas.filter(v => {
+    if(!v.fecha) return false;
     const d = parseDate(v.fecha);
-    return d && d.getMonth()===mesActual && d.getFullYear()===anioActual;
+    if(!d) return false;
+    return d.getMonth()===mesActual && d.getFullYear()===anioActual;
   });
 
   const getCant = (v, tipo) => {
