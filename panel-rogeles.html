@@ -298,9 +298,17 @@ function App() {
 
   // Firebase listeners - sync in real time
   useEffect(() => {
-    // Stock: load once on start only (no live listener to avoid overwriting)
-    db.ref("stock").once("value").then(snap => { const v=snap.val(); if(v && !ignoringStock.current) setStock(v); });
-    db.ref("stockCafe").once("value").then(snap => { const v=snap.val(); if(v && !ignoringStockCafe.current) setStockCafe(v); });
+    // Stock listeners
+    const refStock = db.ref("stock");
+    refStock.on("value", snap => { 
+      const v=snap.val(); 
+      if(v && !ignoringStock.current) setStock(v); 
+    });
+    const refStockCafe = db.ref("stockCafe");
+    refStockCafe.on("value", snap => { 
+      const v=snap.val(); 
+      if(v && !ignoringStockCafe.current) setStockCafe(v); 
+    });
     // Listen to ventas
     const refVentas = db.ref("ventas");
     refVentas.on("value", snap => {
@@ -323,7 +331,7 @@ function App() {
       else setPedsCafe([]);
     });
     return () => {
-      refVentas.off(); refPeds.off(); refPedsCafe.off();
+      refStock.off(); refStockCafe.off(); refVentas.off(); refPeds.off(); refPedsCafe.off();
     };
   }, []);
 
@@ -335,9 +343,9 @@ function App() {
     ignoringStock.current = true;
     stockTimer.current = setTimeout(() => {
       fbSet("stock", stock).then(() => {
-        setTimeout(() => { ignoringStock.current = false; }, 1000);
+        setTimeout(() => { ignoringStock.current = false; }, 5000);
       });
-    }, 800);
+    }, 1000);
   }, [stock]);
   const stockCafeTimer = React.useRef(null);
   const ignoringStockCafe = React.useRef(false);
@@ -346,9 +354,9 @@ function App() {
     ignoringStockCafe.current = true;
     stockCafeTimer.current = setTimeout(() => {
       fbSet("stockCafe", stockCafe).then(() => {
-        setTimeout(() => { ignoringStockCafe.current = false; }, 1000);
+        setTimeout(() => { ignoringStockCafe.current = false; }, 5000);
       });
-    }, 800);
+    }, 1000);
   }, [stockCafe]);
 
   // Auto-sync every 30 seconds
