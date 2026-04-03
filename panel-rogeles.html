@@ -275,7 +275,7 @@ function CalendarioEntregas({ventas, setVentas, calMes, calAnio, setCalMes, setC
 
 function App() {
   const [tab, setTab] = useState("dashboard");
-  const [stock, setStock] = useState(null);
+  const [stock, setStock] = useState({ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
   const [ventas, setVentas] = useState([]);
   const [peds, setPeds] = useState([]);
   const [svf, setSvf] = useState(false);
@@ -288,7 +288,7 @@ function App() {
   const [pedsCafe, setPedsCafe] = useState([]);
   const [showCafeForm, setShowCafeForm] = useState(false);
   const [cafeForm, setCafeForm] = useState({punto:PUNTOS[0],cantidades:{}});
-  const [stockCafe, setStockCafe] = useState(null);
+  const [stockCafe, setStockCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [calMes, setCalMes] = useState(new Date().getMonth());
   const [calAnio, setCalAnio] = useState(new Date().getFullYear());
@@ -412,7 +412,7 @@ function App() {
   const gma = peds.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+p.ganancia, 0);
   const ps = peds.filter(p => p.semana===sem);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
-  const sc = n => !n||n<0 ? C.rojo : n<=3 ? C.naranja : C.verde;
+  const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
 
   // Cafe metrics
   const psCafe = pedsCafe.filter(p => p.semana===sem);
@@ -712,7 +712,7 @@ function App() {
               {SIZES.map(s => (
                 <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:C.bg,borderRadius:10,padding:"10px 14px",border:"1px solid "+C.border}}>
                   <span style={{fontSize:13,color:C.marronL}}>{s}</span>
-                  <span style={{fontWeight:"bold",color:sc(stock?stock[s]:0),fontSize:22}}>{stock?stock[s]:"-"}</span>
+                  <span style={{fontWeight:"bold",color:sc(stock[s]),fontSize:22}}>{stock[s]}</span>
                 </div>
               ))}
             </div>
@@ -943,8 +943,7 @@ function App() {
               Guardar stock
             </button>
           </div>
-          {!stock && <div style={{textAlign:"center",padding:30,color:C.marronL}}>Cargando stock...</div>}
-          {stock && SIZES.map(s => (
+          {SIZES.map(s => (
             <div key={s} style={{background:C.card,borderRadius:16,padding:16,marginBottom:12,border:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
@@ -968,7 +967,6 @@ function App() {
               </div>
             </div>
           ))}
-          }
 
           {/* CAFE STOCK */}
           <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
