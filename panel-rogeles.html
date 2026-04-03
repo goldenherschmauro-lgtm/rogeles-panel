@@ -712,7 +712,7 @@ function App() {
               {SIZES.map(s => (
                 <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:C.bg,borderRadius:10,padding:"10px 14px",border:"1px solid "+C.border}}>
                   <span style={{fontSize:13,color:C.marronL}}>{s}</span>
-                  <span style={{fontWeight:"bold",color:sc(stock[s]),fontSize:22}}>{stock[s]}</span>
+                  <span style={{fontWeight:"bold",color:sc(stock?stock[s]:0),fontSize:22}}>{stock?stock[s]:"-"}</span>
                 </div>
               ))}
             </div>
@@ -944,7 +944,9 @@ function App() {
             </button>
           </div>
           {!stock && <div style={{textAlign:"center",padding:30,color:C.marronL}}>Cargando stock...</div>}
-          {stock && SIZES.map(s => (
+          {stock && SIZES.map(s => {
+            const sVal = stock[s]||0;
+            return (
             <div key={s} style={{background:C.card,borderRadius:16,padding:16,marginBottom:12,border:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
@@ -967,7 +969,7 @@ function App() {
                   style={{padding:"10px 14px",borderRadius:10,border:"none",background:C.verde,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold",whiteSpace:"nowrap"}}>Cargar</button>
               </div>
             </div>
-          ))}
+          );})}
           }
 
           {/* CAFE STOCK */}
