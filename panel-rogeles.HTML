@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Rogeles de Marcela</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = { databaseURL: "https://los-rogeles-de-marcela-default-rtdb.firebaseio.com" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background: #FDF6F0; font-family: 'Lato', sans-serif; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// Colors
+const C = {
+  bg:"#FDF6F0", card:"#FFFFFF", input:"#FFF8F5",
+  rosa:"#C4687A", rosaL:"#E8A0A8", rosaPale:"#F5D0D6", rosaBg:"#FDE8EC",
+  marron:"#5C3340", marronL:"#8B6070", crema:"#F0DDE2",
+  verde:"#7BAE84", naranja:"#D4845A", rojo:"#C0444A",
+  border:"#F0D0D8"
+};
+
+// Rogeles data
+const SIZES = ["ENTERO","MEDIANO","PEQUENO","PORCION"];
+const PM = {ENTERO:73000, MEDIANO:45000, PEQUENO:31000, PORCION:9000};
+const PMay = {ENTERO:56940, MEDIANO:35100, PEQUENO:24180, PORCION:40560};
+const COSTO = {ENTERO:48050, MEDIANO:29150, PEQUENO:20350, PORCION:37600};
+const GM = {ENTERO:24950, MEDIANO:15850, PEQUENO:10650, PORCION:1400};
+const GMay = {ENTERO:8890, MEDIANO:5950, PEQUENO:3830, PORCION:2960};
+
+// Puntos
+const PUNTOS = [
+  "Valle Escondido (Casa Central)",
+  "Barrio Jardin","Canitas / Valle del Golf / Causana","Camino a San Carlos",
+  "Centro (Bonafide Colon y Canada)","Cerro de las Rosas / Urca","Cofico","Docta",
+  "Intercountry (El Bosque)","J. Claret / P. Lugones","La Cuesta / La Calera",
+  "Manantiales","Montecristo","Nueva Cordoba (Strobel Panaderia / Cafe)",
+  "Orfeo / Dino","Sierras Chicas - Rio Ceballos / Salsipuedes","Siete Soles / Tejas 3",
+  "V. Rivera Indarte / Saldan","Villa Allende / Mendiolaza",
+  "Villa Allende - Av. Padre Luchesse / Ruta E53","Villa Belgrano"
+];
+
+// Cafe data
+const CAFE = [
+  {id:"peru250",     n:"Peru Blend 250gr",        t:"grano",   cv:15791, mi:23000, ma:19320, gm:7209,  gma:3529, min:1},
+  {id:"col250",      n:"Colombia El Tambo 250gr",  t:"grano",   cv:20873, mi:26500, ma:22260, gm:5627,  gma:1387, min:1},
+  {id:"guat250",     n:"Guatemala Anaer. 250gr",   t:"grano",   cv:21054, mi:30000, ma:25200, gm:8946,  gma:4146, min:1},
+  {id:"peru1kg",     n:"Peru Blend 1kg",           t:"grano",   cv:39780, mi:52100, ma:46369, gm:12320, gma:6589, min:1},
+  {id:"capscol",     n:"Capsulas Colombia x10",    t:"capsula", cv:13260, mi:18000, ma:14760, gm:4740,  gma:1500, min:6},
+  {id:"capsperu",    n:"Capsulas Peru Blend x10",  t:"capsula", cv:13260, mi:18000, ma:14760, gm:4740,  gma:1500, min:6},
+];
+
+// Historial 2025 mayorista
+const H2025 = [
+  {mes:"Enero",      gmi:0,       gma:6667680,  tot:6667680,  caja:0,       mE:0,   mM:0,   mC:0,  mP:0,  myE:392,  myM:374,  myC:250, myP:0},
+  {mes:"Febrero",    gmi:0,       gma:10017240, tot:10017240, caja:0,       mE:0,   mM:0,   mC:0,  mP:0,  myE:674,  myM:486,  myC:296, myP:0},
+  {mes:"Marzo",      gmi:0,       gma:14187800, tot:14187800, caja:0,       mE:0,   mM:0,   mC:0,  mP:0,  myE:912,  myM:794,  myC:354, myP:0},
+  {mes:"Abril",      gmi:0,       gma:13697420, tot:13697420, caja:0,       mE:0,   mM:0,   mC:0,  mP:0,  myE:930,  myM:704,  myC:324, myP:0},
+  {mes:"Mayo",       gmi:2151450, gma:8835520,  tot:10986970, caja:6147000, mE:632, mM:497, mC:236,mP:0,  myE:577,  myM:460,  myC:253, myP:0},
+  {mes:"Junio",      gmi:1858535, gma:16137040, tot:17995575, caja:5310100, mE:513, mM:409, mC:211,mP:0,  myE:1054, myM:847,  myC:451, myP:0},
+  {mes:"Julio",      gmi:2481780, gma:6585850,  tot:9067630,  caja:7090800, mE:565, mM:547, mC:250,mP:0,  myE:463,  myM:504,  myC:236, myP:0},
+  {mes:"Agosto",     gmi:2028775, gma:14579540, tot:16608315, caja:5796500, mE:664, mM:559, mC:276,mP:0,  myE:924,  myM:802,  myC:416, myP:0},
+  {mes:"Septiembre", gmi:2313325, gma:7360910,  tot:9674235,  caja:6609500, mE:609, mM:422, mC:186,mP:0,  myE:523,  myM:354,  myC:158, myP:0},
+  {mes:"Octubre",    gmi:1850558, gma:10164840, tot:12015398, caja:5287308, mE:0,   mM:0,   mC:8,  mP:6,  myE:671,  myM:542,  myC:229, myP:33},
+  {mes:"Noviembre",  gmi:2146487, gma:11905230, tot:14051717, caja:6132820, mE:0,   mM:0,   mC:6,  mP:1,  myE:809,  myM:604,  myC:266, myP:34},
+  {mes:"Diciembre",  gmi:3174605, gma:12543230, tot:15717835, caja:9070300, mE:1011,mM:653, mC:241,mP:96, myE:907,  myM:595,  myC:233, myP:16},
+];
+const H2026 = [
+  {mes:"Enero",   gmi:1177820, gma:5209220, tot:6387040, caja:3365200, mE:35, mM:26, mC:12, mP:6,  myE:412, myM:326, myC:52, myP:30},
+  {mes:"Febrero", gmi:2212669, gma:6325020, tot:8537689, caja:6321911, mE:70, mM:46, mC:6,  mP:11, myE:480, myM:446, myC:0,  myP:51},
+  {mes:"Marzo",   gmi:1999550, gma:9040440, tot:11039990, caja:5713000, mE:59, mM:45, mC:0,  mP:9,  myE:408, myM:377, myC:0,  myP:37},
+];
+
+// Firebase helpers
+const fbSet = (path, data) => db.ref(path).set(data).catch(e=>console.log("FB error:",e));
+const fbUpdate = (path, data) => db.ref(path).update(data).catch(e=>console.log("FB error:",e));
+const fbRemove = (path) => db.ref(path).remove().catch(e=>console.log("FB error:",e));
+const postSheets = (data) => { fetch(SHEETS_URL, {method:"POST", body:JSON.stringify(data)}).catch(()=>{}); };
+const fetchSheets = (tipo, callback) => {
+  const name = "cb_"+Date.now();
+  window[name] = (json) => { delete window[name]; const s=document.getElementById("s-script"); if(s) s.remove(); callback(json); };
+  const s = document.createElement("script");
+  s.id = "s-script";
+  s.src = SHEETS_URL+"?tipo="+tipo+"&callback="+name;
+  s.onerror = () => callback({ok:false});
+  document.body.appendChild(s);
+};
+
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxIyL8fYXhQoLp0x1prQYkZCXzOGYkL9Non99Zvd1tRCnld7nFgvXqZSo-3BeNYNqfR/exec";
+
+const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
+
+const getSem = () => {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day===0 ? -6 : 1-day;
+  const lun = new Date(d); lun.setDate(d.getDate()+diff);
+  const dom = new Date(lun); dom.setDate(lun.getDate()+6);
+  const f = x => x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
+  return "Pedido semanal "+f(lun)+" - "+f(dom);
+};
+
+// Shared styles
+const inp = () => ({width:"100%",padding:"11px 13px",borderRadius:10,background:C.input,border:"1px solid "+C.border,color:C.marron,fontSize:13,marginBottom:8,boxSizing:"border-box",outline:"none"});
+const btnFill = (bg) => ({padding:12,borderRadius:12,border:"none",background:bg,color:"#fff",cursor:"pointer",fontSize:13,fontWeight:"bold"});
+const btnOut = () => ({padding:12,borderRadius:12,border:"1px solid "+C.border,background:"transparent",color:C.marronL,cursor:"pointer",fontSize:13});
+const btnSm = (bg) => ({fontSize:10,background:bg,color:"#fff",border:"none",borderRadius:8,padding:"4px 9px",cursor:"pointer",marginTop:4,display:"block",fontWeight:"bold"});
+const btnMain = (bg) => ({background:bg,color:"#fff",border:"none",borderRadius:20,padding:"9px 18px",fontSize:13,cursor:"pointer",fontWeight:"bold"});
+
+function KPI({label, value, sub, color}) {
+  return (
+    <div style={{background:C.card,borderRadius:16,padding:14,border:"1px solid "+C.border}}>
+      <div style={{fontSize:22,fontWeight:"bold",color,marginTop:4}}>{value}</div>
+      <div style={{fontSize:12,color:C.marron,marginTop:2}}>{label}</div>
+      <div style={{fontSize:10,color:C.marronL}}>{sub}</div>
+    </div>
+  );
+}
+
+function Card({title,titleColor,borderColor,children}) {
+  return (
+    <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid "+(borderColor||C.border)}}>
+      {title && <div style={{fontSize:11,color:titleColor||C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>{title}</div>}
+      {children}
+    </div>
+  );
+}
+
+function ST({children,noTop}) {
+  return <div style={{fontSize:12,color:C.rosaL,letterSpacing:2.5,textTransform:"uppercase",paddingTop:noTop?0:20,marginBottom:14,fontWeight:"bold"}}>{children}</div>;
+}
+
+function Lbl({children}) {
+  return <div style={{fontSize:12,color:C.marronL,marginBottom:6}}>{children}</div>;
+}
+
+function Empty({text}) {
+  return <div style={{textAlign:"center",padding:50,color:C.rosaL}}><div style={{marginTop:12,fontSize:14,color:C.marronL}}>{text}</div></div>;
+}
+
+
+function CalendarioEntregas({ventas, setVentas, calMes, calAnio, setCalMes, setCalAnio}) {
+  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const hoy = new Date();
+  const [diaSelec, setDiaSelec] = useState(null);
+  const primerDia = new Date(calAnio, calMes, 1).getDay();
+  const diasEnMes = new Date(calAnio, calMes+1, 0).getDate();
+  const offset = primerDia===0 ? 6 : primerDia-1;
+  const fmt2 = n => "$"+Math.round(n).toLocaleString("es-AR");
+
+  const fechasEntrega = {};
+  ventas.forEach(v => {
+    if(!v.retira) return;
+    try {
+      const parts = v.retira.split("-");
+      if(parts.length!==3) return;
+      const anioR = parseInt(parts[0]);
+      const mesR = parseInt(parts[1])-1;
+      const diaR = parseInt(parts[2]);
+      if(isNaN(anioR)||isNaN(mesR)||isNaN(diaR)) return;
+      if(mesR===calMes && anioR===calAnio) {
+        const dia = diaR;
+        if(!fechasEntrega[dia]) fechasEntrega[dia] = [];
+        fechasEntrega[dia].push(v);
+      }
+    } catch{}
+  });
+
+  const prevMes = () => { if(calMes===0){setCalMes(11);setCalAnio(y=>y-1);}else setCalMes(m=>m-1); };
+  const nextMes = () => { if(calMes===11){setCalMes(0);setCalAnio(y=>y+1);}else setCalMes(m=>m+1); };
+
+  const celdas = [];
+  for(let i=0;i<offset;i++) celdas.push(null);
+  for(let i=1;i<=diasEnMes;i++) celdas.push(i);
+
+  const ventasDia = diaSelec ? (fechasEntrega[diaSelec]||[]) : [];
+
+  return (
+    <div style={{background:"#FFFFFF",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <button onClick={prevMes} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:"#C4687A",fontWeight:"bold"}}>{"<"}</button>
+        <div style={{fontSize:13,fontWeight:"bold",color:"#5C3340"}}>{MESES[calMes]} {calAnio}</div>
+        <button onClick={nextMes} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:"#C4687A",fontWeight:"bold"}}>{">"}</button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:6}}>
+        {["L","M","M","J","V","S","D"].map((d,i)=>(
+          <div key={i} style={{textAlign:"center",fontSize:9,color:"#8B6070",fontWeight:"bold",padding:"2px 0"}}>{d}</div>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+        {celdas.map((dia,i) => {
+          if(!dia) return <div key={i}/>;
+          const tieneEntrega = fechasEntrega[dia] && fechasEntrega[dia].length>0;
+          const esHoy = dia===hoy.getDate() && calMes===hoy.getMonth() && calAnio===hoy.getFullYear();
+          const todasEntregadas = tieneEntrega && fechasEntrega[dia].every(v=>v.entregado);
+          const algunasPendientes = tieneEntrega && fechasEntrega[dia].some(v=>!v.entregado);
+          const bgColor = algunasPendientes ? "#7BAE84" : esHoy ? "#F5D0D6" : "transparent";
+          const textColor = algunasPendientes ? "#fff" : esHoy ? "#C4687A" : "#5C3340";
+          return (
+            <div key={i} onClick={()=>tieneEntrega?setDiaSelec(diaSelec===dia?null:dia):null}
+              style={{textAlign:"center",padding:"5px 2px",borderRadius:8,background:bgColor,cursor:tieneEntrega?"pointer":"default",border:diaSelec===dia?"2px solid #C4687A":"2px solid transparent"}}>
+              <span style={{fontSize:12,fontWeight:tieneEntrega||esHoy?"bold":"normal",color:textColor}}>{dia}</span>
+              {tieneEntrega && <div style={{fontSize:7,color:"rgba(255,255,255,0.9)",marginTop:1}}>{fechasEntrega[dia].length}ent.</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Modal detalle del dia */}
+      {diaSelec && ventasDia.length>0 && (
+        <div style={{marginTop:14,paddingTop:12,borderTop:"2px solid #F0D0D8"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+            <div style={{fontSize:13,fontWeight:"bold",color:"#5C3340"}}>Entregas del dia {diaSelec} - {MESES[calMes]}</div>
+            <button onClick={()=>setDiaSelec(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,color:"#8B6070"}}>x</button>
+          </div>
+          {ventasDia.map(v => {
+            const saldo = v.precio - (v.senia||0);
+            return (
+              <div key={v.id} style={{background:"#FDF6F0",borderRadius:12,padding:12,marginBottom:10,border:"1px solid "+(v.entregado?"#C5E0CB":v.pagado?"#7BAE8444":"#F0D0D8")}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:"bold",color:"#5C3340"}}>{v.cliente}</div>
+                    {v.celular && <div style={{fontSize:11,color:"#8B6070",marginTop:2}}>{v.celular}</div>}
+                  </div>
+                  <div style={{background:v.entregado?"#7B68EE":v.pagado?"#7BAE84":"#E8A0A8",color:"#fff",borderRadius:20,padding:"3px 10px",fontSize:10,fontWeight:"bold"}}>
+                    {v.entregado?"Entregado":v.pagado?"Pagado":"Pendiente"}
+                  </div>
+                </div>
+                <div style={{fontSize:12,color:"#5C3340",marginBottom:6}}>
+                  <span style={{fontWeight:"bold"}}>{v.tamano}</span> x{v.cantidad} - {v.tipo}
+                </div>
+                <div style={{borderTop:"1px solid #F0D0D8",paddingTop:6,marginTop:4,marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:2}}>
+                    <span style={{color:"#8B6070"}}>Total:</span>
+                    <span style={{fontWeight:"bold",color:"#D4845A"}}>{fmt2(v.precio)}</span>
+                  </div>
+                  {(v.senia||0)>0 && <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:2}}>
+                    <span style={{color:"#8B6070"}}>Senia:</span>
+                    <span style={{fontWeight:"bold",color:"#7BAE84"}}>{fmt2(v.senia)}</span>
+                  </div>}
+                  {!v.pagado && (v.senia||0)>0 && <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                    <span style={{color:"#C0444A",fontWeight:"bold"}}>Saldo:</span>
+                    <span style={{fontWeight:"bold",color:"#C0444A"}}>{fmt2(saldo)}</span>
+                  </div>}
+                </div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {!v.pagado && <button onClick={()=>setVentas(p=>p.map(x=>x.id===v.id?{...x,pagado:true}:x))}
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#7BAE84",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Cobrar</button>}
+                  {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s))setVentas(p=>p.map(x=>x.id===v.id?{...x,senia:(x.senia||0)+parseInt(s)}:x));}}
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#D4845A",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Senia</button>}
+                  {v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:false})} style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#8B6070",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Deshacer entrega</button>}
+                  {!v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:true})}
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#7B68EE",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Entregado</button>}
+                  {v.entregado && <div style={{fontSize:11,color:"#7B68EE",fontWeight:"bold",padding:"7px 0",textAlign:"center",flex:1}}>Ya entregado</div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const [tab, setTab] = useState("dashboard");
+  const [stock, setStock] = useState({ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
+  const [ventas, setVentas] = useState([]);
+  const [peds, setPeds] = useState([]);
+  const [svf, setSvf] = useState(false);
+  const [spf, setSpf] = useState(false);
+  const [vf, setVf] = useState({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
+  const [pf, setPf] = useState({punto:PUNTOS[0],ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
+  const [toast, setToast] = useState(null);
+  const [rv, setRv] = useState({ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
+  const [anio, setAnio] = useState("2026");
+  const [pedsCafe, setPedsCafe] = useState([]);
+  const [showCafeForm, setShowCafeForm] = useState(false);
+  const [cafeForm, setCafeForm] = useState({punto:PUNTOS[0],cantidades:{}});
+  const [stockCafe, setStockCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
+  const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
+  const [calMes, setCalMes] = useState(new Date().getMonth());
+  const [calAnio, setCalAnio] = useState(new Date().getFullYear());
+  const [filtroVentas, setFiltroVentas] = useState('hoy');
+  const [editVenta, setEditVenta] = useState(null);
+  const [editForm, setEditForm] = useState({});
+
+  // Firebase listeners - sync in real time
+  useEffect(() => {
+    // Stock: load once only - set loaded flag after
+    db.ref("stock").once("value").then(snap => { 
+      const v=snap.val(); 
+      if(v) setStock(v); 
+      window._stockFBLoaded = true;
+    });
+    db.ref("stockCafe").once("value").then(snap => { 
+      const v=snap.val(); 
+      if(v) setStockCafe(v);
+      window._stockCafeFBLoaded = true;
+    });
+    // Listen to ventas
+    const refVentas = db.ref("ventas");
+    refVentas.on("value", snap => {
+      const v=snap.val();
+      if(v) setVentas(Object.values(v).sort((a,b)=>b.id-a.id));
+      else setVentas([]);
+    });
+    // Listen to peds mayoristas
+    const refPeds = db.ref("peds");
+    refPeds.on("value", snap => {
+      const v=snap.val();
+      if(v) setPeds(Object.values(v).sort((a,b)=>b.id-a.id));
+      else setPeds([]);
+    });
+    // Listen to pedsCafe
+    const refPedsCafe = db.ref("pedsCafe");
+    refPedsCafe.on("value", snap => {
+      const v=snap.val();
+      if(v) setPedsCafe(Object.values(v).sort((a,b)=>b.id-a.id));
+      else setPedsCafe([]);
+    });
+    return () => {
+      refVentas.off(); refPeds.off(); refPedsCafe.off();
+    };
+  }, []);
+
+
+
+  // Auto-sync every 30 seconds
+  
+
+  const showT = (msg, ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),2500); };
+  const pv = (t,tipo) => tipo==="minorista" ? PM[t] : PMay[t];
+  const gan = (t,tipo,c) => (tipo==="minorista" ? GM[t] : GMay[t]) * c;
+  const sem = getSem();
+
+  // Rogeles metrics
+  const pend = ventas.filter(v => !v.pagado);
+  const hoy = ventas.filter(v => v.fecha===new Date().toLocaleDateString("es-AR"));
+  const caja = ventas.filter(v => v.pagado).reduce((a,v) => a+v.precio, 0);
+  const mes = new Date().getMonth()+1 + "-" + new Date().getFullYear();
+  const ventasMes = ventas.filter(v => { try { const p=v.fecha.split("/"); return (parseInt(p[1])-1+1)+"-"+parseInt(p[2])===mes; } catch{return true;} });
+  const gmi = ventasMes.filter(v => v.tipo==="minorista").reduce((a,v) => a+v.ganancia, 0);
+  const gma = peds.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+p.ganancia, 0);
+  const ps = peds.filter(p => p.semana===sem);
+  const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
+  const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
+
+  // Cafe metrics
+  const psCafe = pedsCafe.filter(p => p.semana===sem);
+  const ganCafe = psCafe.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*(p.cantidades[prod.id]||0)),0), 0);
+  const invValleCafe = psCafe.filter(p => p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.cv*(p.cantidades[prod.id]||0)),0), 0);
+  const conCafe = CAFE.reduce((acc,p) => { acc[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0); return acc; }, {});
+
+  const regVenta = () => {
+    if(!vf.cliente.trim()) { showT("Ingresa el nombre del cliente",false); return; }
+    const cants = vf.cantidades || {};
+    const totalUnidades = SIZES.reduce((a,s)=>a+(cants[s]||0),0);
+    const totalCafeUnidades = CAFE.reduce((a,p)=>a+((vf.cafeCantidades||{})[p.id]||0),0);
+    if(totalUnidades===0 && totalCafeUnidades===0) { showT("Agrega al menos un producto",false); return; }
+    // Permitir venta aunque no haya stock (queda en negativo)
+    const subtotalVenta = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(cants[s]||0)),0) + CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*((vf.cafeCantidades||{})[p.id]||0)),0);
+    const descuento = Math.round(subtotalVenta * (vf.descuentoPct||0) / 100);
+    const totalRogeles = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(cants[s]||0)),0);
+    const totalCafe = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*((vf.cafeCantidades||{})[p.id]||0)),0);
+    const ganRogeles = SIZES.reduce((a,s)=>a+((vf.tipo==="minorista"?GM[s]:GMay[s])*(cants[s]||0)),0);
+    const ganCafeVenta = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.gm:p.gma)*((vf.cafeCantidades||{})[p.id]||0)),0);
+    const resumen = SIZES.filter(s=>(cants[s]||0)>0).map(s=>s+" x"+cants[s]).join(", ");
+    const v = {
+      ...vf,
+      id: Date.now(),
+      tamano: resumen||"Cafe",
+      cantidad: totalUnidades,
+      precio: totalRogeles+totalCafe-descuento,
+      ganancia: ganRogeles+ganCafeVenta-descuento,
+      cantidades: cants
+    };
+    fbSet("ventas/"+v.id, v);
+    // Descontar stock rogeles y guardar en Firebase
+    setStock(p => {
+      const ns = {...p};
+      SIZES.forEach(s => { if((cants[s]||0)>0) ns[s]=(ns[s]||0)-(cants[s]||0); });
+      if(window._stockFBLoaded) fbSet("stock", ns);
+      return ns;
+    });
+    postSheets({tipo:"venta", ...v});
+    // Descontar stock cafe
+    if(vf.cafeCantidades) {
+      setStockCafe(s => {
+        const ns = {...s};
+        CAFE.forEach(p => { if((vf.cafeCantidades[p.id]||0)>0) ns[p.id]=Math.max(0,(ns[p.id]||0)-(vf.cafeCantidades[p.id]||0)); });
+        return ns;
+      });
+    }
+    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,cantidades:{},retira:"",pagado:false,entregado:false,senia:0,descuentoPct:0,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
+    setSvf(false);
+    showT("Venta registrada");
+  };
+
+  const cobrar = id => {
+    fbUpdate("ventas/"+id, {pagado:true});
+    showT("Cobrado");
+  };
+
+  const anularVenta = id => {
+    const v = ventas.find(x=>x.id===id);
+    if(!v) return;
+    if(!window.confirm("Anular la venta de "+v.cliente+"? Se devuelve el stock.")) return;
+    fbRemove("ventas/"+id);
+    setStock(p => ({...p,[v.tamano]:p[v.tamano]+v.cantidad}));
+    if(v.cafeCantidades) {
+      setStockCafe(s => {
+        const ns = {...s};
+        CAFE.forEach(p => { if((v.cafeCantidades[p.id]||0)>0) ns[p.id]=(ns[p.id]||0)+(v.cafeCantidades[p.id]||0); });
+        return ns;
+      });
+    }
+    showT("Venta anulada - stock devuelto");
+  };
+
+  const addPed = () => {
+    const tot = SIZES.reduce((a,s)=>a+(pf[s]||0),0);
+    if(tot===0) { showT("Ingresa al menos un producto",false); return; }
+    const esV = pf.punto.toLowerCase().includes("valle");
+    const g = esV ? 0 : SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0);
+    const newPed = {...pf,id:Date.now(),semana:sem,ganancia:g};
+    fbSet("peds/"+newPed.id, newPed);
+    setPf({punto:PUNTOS[0],ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
+    setSpf(false);
+    showT("Pedido guardado");
+  };
+
+  const enviarPedido = () => {
+    const tot = SIZES.reduce((a,s)=>a+con[s],0);
+    if(tot===0) { showT("No hay pedidos cargados",false); return; }
+    const porPunto = {};
+    ps.forEach(p => {
+      if(!porPunto[p.punto]) porPunto[p.punto]={Entero:0,Medio:0,Cuarto:0,Rogelito:0};
+      SIZES.forEach(s => { porPunto[p.punto][s]+=(parseInt(p[s])||0); });
+    });
+    const totalE=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Entero||0),0);
+    const totalM=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Medio||0),0);
+    const totalC=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Cuarto||0),0);
+    const totalR=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Rogelito||0),0);
+    const msg = "Rodri te paso el pedido\n\nENTEROS: "+con.Entero+"\nMEDIOS: "+con.Medio+"\nCUARTOS: "+con.Cuarto+"\nCAJA ROGELITOS: "+con.Rogelito+"\n\nGracias";
+    window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
+    showT("Pedido enviado a Rodri");
+  };
+
+  const enviarRepartida = () => {
+    const tot = SIZES.reduce((a,s)=>a+con[s],0);
+    if(tot===0) { showT("No hay pedidos cargados",false); return; }
+    const porPunto = {};
+    ps.forEach(p => {
+      if(!porPunto[p.punto]) porPunto[p.punto]={Entero:0,Medio:0,Cuarto:0,Rogelito:0};
+      SIZES.forEach(s => { porPunto[p.punto][s]+=(parseInt(p[s])||0); });
+    });
+    const REPARTIDA = [
+      {key:"Manantiales",label:"MANANTIALES",retira:""},
+      {key:"Camino a San Carlos",label:"CAMINO A SAN CARLOS",retira:"retira Fran"},
+      {key:"Montecristo",label:"MONTECRISTO",retira:"retira Belen"},
+    ];
+    let rep = "";
+    REPARTIDA.forEach(r => {
+      const key = Object.keys(porPunto).find(k=>k.toLowerCase().includes(r.key.toLowerCase()));
+      const p = key ? porPunto[key] : {Entero:0,Medio:0,Cuarto:0,Rogelito:0};
+      const titulo = r.retira ? r.label+" ("+r.retira+")" : r.label;
+      const lineas = [];
+      if(p.Entero>0) lineas.push("Entero: "+p.Entero);
+      if(p.Medio>0) lineas.push("Medio: "+p.Medio);
+      if(p.Cuarto>0) lineas.push("Cuarto: "+p.Cuarto);
+      if(p.Rogelito>0) lineas.push("Caja Rogelito: "+p.Rogelito);
+      rep += "\n"+titulo+"\n"+(lineas.length>0?lineas.join("\n"):"Sin pedido")+"\n";
+    });
+    rep += "\nRESTO EN CASA";
+    const msg = "Repartida de la semana\n"+rep+"\n\nGracias";
+    window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
+    showT("Repartida enviada");
+  };
+
+  const addPedCafe = () => {
+    const tot = CAFE.reduce((a,p)=>a+(cafeForm.cantidades[p.id]||0),0);
+    if(tot===0) { showT("Ingresa al menos un producto",false); return; }
+    for(const cp of CAFE.filter(p=>p.t==="capsula")) {
+      const c = cafeForm.cantidades[cp.id]||0;
+      if(c>0 && c<cp.min) { showT("Minimo "+cp.min+" cajas de capsulas",false); return; }
+    }
+    const esV = cafeForm.punto.toLowerCase().includes("valle");
+    const g = esV ? 0 : CAFE.reduce((a,p)=>a+(p.gma*(cafeForm.cantidades[p.id]||0)),0);
+    const newPedCafe = {...cafeForm,id:Date.now(),semana:sem,ganancia:g};
+    fbSet("pedsCafe/"+newPedCafe.id, newPedCafe);
+    setCafeForm({punto:PUNTOS[0],cantidades:{}});
+    setShowCafeForm(false);
+    showT("Pedido cafe guardado");
+  };
+
+  const cerrarCafe = () => {
+    const tot = CAFE.reduce((a,p)=>a+conCafe[p.id],0);
+    if(tot===0) { showT("No hay pedidos de cafe",false); return; }
+    let det = "";
+    psCafe.forEach(p => {
+      const ls = CAFE.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.n+": "+p.cantidades[prod.id]);
+      if(ls.length>0) det += "\n"+p.punto.toUpperCase()+"\n"+ls.join("\n")+"\n";
+    });
+    // Totales incluyendo Valle Escondido
+    const conTodo = CAFE.reduce((acc,p)=>{acc[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0);return acc;},{});
+    const tots = "\nTOTAL (todos los puntos):\n"+CAFE.filter(p=>conTodo[p.id]>0).map(p=>"- "+p.n+": "+conTodo[p.id]).join("\n");
+    window.open("https://wa.me/5493513128283?text="+encodeURIComponent("Pedido CHERRYSEASON\n"+det+tots+"\n\nGracias!"),"_blank");
+    showT("Pedido cafe enviado");
+  };
+
+  const procesarPedidosSheets = React.useCallback((data, pedsCopy) => {
+    let nuevos = 0;
+    data.forEach(row => {
+      if(!row.punto || !row.semana) return;
+      const yaExiste = pedsCopy.some(p => p.punto===row.punto && p.semana===row.semana);
+      if(!yaExiste) {
+        const esValle = row.punto.toLowerCase().includes("valle");
+        const g = esValle ? 0 : (
+          (parseInt(row.entero)||0)*GMay.ENTERO +
+          (parseInt(row.medio)||0)*GMay.MEDIANO +
+          (parseInt(row.cuarto)||0)*GMay.PEQUENO +
+          (parseInt(row.porcion)||0)*GMay.PORCION
+        );
+        pedsCopy.unshift({
+          id: Date.now()+nuevos,
+          punto: row.punto,
+          semana: row.semana,
+          ENTERO: parseInt(row.entero)||0,
+          MEDIANO: parseInt(row.medio)||0,
+          PEQUENO: parseInt(row.cuarto)||0,
+          PORCION: parseInt(row.porcion)||0,
+          ganancia: g,
+          contacto: row.contacto||""
+        });
+        nuevos++;
+      }
+    });
+    return nuevos;
+  }, []);
+
+  const sincronizarSheets = () => {
+    showT("Sincronizando pedidos del formulario...");
+    const name = "cb_"+Date.now();
+    window[name] = (json) => {
+      delete window[name];
+      document.getElementById("s-script")&&document.getElementById("s-script").remove();
+      if(!json.ok || !json.data) { showT("Error al sincronizar",false); return; }
+      let nuevos = 0;
+      json.data.forEach(row => {
+        if(!row.punto || !row.semana) return;
+        const yaExiste = peds.some(p => p.punto===row.punto && p.semana===row.semana);
+        if(!yaExiste) {
+          const esValle = row.punto.toLowerCase().includes("valle");
+          const g = esValle ? 0 : (
+            (parseInt(row.entero)||0)*GMay.ENTERO +
+            (parseInt(row.medio)||0)*GMay.MEDIANO +
+            (parseInt(row.cuarto)||0)*GMay.PEQUENO +
+            (parseInt(row.porcion)||0)*GMay.PORCION
+          );
+          const newP = {
+            id: Date.now()+nuevos,
+            punto: row.punto, semana: row.semana,
+            ENTERO: parseInt(row.entero)||0, MEDIANO: parseInt(row.medio)||0,
+            PEQUENO: parseInt(row.cuarto)||0, PORCION: parseInt(row.porcion)||0,
+            ganancia: g, contacto: row.contacto||""
+          };
+          fbSet("peds/"+newP.id, newP);
+          nuevos++;
+        }
+      });
+      showT(nuevos>0 ? nuevos+" pedido(s) importados!" : "Todo al dia");
+    };
+    const s = document.createElement("script");
+    s.id = "s-script";
+    s.src = SHEETS_URL+"?tipo=pedidos&callback="+name;
+    s.onerror = () => showT("Error de conexion",false);
+    document.body.appendChild(s);
+  };
+
+  const guardarEdicion = () => {
+    fbUpdate("ventas/"+editVenta, editForm);
+    setEditVenta(null);
+    setEditForm({});
+    showT("Venta actualizada");
+  };
+
+  const setCantCafe = (id,delta) => {
+    const prev = cafeForm.cantidades[id]||0;
+    setCafeForm(f => ({...f,cantidades:{...f.cantidades,[id]:Math.max(0,prev+delta)}}));
+  };
+
+  const tabs = [
+    {id:"dashboard",icon:"*",label:"Inicio"},
+    {id:"ventas",icon:"$",label:"Ventas"},
+    {id:"stock",icon:"S",label:"Stock"},
+    {id:"mayoristas",icon:"M",label:"Mayorista"},
+    {id:"cafe",icon:"C",label:"Cafe"},
+    {id:"ganancia",icon:"G",label:"Ganancia"},
+    {id:"stats",icon:"ST",label:"Stats"},
+    {id:"historial",icon:"H",label:"2026"},
+  ];
+
+  const rowStyle = {display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,background:C.bg,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border};
+
+  return (
+    <div style={{background:C.bg,minHeight:"100vh",color:C.marron,maxWidth:430,margin:"0 auto",paddingBottom:88}}>
+
+      {/* Header */}
+      <div style={{background:"linear-gradient(160deg,"+C.rosaPale+" 0%,"+C.rosaL+" 60%,"+C.rosa+" 100%)",padding:"20px 22px",position:"relative",overflow:"hidden",display:"flex",alignItems:"center",gap:16}}>
+        <img src="Copia_de_LRDM_-_Logo.jpg" alt="Los Rogeles de Marcela" style={{width:80,height:80,borderRadius:"50%",objectFit:"cover",border:"2px solid rgba(255,255,255,0.5)",flexShrink:0}}/>
+        <div>
+          <div style={{fontSize:10,letterSpacing:3,color:"rgba(92,51,64,0.6)",textTransform:"uppercase",marginBottom:2}}>Sistema de Gestion</div>
+          <div style={{fontSize:22,fontWeight:"bold",color:C.marron,lineHeight:1.1,fontFamily:"'Playfair Display',serif"}}>Los rogeles</div>
+          <div style={{fontSize:12,letterSpacing:4,color:C.marron,opacity:0.75,textTransform:"uppercase",marginBottom:6}}>de Marcela</div>
+          <div style={{fontSize:10,color:C.marron,opacity:0.6}}>Valle Escondido - {new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</div>
+        </div>
+      </div>
+
+      {/* Toast */}
+      {toast && <div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:toast.ok?C.verde:C.rojo,color:"#fff",padding:"11px 26px",borderRadius:30,fontSize:13,fontWeight:"bold",zIndex:999,whiteSpace:"nowrap"}}>{toast.msg}</div>}
+
+      <div style={{padding:"0 14px"}}>
+
+        {/* DASHBOARD */}
+        {tab==="dashboard" && <div>
+          <ST>Resumen del dia</ST>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <KPI label="Total Caja" value={fmt(caja)} sub="cobrado" color={C.verde}/>
+            <KPI label="Ganancia Total" value={fmt(gmi+gma+ganCafe)} sub="rogeles+cafe" color={C.naranja}/>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+            <div onClick={()=>{setTab("ventas");setFiltroVentas("hoy");}} style={{cursor:"pointer"}}><KPI label="Ventas hoy" value={hoy.length} sub="toca para ver" color={C.rosa}/></div>
+            <KPI label="Pendientes" value={pend.length} sub="sin cobrar" color={pend.length>0?C.rojo:C.verde}/>
+          </div>
+          <Card title="Stock actual">
+            <div style={{textAlign:"right",marginBottom:8}}>
+              <button onClick={()=>{if(window.confirm("Borrar TODO y arrancar en cero?")){db.ref("/").remove().then(()=>{localStorage.clear();location.reload();});}}}
+                style={{fontSize:10,color:C.rojo,background:"transparent",border:"1px solid "+C.rojo,borderRadius:20,padding:"4px 12px",cursor:"pointer"}}>
+                Reset total
+              </button>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              {SIZES.map(s => (
+                <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:C.bg,borderRadius:10,padding:"10px 14px",border:"1px solid "+C.border}}>
+                  <span style={{fontSize:13,color:C.marronL}}>{s}</span>
+                  <span style={{fontWeight:"bold",color:sc(stock[s]),fontSize:22}}>{stock[s]}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{fontSize:10,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:8,fontWeight:"bold",borderTop:"1px solid #E8C5C0",paddingTop:10}}>Stock Cherry Season</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {CAFE.map(p => {
+                const cant = stockCafe[p.id]||0;
+                const color = cant===0?C.rojo:cant<=3?C.naranja:C.verde;
+                return (
+                  <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#FDF6F0",borderRadius:10,padding:"8px 12px",border:"1px solid #E8C5C0"}}>
+                    <span style={{fontSize:10,color:C.marronL,flex:1}}>{p.n}</span>
+                    <span style={{fontWeight:"bold",color,fontSize:18,marginLeft:4}}>{cant}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+          {pend.length>0 && <Card title="Pendientes de cobro" titleColor={C.rojo} borderColor={C.rojo+"33"}>
+            {pend.slice(0,4).map(v => (
+              <div key={v.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,background:C.bg,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:"bold"}}>{v.cliente}</div>
+                  <div style={{fontSize:11,color:C.marronL}}>{v.tamano} x{v.cantidad} - {v.retira||"-"}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:13,fontWeight:"bold",color:C.naranja}}>{fmt(v.precio)}</div>
+                  <button onClick={()=>cobrar(v.id)} style={btnSm(C.verde)}>Cobrar</button>
+                </div>
+              </div>
+            ))}
+          </Card>}
+          <CalendarioEntregas ventas={ventas} setVentas={setVentas} calMes={calMes} calAnio={calAnio} setCalMes={setCalMes} setCalAnio={setCalAnio}/>
+          <Card title={sem} titleColor={C.rosa}>
+            {SIZES.map(s => (
+              <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
+                <span style={{fontSize:13,color:C.marronL}}>{s}</span>
+                <span style={{fontWeight:"bold",color:con[s]>0?C.marron:C.border}}>{con[s]} u.</span>
+              </div>
+            ))}
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid "+C.crema}}>
+              <span style={{fontSize:12,color:C.marronL}}>{ps.length}/20 puntos</span>
+              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gma+ganCafe)}</span>
+            </div>
+            {ganCafe>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:11}}>
+              <span style={{color:"#C0392B"}}>Inc. cafe Cherry Season</span>
+              <span style={{color:"#C0392B",fontWeight:"bold"}}>{fmt(ganCafe)}</span>
+            </div>}
+            {psCafe.length>0&&<div style={{marginTop:10,paddingTop:8,borderTop:"1px solid #E8C5C0"}}>
+              <div style={{fontSize:10,color:"#C0392B",fontWeight:"bold",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Cherry Season</div>
+              {CAFE.map(p=>conCafe[p.id]>0?<div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:"1px solid #F5E5E0"}}>
+                <span style={{fontSize:11,color:"#8B6070"}}>{p.n}</span>
+                <span style={{fontWeight:"bold",fontSize:11,color:"#5C3340"}}>{conCafe[p.id]} u.</span>
+              </div>:null)}
+            </div>}
+          </Card>
+        </div>}
+
+        {/* VENTAS */}
+        {tab==="ventas" && <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}>
+            <ST noTop>Ventas</ST>
+            <button onClick={()=>setSvf(v=>!v)} style={btnMain(C.rosa)}>{svf?"Cerrar":"+ Nueva venta"}</button>
+          </div>
+          {svf && <Card title="Nueva venta" titleColor={C.rosa}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              {["minorista","mayorista"].map(t => (
+                <button key={t} onClick={()=>setVf(f=>({...f,tipo:t}))}
+                  style={{padding:10,borderRadius:10,border:"2px solid "+(vf.tipo===t?C.rosa:C.border),cursor:"pointer",fontWeight:"bold",fontSize:13,background:vf.tipo===t?C.rosaBg:C.card,color:vf.tipo===t?C.rosa:C.marronL}}>
+                  {t==="minorista"?"Minorista":"Mayorista"}
+                </button>
+              ))}
+            </div>
+            <input placeholder="Nombre *" value={vf.cliente} onChange={e=>setVf(f=>({...f,cliente:e.target.value}))} style={inp()}/>
+            <input type="tel" placeholder="Celular (opcional)" value={vf.celular} onChange={e=>setVf(f=>({...f,celular:e.target.value}))} style={inp()}/>
+            <Lbl>Rogeles (cantidad por tamano)</Lbl>
+            {SIZES.map(s => {
+              const precio = pv(s,vf.tipo);
+              const cant = vf.cantidades ? (vf.cantidades[s]||0) : 0;
+              return <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,background:C.bg,borderRadius:10,padding:"8px 12px",border:"1px solid "+C.border}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:"bold",color:C.marron}}>{s}</div>
+                  <div style={{fontSize:10,color:C.marronL}}>{fmt(precio)}</div>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <button onClick={()=>setVf(f=>({...f,cantidades:{...(f.cantidades||{}),[s]:Math.max(0,(f.cantidades?.[s]||0)-1)}}))}
+                    style={{width:32,height:32,borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                  <span style={{width:24,textAlign:"center",fontSize:18,fontWeight:"bold"}}>{cant}</span>
+                  <button onClick={()=>setVf(f=>({...f,cantidades:{...(f.cantidades||{}),[s]:(f.cantidades?.[s]||0)+1}}))}
+                    style={{width:32,height:32,borderRadius:8,border:"none",background:C.rosa,color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                </div>
+                <span style={{fontSize:11,color:C.naranja,width:70,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cant)}</span>
+              </div>;
+            })}
+            <div style={{marginTop:4}}>
+              <Lbl>Fecha retira</Lbl>
+              <input type="date" value={vf.retira} onChange={e=>setVf(f=>({...f,retira:e.target.value}))} style={inp()}/>
+              <Lbl>Descuento %</Lbl>
+              <input type="number" min="0" max="100" placeholder="0%" value={vf.descuentoPct||""} onChange={e=>setVf(f=>({...f,descuentoPct:parseInt(e.target.value)||0}))} style={inp()}/>
+            </div>
+            {/* Cafe en ventas */}
+            <div style={{marginTop:4,marginBottom:8}}>
+              <div style={{fontSize:10,color:"#C0392B",fontWeight:"bold",textTransform:"uppercase",letterSpacing:1,marginBottom:6,marginTop:8}}>Agregar cafe Cherry Season (opcional)</div>
+              {CAFE.map(prod => {
+                const precio = vf.tipo==="minorista" ? prod.mi : prod.ma;
+                const cantCafeVenta = vf.cafeCantidades ? (vf.cafeCantidades[prod.id]||0) : 0;
+                return (
+                  <div key={prod.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,background:"#FDF6F0",borderRadius:8,padding:"8px 10px",border:"1px solid #E8C5C0"}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:11,fontWeight:"bold",color:"#5C3340"}}>{prod.n}</div>
+                      <div style={{fontSize:9,color:"#8B6070"}}>{fmt(precio)}</div>
+                    </div>
+                    <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                      <button onClick={()=>setVf(f=>({...f,cafeCantidades:{...(f.cafeCantidades||{}), [prod.id]:Math.max(0,(f.cafeCantidades?.[prod.id]||0)-1)}}))}
+                        style={{width:26,height:26,borderRadius:6,border:"1px solid #E8C5C0",background:"#fff",color:"#5C3340",fontSize:14,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                      <span style={{width:20,textAlign:"center",fontSize:14,fontWeight:"bold",color:"#5C3340"}}>{cantCafeVenta}</span>
+                      <button onClick={()=>setVf(f=>({...f,cafeCantidades:{...(f.cafeCantidades||{}), [prod.id]:(f.cafeCantidades?.[prod.id]||0)+1}}))}
+                        style={{width:26,height:26,borderRadius:6,border:"none",background:"#C0392B",color:"#fff",fontSize:14,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                    </div>
+                    <span style={{fontSize:10,color:"#D4845A",width:60,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cantCafeVenta)}</span>
+                  </div>
+                );
+              })}
+            </div>
+            {(()=>{
+              const totalRogeles = SIZES.reduce((a,s)=>a+(pv(s,vf.tipo)*(vf.cantidades?.[s]||0)),0);
+              const totalCafe = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.mi:p.ma)*(vf.cafeCantidades?.[p.id]||0)),0);
+              const pct = vf.descuentoPct||0;
+              const subtotal = totalRogeles + totalCafe;
+              const descuento = Math.round(subtotal * pct / 100);
+              const totalFinal = subtotal - descuento;
+              const ganRogeles = SIZES.reduce((a,s)=>a+((vf.tipo==="minorista"?GM[s]:GMay[s])*(vf.cantidades?.[s]||0)),0);
+              const ganCafe = CAFE.reduce((a,p)=>a+((vf.tipo==="minorista"?p.gm:p.gma)*(vf.cafeCantidades?.[p.id]||0)),0);
+              return <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                  <span style={{color:C.marronL}}>Total rogeles:</span>
+                  <span style={{fontWeight:"bold",color:C.naranja}}>{fmt(totalRogeles)}</span>
+                </div>
+                {totalCafe>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                  <span style={{color:C.marronL}}>Total cafe:</span>
+                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(totalCafe)}</span>
+                </div>}
+                {pct>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}>
+                  <span style={{color:C.marronL}}>Descuento {pct}%:</span>
+                  <span style={{fontWeight:"bold",color:C.rojo}}>-{fmt(descuento)}</span>
+                </div>}
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:14,borderTop:"1px solid "+C.border,paddingTop:6,marginTop:4}}>
+                  <span style={{color:C.marron,fontWeight:"bold"}}>TOTAL:</span>
+                  <span style={{fontWeight:"bold",color:C.naranja,fontSize:16}}>{fmt(totalFinal)}</span>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginTop:4}}>
+                  <span style={{color:C.marronL}}>Ganancia:</span>
+                  <span style={{fontWeight:"bold",color:C.verde}}>{fmt(ganRogeles+ganCafe-descuento)}</span>
+                </div>
+              </div>;
+            })()}
+            <label style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,fontSize:13,cursor:"pointer",color:C.marronL}}>
+              <input type="checkbox" checked={vf.pagado} onChange={e=>setVf(f=>({...f,pagado:e.target.checked}))} style={{accentColor:C.rosa,width:16,height:16}}/>
+              Ya cobrado
+            </label>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <button onClick={()=>setSvf(false)} style={btnOut()}>Cancelar</button>
+              <button onClick={regVenta} style={btnFill(C.rosa)}>Registrar</button>
+            </div>
+          </Card>}
+          {/* Filtros */}
+          <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+            {[{id:"hoy",label:"Hoy"},{id:"todas",label:"Todas"},{id:"pendientes",label:"Sin entregar"},{id:"senia",label:"Con senia"},{id:"entregadas",label:"Entregadas"}].map(f=>(
+              <button key={f.id} onClick={()=>setFiltroVentas(f.id)}
+                style={{padding:"6px 12px",borderRadius:20,border:"2px solid "+(filtroVentas===f.id?C.rosa:C.border),background:filtroVentas===f.id?C.rosaBg:"transparent",color:filtroVentas===f.id?C.rosa:C.marronL,fontSize:11,cursor:"pointer",fontWeight:filtroVentas===f.id?"bold":"normal"}}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {ventas.length===0 && !svf && <Empty text="No hay ventas registradas"/>}
+          {ventas.filter(v=>{
+            const hoyStr = new Date().toLocaleDateString("es-AR");
+            if(filtroVentas==="hoy") return v.fecha===hoyStr;
+            if(filtroVentas==="pendientes") return !v.entregado;
+            if(filtroVentas==="senia") return (v.senia||0)>0 && !v.pagado;
+            if(filtroVentas==="entregadas") return v.entregado;
+            return true;
+          }).map(v => (
+            <div key={v.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+(v.pagado?C.verde+"44":C.rojo+"33")}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:"bold",fontSize:14}}>{v.cliente}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:3}}>{v.tamano} x{v.cantidad} - {v.tipo} - {v.fecha}{v.retira?" - "+v.retira:""}</div>
+                  {v.celular && <a href={"https://wa.me/54"+v.celular.replace(/\D/g,"")} target="_blank" style={{fontSize:11,color:"#25D366",fontWeight:"bold",textDecoration:"none",display:"block",marginTop:2}}>WA: {v.celular}</a>}
+                </div>
+                <div style={{textAlign:"right",marginLeft:10}}>
+                  <div style={{fontWeight:"bold",color:C.naranja,fontSize:15}}>{fmt(v.precio)}</div>
+                  <div style={{fontSize:11,color:C.verde}}>+{fmt(v.ganancia)}</div>
+                  {!v.pagado && <button onClick={()=>cobrar(v.id)} style={btnSm(C.verde)}>Cobrar</button>}
+                  {v.pagado && !v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{pagado:false})} style={{...btnSm("#8B6070"),background:"#9B9B9B"}}>Deshacer cobro</button>}
+                  {v.pagado && !v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:true})} style={{...btnSm("#7B68EE"),background:"#7B68EE"}}>Entregado</button>}
+                  {v.pagado && v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:false})} style={{...btnSm("#8B6070"),background:"#8B6070"}}>Deshacer entrega</button>}
+                  {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s)){const vv=ventas.find(x=>x.id===v.id);fbUpdate("ventas/"+v.id,{senia:(vv?.senia||0)+parseInt(s)});}}} style={btnSm(C.naranja)}>Senia</button>}
+                  {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.naranja,marginTop:2}}>Senia: {fmt(v.senia)}</div>}
+                  {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.rojo,fontWeight:"bold"}}>Saldo: {fmt(v.precio-v.senia)}</div>}
+                  {!v.entregado && v.retira && <div style={{fontSize:9,color:C.marronL,marginTop:2}}>Retira: {v.retira}</div>}
+                  {!v.pagado && <button onClick={()=>anularVenta(v.id)} style={btnSm(C.rojo)}>Anular</button>}
+                  <button onClick={()=>{setEditVenta(v.id);setEditForm({cliente:v.cliente,celular:v.celular||"",retira:v.retira||"",precio:v.precio,tamano:v.tamano});}} style={btnSm("#6B7280")}>Editar</button>
+                  {editVenta===v.id&&<div style={{marginTop:8,background:"#F9FAFB",borderRadius:10,padding:10,border:"1px solid #E5E7EB"}}>
+                    <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Nombre</div>
+                    <input value={editForm.cliente||""} onChange={e=>setEditForm(f=>({...f,cliente:e.target.value}))} style={{...inp(),marginBottom:6,fontSize:12}}/>
+                    <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Celular</div>
+                    <input value={editForm.celular||""} onChange={e=>setEditForm(f=>({...f,celular:e.target.value}))} style={{...inp(),marginBottom:6,fontSize:12}}/>
+                    <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Fecha retira</div>
+                    <input type="date" value={editForm.retira||""} onChange={e=>setEditForm(f=>({...f,retira:e.target.value}))} style={{...inp(),marginBottom:8,fontSize:12}}/>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                      <button onClick={()=>{setEditVenta(null);setEditForm({});}} style={{padding:8,borderRadius:8,border:"1px solid #E5E7EB",background:"transparent",color:C.marronL,cursor:"pointer",fontSize:12}}>Cancelar</button>
+                      <button onClick={guardarEdicion} style={{padding:8,borderRadius:8,border:"none",background:C.rosa,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold"}}>Guardar</button>
+                    </div>
+                  </div>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>}
+
+        {/* STOCK */}
+        {tab==="stock" && <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}>
+            <ST noTop>Control de Stock</ST>
+            <button onClick={()=>{if(!window._stockFBLoaded){showT("Esperando carga...",false);return;}fbSet("stock",stock);fbSet("stockCafe",stockCafe);showT("Stock guardado!");}}
+              style={{padding:"8px 16px",borderRadius:12,border:"none",background:C.verde,color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:12}}>
+              Guardar stock
+            </button>
+          </div>
+          {SIZES.map(s => (
+            <div key={s} style={{background:C.card,borderRadius:16,padding:16,marginBottom:12,border:"1px solid "+C.border}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:18,fontWeight:"bold"}}>{s}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:2}}>Min: {fmt(PM[s])} - May: {fmt(PMay[s])}</div>
+                </div>
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontSize:46,fontWeight:"bold",color:sc(stock[s]),lineHeight:1}}>{stock[s]}</div>
+                  <div style={{fontSize:10,color:C.marronL}}>unidades</div>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:8,marginTop:12}}>
+                <button onClick={()=>setStock(p=>({...p,[s]:Math.max(0,p[s]-1)}))} style={{flex:1,padding:11,borderRadius:10,border:"1px solid "+C.border,background:C.bg,color:C.marron,fontSize:20,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                <button onClick={()=>setStock(p=>({...p,[s]:p[s]+1}))} style={{flex:1,padding:11,borderRadius:10,border:"none",background:C.rosa,color:"#fff",fontSize:20,cursor:"pointer",fontWeight:"bold"}}>+</button>
+              </div>
+              <div style={{display:"flex",gap:8,marginTop:8,alignItems:"center"}}>
+                <input type="number" min="0" placeholder="Agregar..." value={rv[s]||""} onChange={e=>setRv(p=>({...p,[s]:parseInt(e.target.value)||0}))}
+                  style={{...inp(),marginBottom:0,flex:1,fontSize:12}}/>
+                <button onClick={()=>{if(rv[s]>0){setStock(p=>({...p,[s]:p[s]+rv[s]}));setRv(p=>({...p,[s]:0}));showT("+"+rv[s]+" "+s+" cargados");}}}
+                  style={{padding:"10px 14px",borderRadius:10,border:"none",background:C.verde,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold",whiteSpace:"nowrap"}}>Cargar</button>
+              </div>
+            </div>
+          ))}
+
+          {/* CAFE STOCK */}
+          <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
+            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Stock CHERRYSEASON</div>
+            {CAFE.map(p => {
+              const cant = stockCafe[p.id]||0;
+              const color = cant===0 ? C.rojo : cant<=3 ? C.naranja : C.verde;
+              return (
+                <div key={p.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid #E8C5C0"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div>
+                      <div style={{fontSize:14,fontWeight:"bold"}}>{p.n}</div>
+                      <div style={{fontSize:11,color:C.marronL,marginTop:2}}>{p.t==="capsula"?"min. 6 cajas":""}</div>
+                    </div>
+                    <div style={{textAlign:"center"}}>
+                      <div style={{fontSize:40,fontWeight:"bold",color,lineHeight:1}}>{cant}</div>
+                      <div style={{fontSize:10,color:C.marronL}}>unidades</div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:8,marginTop:10}}>
+                    <button onClick={()=>setStockCafe(s=>({...s,[p.id]:Math.max(0,(s[p.id]||0)-1)}))} style={{flex:1,padding:10,borderRadius:10,border:"1px solid #E8C5C0",background:C.bg,color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                    <button onClick={()=>setStockCafe(s=>({...s,[p.id]:(s[p.id]||0)+1}))} style={{flex:1,padding:10,borderRadius:10,border:"none",background:"#C0392B",color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                  </div>
+                  <div style={{display:"flex",gap:8,marginTop:8,alignItems:"center"}}>
+                    <input type="number" min="0" placeholder="Agregar..." value={rvCafe[p.id]||""} onChange={e=>setRvCafe(s=>({...s,[p.id]:parseInt(e.target.value)||0}))}
+                      style={{...inp(),marginBottom:0,flex:1,fontSize:12}}/>
+                    <button onClick={()=>{if(rvCafe[p.id]>0){setStockCafe(s=>({...s,[p.id]:(s[p.id]||0)+rvCafe[p.id]}));setRvCafe(s=>({...s,[p.id]:0}));showT("+"+rvCafe[p.id]+" "+p.n+" cargados");}}}
+                      style={{padding:"9px 12px",borderRadius:10,border:"none",background:C.verde,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold",whiteSpace:"nowrap"}}>Cargar</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>}
+
+        {/* MAYORISTAS */}
+        {tab==="mayoristas" && <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}>
+            <ST noTop>Pedidos Mayoristas</ST>
+            <button onClick={()=>setSpf(v=>!v)} style={btnMain(C.rosa)}>{spf?"Cerrar":"+ Cargar pedido"}</button>
+          </div>
+          <button onClick={sincronizarSheets} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid "+C.rosa,background:C.rosaBg,color:C.rosa,fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
+            Sincronizar pedidos del formulario
+          </button>
+          <Card title={"Consolidado - "+sem} titleColor={C.rosa}>
+            {SIZES.map(s => (
+              <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
+                <span style={{fontSize:13,color:C.marronL}}>{s==="PORCION"?"PORCION":s}</span>
+                <span style={{fontWeight:"bold",color:con[s]>0?C.marron:C.border}}>{con[s]} u.</span>
+              </div>
+            ))}
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid "+C.crema}}>
+              <span style={{fontSize:12,color:C.marronL}}>{ps.length}/20 puntos</span>
+              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(gma+ganCafe)}</span>
+            </div>
+            {ganCafe>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:11}}>
+              <span style={{color:"#C0392B"}}>Inc. cafe Cherry Season</span>
+              <span style={{color:"#C0392B",fontWeight:"bold"}}>{fmt(ganCafe)}</span>
+            </div>}
+            {psCafe.length>0&&<div style={{marginTop:10,paddingTop:8,borderTop:"1px solid #E8C5C0"}}>
+              <div style={{fontSize:10,color:"#C0392B",fontWeight:"bold",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Cherry Season</div>
+              {CAFE.map(p=>conCafe[p.id]>0?<div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:"1px solid #F5E5E0"}}>
+                <span style={{fontSize:11,color:"#8B6070"}}>{p.n}</span>
+                <span style={{fontWeight:"bold",fontSize:11,color:"#5C3340"}}>{conCafe[p.id]} u.</span>
+              </div>:null)}
+            </div>}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
+              <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
+              <button onClick={enviarRepartida} style={{...btnFill(C.rosa),fontSize:11}}>Enviar repartida</button>
+            </div>
+          </Card>
+          {spf && <Card title="Cargar pedido de punto" titleColor={C.rosa}>
+            <Lbl>Punto de venta</Lbl>
+            <select value={pf.punto} onChange={e=>setPf(f=>({...f,punto:e.target.value}))}
+              style={{...inp(),marginBottom:14}}>
+              {PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+            <Lbl>Cantidades</Lbl>
+            {SIZES.map(s => {
+              const esV = pf.punto.toLowerCase().includes("valle");
+              const precio = esV ? COSTO[s] : PMay[s];
+              return (
+                <div key={s} style={rowStyle}>
+                  <div style={{width:90}}>
+                    <div style={{fontSize:13,fontWeight:"bold"}}>{s==="PORCION"?"PORCION":s}</div>
+                    <div style={{fontSize:10,color:C.marronL}}>{esV?fmt(precio)+" (costo)":fmt(precio)}</div>
+                  </div>
+                  <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                    <button onClick={()=>setPf(f=>({...f,[s]:Math.max(0,(f[s]||0)-1)}))} style={{width:36,height:36,borderRadius:8,border:"1px solid "+C.border,background:C.card,color:C.marron,fontSize:18,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                    <span style={{width:28,textAlign:"center",fontSize:20,fontWeight:"bold"}}>{pf[s]||0}</span>
+                    <button onClick={()=>setPf(f=>({...f,[s]:(f[s]||0)+1}))} style={{width:36,height:36,borderRadius:8,border:"none",background:C.rosa,color:"#fff",fontSize:18,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                  </div>
+                  <span style={{fontSize:12,color:C.naranja,width:80,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*(pf[s]||0))}</span>
+                </div>
+              );
+            })}
+            <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                <span style={{color:C.marronL}}>Ganancia:</span>
+                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0))}</span>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <button onClick={()=>setSpf(false)} style={btnOut()}>Cancelar</button>
+              <button onClick={addPed} style={btnFill(C.rosa)}>Guardar</button>
+            </div>
+          </Card>}
+          {peds.length===0 && !spf && <Empty text="No hay pedidos esta semana"/>}
+          {peds.map(p => (
+            <div key={p.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+C.border}}>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{SIZES.filter(s=>p[s]>0).map(s=>s+": "+p[s]).join(" - ")}</div>
+                  <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:14,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* CAFE en Mayoristas */}
+          <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
+            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>CHERRYSEASON - Cafe</div>
+            <div style={{marginBottom:12}}>
+              <button onClick={cerrarCafe} style={{...btnFill("#C0392B"),width:"100%",fontSize:12}}>Cerrar pedido cafe - Enviar WhatsApp</button>
+            </div>
+            <div style={{background:C.bg,borderRadius:12,padding:12,border:"1px solid #E8C5C0"}}>
+              {CAFE.map(p => (
+                <div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #F5E5E0"}}>
+                  <span style={{fontSize:11,color:C.marronL}}>{p.n}</span>
+                  <span style={{fontWeight:"bold",fontSize:11,color:conCafe[p.id]>0?C.marron:"#E8C5C0"}}>{conCafe[p.id]} u.</span>
+                </div>
+              ))}
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:8,paddingTop:6,borderTop:"1px solid #E8C5C0"}}>
+                <span style={{fontSize:11,color:C.marronL}}>{psCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).length} puntos</span>
+                <span style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(ganCafe)}</span>
+              </div>
+            </div>
+          </div>
+        </div>}
+
+        {/* CAFE */}
+        {tab==="cafe" && <div>
+          <div style={{background:"#8B2010",padding:"20px 16px",margin:"0 -14px",marginBottom:16,textAlign:"center"}}>
+            <div style={{fontSize:9,letterSpacing:4,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",marginBottom:4}}>Cafe de Especialidad</div>
+            <div style={{fontSize:24,fontWeight:"bold",color:"#fff",letterSpacing:3}}>CHERRYSEASON</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+            <button onClick={()=>setShowCafeForm(v=>!v)} style={{...btnFill("#C0392B"),fontSize:12}}>{showCafeForm?"Cerrar":"+ Cargar pedido"}</button>
+            <button onClick={cerrarCafe} style={{...btnFill(C.marron),fontSize:12}}>Cerrar pedido</button>
+          </div>
+          <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid #E8C5C0"}}>
+            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Consolidado - {sem}</div>
+            {CAFE.map(p => (
+              <div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #F5E5E0"}}>
+                <span style={{fontSize:12,color:C.marronL}}>{p.n}</span>
+                <span style={{fontWeight:"bold",color:conCafe[p.id]>0?C.marron:"#E8C5C0"}}>{conCafe[p.id]} u.</span>
+              </div>
+            ))}
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid #E8C5C0"}}>
+              <span style={{fontSize:12,color:C.marronL}}>{psCafe.length} puntos</span>
+              <span style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(ganCafe)}</span>
+            </div>
+            {invValleCafe>0 && <div style={{display:"flex",justifyContent:"space-between",marginTop:6,background:"#FDE8EC",borderRadius:8,padding:"6px 10px"}}>
+              <span style={{fontSize:11,color:C.marronL}}>Inv. Valle Escondido:</span>
+              <span style={{fontSize:12,color:"#C0392B",fontWeight:"bold"}}>{fmt(invValleCafe)}</span>
+            </div>}
+          </div>
+          {showCafeForm && <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid #E8C5C0"}}>
+            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Cargar pedido cafe</div>
+            <Lbl>Punto de venta</Lbl>
+            <select value={cafeForm.punto} onChange={e=>setCafeForm(f=>({...f,punto:e.target.value}))}
+              style={{...inp(),marginBottom:14}}>
+              {PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+            {["grano","capsula"].map(tipo => (
+              <div key={tipo}>
+                <div style={{fontSize:10,color:C.marronL,fontWeight:"bold",textTransform:"uppercase",marginBottom:8,marginTop:tipo==="capsula"?12:0}}>
+                  {tipo==="grano"?"Cafe en grano":"Capsulas (min. 6 cajas)"}
+                </div>
+                {CAFE.filter(p=>p.t===tipo).map(prod => {
+                  const esV = cafeForm.punto.toLowerCase().includes("valle");
+                  const precio = esV ? prod.cv : prod.ma;
+                  const cant = cafeForm.cantidades[prod.id]||0;
+                  return (
+                    <div key={prod.id} style={rowStyle}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:12,fontWeight:"bold"}}>{prod.n}</div>
+                        <div style={{fontSize:10,color:C.marronL}}>{esV?fmt(precio)+" (costo)":fmt(precio)}</div>
+                      </div>
+                      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                        <button onClick={()=>setCantCafe(prod.id,-1)} style={{width:32,height:32,borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.marron,fontSize:16,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                        <span style={{width:24,textAlign:"center",fontSize:18,fontWeight:"bold"}}>{cant}</span>
+                        <button onClick={()=>setCantCafe(prod.id,1)} style={{width:32,height:32,borderRadius:8,border:"none",background:"#C0392B",color:"#fff",fontSize:16,cursor:"pointer",fontWeight:"bold"}}>+</button>
+                      </div>
+                      <span style={{fontSize:11,color:C.naranja,width:70,textAlign:"right",fontWeight:"bold"}}>{fmt(precio*cant)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+            <div style={{background:"#FDE8EC",borderRadius:12,padding:12,marginBottom:12,marginTop:8}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                <span style={{color:C.marronL}}>Total:</span>
+                <span style={{fontWeight:"bold",color:C.naranja}}>{fmt(CAFE.reduce((a,p)=>{const esV=cafeForm.punto.toLowerCase().includes("valle");return a+((esV?p.cv:p.ma)*(cafeForm.cantidades[p.id]||0));},0))}</span>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <button onClick={()=>setShowCafeForm(false)} style={btnOut()}>Cancelar</button>
+              <button onClick={addPedCafe} style={btnFill("#C0392B")}>Guardar</button>
+            </div>
+          </div>}
+          {pedsCafe.length===0 && !showCafeForm && <Empty text="No hay pedidos de cafe esta semana"/>}
+          {pedsCafe.map(p => (
+            <div key={p.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid #E8C5C0"}}>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{CAFE.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.n+": "+p.cantidades[prod.id]).join(" / ")}</div>
+                  <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  {p.ganancia>0 && <div style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>}
+                  {p.ganancia===0 && <div style={{fontSize:11,color:C.marronL}}>Valle Escondido</div>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>}
+
+        {/* GANANCIA */}
+        {tab==="ganancia" && <div>
+          <ST>Ganancia del mes</ST>
+          <div style={{fontSize:11,color:C.marronL,marginBottom:16,letterSpacing:1}}>{new Date().toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase()}</div>
+          {/* GANANCIA ROGELES */}
+          <Card title="Ganancia ROGELES" titleColor={C.rosa}>
+            <div style={{textAlign:"center",padding:"12px 0"}}>
+              <div style={{fontSize:38,fontWeight:"bold",color:C.rosa}}>{fmt(gmi+gma)}</div>
+              <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Minorista + Mayorista</div>
+            </div>
+            <div style={{borderTop:"1px solid "+C.border,paddingTop:10,marginTop:4}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}>
+                <span style={{color:C.marronL}}>Minorista rogeles</span>
+                <span style={{fontWeight:"bold",color:C.rosa}}>{fmt(gmi)}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                <span style={{color:C.marronL}}>Mayorista rogeles</span>
+                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(gma)}</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* GANANCIA CAFE */}
+          {(()=>{
+            const ganCafeMino = ventas.filter(v=>v.cafeCantidades).reduce((a,v)=>a+CAFE.reduce((b,p)=>b+(p.gm*((v.cafeCantidades||{})[p.id]||0)),0),0);
+            const ganCafeMayo = pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+CAFE.reduce((b,prod)=>b+(prod.gma*(p.cantidades[prod.id]||0)),0),0);
+            const totalCafe = ganCafeMino + ganCafeMayo;
+            return <Card title="Ganancia CAFE Cherry Season" titleColor="#C0392B" borderColor="#E8C5C0">
+              <div style={{textAlign:"center",padding:"12px 0"}}>
+                <div style={{fontSize:38,fontWeight:"bold",color:"#C0392B"}}>{fmt(totalCafe)}</div>
+                <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Minorista + Mayorista</div>
+              </div>
+              <div style={{borderTop:"1px solid #E8C5C0",paddingTop:10,marginTop:4}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6}}>
+                  <span style={{color:C.marronL}}>Minorista cafe</span>
+                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafeMino)}</span>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                  <span style={{color:C.marronL}}>Mayorista cafe</span>
+                  <span style={{fontWeight:"bold",color:"#C0392B"}}>{fmt(ganCafeMayo)}</span>
+                </div>
+              </div>
+            </Card>;
+          })()}
+
+          {/* TOTAL GENERAL */}
+          <Card title="TOTAL GENERAL" titleColor={C.naranja}>
+            <div style={{textAlign:"center",padding:"12px 0"}}>
+              <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gma+ganCafe)}</div>
+              <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Rogeles + Cafe</div>
+            </div>
+          </Card>
+        </div>}
+
+        {/* HISTORIAL */}
+        {tab==="historial" && <HistorialTab anio={anio} setAnio={setAnio}/>}
+
+      </div>
+
+      {/* Bottom Nav */}
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"#fff",borderTop:"1px solid "+C.border,display:"flex",padding:"10px 0 14px",zIndex:100,boxShadow:"0 -4px 20px rgba(196,104,122,0.12)"}}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)}
+            style={{flex:1,background:"none",border:"none",cursor:"pointer",padding:"4px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+            <span style={{fontSize:15,color:tab===t.id?C.rosa:C.marronL,fontWeight:"bold"}}>{t.icon}</span>
+            <span style={{fontSize:8,color:tab===t.id?C.rosa:C.marronL,fontWeight:tab===t.id?"bold":"normal",letterSpacing:0.3}}>{t.label}</span>
+            {tab===t.id && <div style={{width:20,height:2.5,background:C.rosa,borderRadius:2}}/>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+function StatsTab({ventas}) {
+  const mesActual = new Date().getMonth();
+  const anioActual = new Date().getFullYear();
+  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+  const parseDate = (fecha) => {
+    if(!fecha) return null;
+    // Handle D/M/YYYY or DD/MM/YYYY
+    const p = fecha.split("/");
+    if(p.length===3) {
+      const dia = parseInt(p[0]);
+      const mes = parseInt(p[1])-1;
+      const anio = parseInt(p[2]);
+      if(!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) return new Date(anio, mes, dia);
+    }
+    const d = new Date(fecha);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const ventasMes = ventas.filter(v => {
+    if(!v.fecha) return false;
+    const d = parseDate(v.fecha);
+    if(!d) return false;
+    return d.getMonth()===mesActual && d.getFullYear()===anioActual;
+  });
+
+  const getCant = (v, tipo) => {
+    if(v.cantidades) return v.cantidades[tipo]||0;
+    if(!v.tamano) return 0;
+    const t = v.tamano.toUpperCase();
+    const c = parseInt(v.cantidad)||1;
+    if(tipo==="ENTERO") return t.includes("ENTERO")?c:0;
+    if(tipo==="MEDIANO") return t.includes("MEDIANO")?c:0;
+    if(tipo==="PEQUENO") return (t.includes("PEQUENO")||t.includes("CUARTO"))?c:0;
+    if(tipo==="PORCION") return (t.includes("PORCION")||t.includes("ROGELITO"))?c:0;
+    return 0;
+  };
+
+  const porDia = {};
+  ventasMes.forEach(v => {
+    const d = parseDate(v.fecha);
+    if(!d) return;
+    const dia = d.getDate();
+    if(!porDia[dia]) porDia[dia]={total:0,gan:0,entero:0,mediano:0,pequeno:0,porcion:0,count:0,dow:d.getDay()};
+    porDia[dia].total += v.precio||0;
+    porDia[dia].gan += v.ganancia||0;
+    porDia[dia].count++;
+    porDia[dia].entero += getCant(v,"ENTERO");
+    porDia[dia].mediano += getCant(v,"MEDIANO");
+    porDia[dia].pequeno += getCant(v,"PEQUENO");
+    porDia[dia].porcion += getCant(v,"PORCION");
+  });
+
+  const porSemana = {1:0,2:0,3:0,4:0,5:0,6:0,0:0};
+  ventasMes.forEach(v => {
+    const d = parseDate(v.fecha);
+    if(d) porSemana[d.getDay()] += v.precio||0;
+  });
+
+  const dias = Object.keys(porDia).map(Number).sort((a,b)=>a-b);
+  const maxVenta = Math.max(...dias.map(d=>porDia[d].total), 1);
+  const maxSem = Math.max(...Object.values(porSemana), 1);
+  const totE = ventasMes.reduce((a,v)=>a+getCant(v,"ENTERO"),0);
+  const totM = ventasMes.reduce((a,v)=>a+getCant(v,"MEDIANO"),0);
+  const totP = ventasMes.reduce((a,v)=>a+getCant(v,"PEQUENO"),0);
+  const totPo = ventasMes.reduce((a,v)=>a+getCant(v,"PORCION"),0);
+  const totGan = ventasMes.reduce((a,v)=>a+(v.ganancia||0),0);
+  const findeVentas = porSemana[5]+porSemana[6]+porSemana[0];
+  const totalVentas = Object.values(porSemana).reduce((a,b)=>a+b,0);
+  const findePct = totalVentas>0 ? Math.round(findeVentas/totalVentas*100) : 0;
+  const dowNames = ["Dom","Lun","Mar","Mie","Jue","Vie","Sab"];
+
+  return <div style={{paddingBottom:20}}>
+    <div style={{fontSize:12,color:"#E8A0A8",letterSpacing:2.5,textTransform:"uppercase",paddingTop:20,marginBottom:14,fontWeight:"bold"}}>Estadisticas - {MESES[mesActual]} {anioActual}</div>
+
+    {/* Resumen */}
+    <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+        <div style={{background:"#FDF6F0",borderRadius:12,padding:12,textAlign:"center"}}>
+          <div style={{fontSize:28,fontWeight:"bold",color:"#C4687A"}}>{ventasMes.length}</div>
+          <div style={{fontSize:10,color:"#8B6070"}}>ventas del mes</div>
+        </div>
+        <div style={{background:"#FDF6F0",borderRadius:12,padding:12,textAlign:"center"}}>
+          <div style={{fontSize:22,fontWeight:"bold",color:"#7BAE84"}}>{fmt(totGan)}</div>
+          <div style={{fontSize:10,color:"#8B6070"}}>ganancia</div>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
+        {[["ENTERO",totE,"#C4687A"],["MEDIANO",totM,"#D4845A"],["PEQUENO",totP,"#7BAE84"],["PORCION",totPo,"#9B59B6"]].map(([n,v,col])=>(
+          <div key={n} style={{background:"#FDF6F0",borderRadius:10,padding:8,textAlign:"center"}}>
+            <div style={{fontSize:20,fontWeight:"bold",color:col}}>{v}</div>
+            <div style={{fontSize:8,color:"#8B6070"}}>{n}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Grafico por dia */}
+    <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+      <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Ventas por dia del mes</div>
+      {dias.length===0
+        ? <div style={{textAlign:"center",color:"#8B6070",fontSize:12,padding:20}}>Sin ventas este mes aun</div>
+        : <div style={{overflowX:"auto"}}>
+            <div style={{display:"flex",gap:3,alignItems:"flex-end",height:130,minWidth:dias.length*34}}>
+              {dias.map(dia=>{
+                const d=porDia[dia];
+                const h=Math.max(8,Math.round((d.total/maxVenta)*110));
+                const esFinde=d.dow===5||d.dow===6||d.dow===0;
+                return <div key={dia} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,flex:"0 0 30px"}}>
+                  <div style={{fontSize:7,color:"#8B6070"}}>{fmt(d.total).replace("$","").replace(".000","k").replace(",",".")}</div>
+                  <div style={{width:22,background:esFinde?"#C4687A":"#F5D0D6",borderRadius:"4px 4px 0 0",height:h+"px"}}/>
+                  <div style={{fontSize:9,color:esFinde?"#C4687A":"#8B6070",fontWeight:esFinde?"bold":"normal"}}>{dia}</div>
+                  <div style={{fontSize:7,color:"#8B6070"}}>{dowNames[d.dow]}</div>
+                </div>;
+              })}
+            </div>
+            <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:8}}>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#C4687A",borderRadius:2}}/><span style={{fontSize:9,color:"#8B6070"}}>Finde</span></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#F5D0D6",borderRadius:2}}/><span style={{fontSize:9,color:"#8B6070"}}>Semana</span></div>
+            </div>
+          </div>
+      }
+    </div>
+
+    {/* Grafico por dia de semana */}
+    <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+      <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Por dia de semana</div>
+      <div style={{display:"flex",gap:6,alignItems:"flex-end",height:100}}>
+        {[1,2,3,4,5,6,0].map(dow=>{
+          const val=porSemana[dow];
+          const h=Math.max(4,Math.round((val/maxSem)*80));
+          const esFinde=dow===5||dow===6||dow===0;
+          return <div key={dow} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+            <div style={{fontSize:7,color:"#8B6070"}}>{val>0?fmt(val).replace("$","").replace(".000","k"):""}</div>
+            <div style={{width:"100%",background:esFinde?"#C4687A":"#F5D0D6",borderRadius:"4px 4px 0 0",height:h+"px"}}/>
+            <div style={{fontSize:10,color:esFinde?"#C4687A":"#8B6070",fontWeight:esFinde?"bold":"normal"}}>{["Dom","Lun","Mar","Mie","Jue","Vie","Sab"][dow]}</div>
+          </div>;
+        })}
+      </div>
+    </div>
+
+    {/* Alerta pedido */}
+    {findePct>0&&<div style={{background:"#FFF8E1",borderRadius:16,padding:16,marginBottom:14,border:"2px solid #F59E0B"}}>
+      <div style={{fontSize:11,color:"#92400E",letterSpacing:2,textTransform:"uppercase",marginBottom:8,fontWeight:"bold"}}>Alerta de pedido</div>
+      <div style={{fontSize:13,color:"#92400E",marginBottom:8}}>El <strong>{findePct}%</strong> de tus ventas son Vie/Sab/Dom</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:8}}>
+        {[["ENTERO",Math.ceil(totE/Math.max(dias.length,1)*7)],["MEDIANO",Math.ceil(totM/Math.max(dias.length,1)*7)],["PEQUENO",Math.ceil(totP/Math.max(dias.length,1)*7)],["PORCION",Math.ceil(totPo/Math.max(dias.length,1)*7)]].map(([n,v])=>(
+          <div key={n} style={{background:"#FEF3C7",borderRadius:8,padding:"6px 10px",display:"flex",justifyContent:"space-between"}}>
+            <span style={{fontSize:11,color:"#78350F"}}>{n}</span>
+            <span style={{fontWeight:"bold",color:"#92400E"}}>{v} u.</span>
+          </div>
+        ))}
+      </div>
+    </div>}
+
+    {/* Top dias */}
+    {dias.length>0&&<div style={{background:"#fff",borderRadius:16,padding:16,border:"1px solid #F0D0D8"}}>
+      <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Mejores dias del mes</div>
+      {[...dias].sort((a,b)=>porDia[b].total-porDia[a].total).slice(0,5).map((dia,i)=>{
+        const d=porDia[dia];
+        const esFinde=d.dow===5||d.dow===6||d.dow===0;
+        return <div key={dia} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #F0D0D8"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:24,height:24,borderRadius:"50%",background:i===0?"#C4687A":"#F5D0D6",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:"bold",color:i===0?"#fff":"#C4687A"}}>{i+1}</div>
+            <div>
+              <div style={{fontSize:13,fontWeight:"bold",color:"#5C3340"}}>Dia {dia} - {dowNames[d.dow]}</div>
+              <div style={{fontSize:10,color:"#8B6070"}}>{d.count} ventas - E:{d.entero} M:{d.mediano} P:{d.pequeno} Po:{d.porcion}</div>
+            </div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:13,fontWeight:"bold",color:esFinde?"#C4687A":"#D4845A"}}>{fmt(d.total)}</div>
+            <div style={{fontSize:10,color:"#7BAE84"}}>+{fmt(d.gan)}</div>
+          </div>
+        </div>;
+      })}
+    </div>}
+  </div>;
+}
+
+function HistorialTab({anio, setAnio}) {
+  const H = anio==="2026" ? H2026 : H2025;
+  const maxTot = Math.max(...H.map(h=>h.tot));
+  const vp = (curr,prev) => prev===0?null:((curr-prev)/prev*100);
+  const Badge = ({val}) => {
+    if(val===null) return null;
+    const ok = val>=0;
+    return <span style={{fontSize:11,fontWeight:"bold",color:"#fff",background:ok?"#7BAE84":"#C0444A",borderRadius:6,padding:"2px 6px",marginLeft:6}}>{ok?"+":""}{val.toFixed(1)}%</span>;
+  };
+  return (
+    <div>
+      <div style={{fontSize:12,color:"#E8A0A8",letterSpacing:2.5,textTransform:"uppercase",paddingTop:20,marginBottom:14,fontWeight:"bold"}}>Historial</div>
+      <div style={{display:"flex",gap:8,marginBottom:16}}>
+        {["2026","2025"].map(a => (
+          <button key={a} onClick={()=>setAnio(a)}
+            style={{flex:1,padding:"10px 0",borderRadius:12,border:"2px solid "+(anio===a?"#C4687A":"#F0D0D8"),background:anio===a?"#FDE8EC":"#fff",color:anio===a?"#C4687A":"#8B6070",fontWeight:"bold",cursor:"pointer",fontSize:14}}>
+            {a}
+          </button>
+        ))}
+      </div>
+      <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+        <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Ganancia mensual {anio}</div>
+        <div style={{display:"flex",gap:4,alignItems:"flex-end",height:120,marginBottom:8}}>
+          {H.map((h,i) => {
+            const hMi = Math.max(4,Math.round((h.gmi/maxTot)*100));
+            const hMa = Math.max(4,Math.round((h.gma/maxTot)*100));
+            return (
+              <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                <div style={{width:"100%",display:"flex",gap:1,alignItems:"flex-end",height:100}}>
+                  <div style={{flex:1,background:"#C4687A",borderRadius:"3px 3px 0 0",height:hMi+"px"}}/>
+                  <div style={{flex:1,background:"#7BAE84",borderRadius:"3px 3px 0 0",height:hMa+"px"}}/>
+                </div>
+                <div style={{fontSize:7,color:"#8B6070",textAlign:"center"}}>{h.mes.slice(0,3)}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{display:"flex",gap:16,justifyContent:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#C4687A",borderRadius:2}}/><span style={{fontSize:10,color:"#8B6070"}}>Minorista</span></div>
+          <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#7BAE84",borderRadius:2}}/><span style={{fontSize:10,color:"#8B6070"}}>Mayorista</span></div>
+        </div>
+      </div>
+      <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
+        <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Comparacion intermensual</div>
+        {H.map((h,i) => {
+          const prev = i>0?H[i-1]:null;
+          return (
+            <div key={h.mes} style={{background:"#FDF6F0",borderRadius:12,padding:12,marginBottom:10,border:"1px solid #F0D0D8"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <span style={{fontWeight:"bold",fontSize:14,color:"#5C3340"}}>{h.mes}</span>
+                <div style={{display:"flex",alignItems:"center"}}>
+                  <span style={{fontWeight:"bold",color:"#D4845A",fontSize:14}}>{new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(h.tot)}</span>
+                  <Badge val={prev?vp(h.tot,prev.tot):null}/>
+                </div>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}>
+                <span style={{color:"#8B6070"}}>Minorista</span>
+                <div style={{display:"flex",alignItems:"center"}}>
+                  <span style={{color:"#C4687A",fontWeight:"bold"}}>{new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(h.gmi)}</span>
+                  <Badge val={prev?vp(h.gmi,prev.gmi):null}/>
+                </div>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
+                <span style={{color:"#8B6070"}}>Mayorista</span>
+                <div style={{display:"flex",alignItems:"center"}}>
+                  <span style={{color:"#7BAE84",fontWeight:"bold"}}>{new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(h.gma)}</span>
+                  <Badge val={prev?vp(h.gma,prev.gma):null}/>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
