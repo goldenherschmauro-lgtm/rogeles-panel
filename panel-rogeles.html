@@ -298,16 +298,16 @@ function App() {
 
   // Firebase listeners - sync in real time
   useEffect(() => {
-    // Stock: load once only
-    db.ref("stock").once("value").then(snap => {
-      const v = snap.val();
-      if(v) { setStock(v); stockLoaded.current = true; }
-      else setStock({ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
+    // Stock: load once only - set loaded flag after
+    db.ref("stock").once("value").then(snap => { 
+      const v=snap.val(); 
+      if(v) setStock(v); 
+      window._stockFBLoaded = true;
     });
-    db.ref("stockCafe").once("value").then(snap => {
-      const v = snap.val();
-      if(v) { setStockCafe(v); stockCafeLoaded.current = true; }
-      else setStockCafe({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
+    db.ref("stockCafe").once("value").then(snap => { 
+      const v=snap.val(); 
+      if(v) setStockCafe(v);
+      window._stockCafeFBLoaded = true;
     });
     // Listen to ventas
     const refVentas = db.ref("ventas");
@@ -335,11 +335,7 @@ function App() {
     };
   }, []);
 
-  // Stock refs for manual save
-  const ignoringStock = React.useRef(false);
-  const ignoringStockCafe = React.useRef(false);
-  const stockLoaded = React.useRef(false);
-  const stockCafeLoaded = React.useRef(false);
+
 
   // Auto-sync every 30 seconds
   useEffect(() => {
@@ -448,7 +444,7 @@ function App() {
     setStock(p => {
       const ns = {...p};
       SIZES.forEach(s => { if((cants[s]||0)>0) ns[s]=(ns[s]||0)-(cants[s]||0); });
-      setTimeout(() => fbSet("stock", ns), 500);
+      if(window._stockFBLoaded) fbSet("stock", ns);
       return ns;
     });
     postSheets({tipo:"venta", ...v});
@@ -938,7 +934,7 @@ function App() {
         {tab==="stock" && <div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}>
             <ST noTop>Control de Stock</ST>
-            <button onClick={()=>{fbSet("stock",stock);fbSet("stockCafe",stockCafe);showT("Stock guardado!");}}
+            <button onClick={()=>{if(!window._stockFBLoaded){showT("Esperando carga...",false);return;}fbSet("stock",stock);fbSet("stockCafe",stockCafe);showT("Stock guardado!");}}
               style={{padding:"8px 16px",borderRadius:12,border:"none",background:C.verde,color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:12}}>
               Guardar stock
             </button>
