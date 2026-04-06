@@ -739,4 +739,726 @@ const dbFB = firebase.database();
   }
 </script>
 </body>
+</html>00%);
+    padding: 32px 22px 26px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+  .header-sub  { font-size: 11px; letter-spacing: 4px; color: rgba(92,51,64,0.6); text-transform: uppercase; margin-bottom: 4px; }
+  .header-los  { font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px; color: #5C3340; opacity: 0.75; }
+  .header-name { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 700; color: #5C3340; line-height: 1; }
+  .header-de   { font-size: 13px; letter-spacing: 6px; text-transform: uppercase; color: #5C3340; opacity: 0.7; margin-bottom: 10px; }
+  .header-info { font-size: 12px; color: rgba(92,51,64,0.6); margin-top: 6px; }
+
+  .container { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  .section-title {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: #C4687A; font-weight: 700; margin: 24px 0 12px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid #F0D0D8;
+    box-shadow: 0 1px 8px rgba(196,104,122,0.07);
+  }
+
+  label { display: block; font-size: 12px; color: #8B6070; margin-bottom: 6px; font-weight: 700; letter-spacing: 0.5px; }
+
+  select, input[type="text"], input[type="tel"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #F0D0D8;
+    background: #FFF8F5;
+    color: #5C3340;
+    font-size: 14px;
+    font-family: 'Lato', sans-serif;
+    outline: none;
+    transition: border-color .2s;
+    appearance: none;
+  }
+  select:focus, input:focus { border-color: #C4687A; }
+
+  .size-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .size-card {
+    background: #FDF6F0;
+    border-radius: 12px;
+    padding: 14px 12px;
+    border: 1.5px solid #F0D0D8;
+    transition: border-color .2s;
+  }
+  .size-card.active { border-color: #C4687A; background: #FDE8EC; }
+
+  .size-name { font-size: 15px; font-weight: 700; color: #5C3340; margin-bottom: 2px; }
+  .size-price { font-size: 11px; color: #8B6070; margin-bottom: 10px; }
+
+  .qty-control { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  .qty-btn {
+    width: 34px; height: 34px; border-radius: 8px; border: none;
+    font-size: 18px; cursor: pointer; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .qty-btn.minus { background: #fff; border: 1.5px solid #F0D0D8; color: #5C3340; }
+  .qty-btn.plus  { background: #C4687A; color: #fff; }
+  .qty-btn.minus:active { background: #F5D0D6; }
+  .qty-btn.plus:active  { background: #a05060; }
+  .qty-val { font-size: 22px; font-weight: 700; color: #5C3340; min-width: 28px; text-align: center; }
+
+  .summary {
+    background: #FDE8EC;
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid #F0D0D8;
+    margin-bottom: 20px;
+  }
+  .summary-title { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #C4687A; font-weight: 700; margin-bottom: 10px; }
+  .summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 1px solid rgba(196,104,122,0.1); }
+  .summary-row:last-child { border: none; }
+  .summary-label { color: #8B6070; }
+  .summary-val { font-weight: 700; color: #5C3340; }
+  .summary-empty { color: rgba(139,96,112,0.4); font-style: italic; font-size: 12px; text-align: center; padding: 8px; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #C4687A, #E8A0A8);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Lato', sans-serif;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 16px rgba(196,104,122,0.4);
+    transition: all .2s;
+  }
+  .submit-btn:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(196,104,122,0.3); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .success-icon { font-size: 64px; margin-bottom: 16px; }
+  .success-title { font-family: 'Playfair Display', serif; font-size: 28px; color: #C4687A; margin-bottom: 8px; }
+  .success-text { font-size: 14px; color: #8B6070; line-height: 1.6; }
+  .success-detail { background: #FDE8EC; border-radius: 12px; padding: 14px; margin: 20px 0; text-align: left; }
+  .success-detail p { font-size: 13px; color: #5C3340; margin-bottom: 4px; }
+
+  .footer { text-align: center; font-size: 11px; color: rgba(139,96,112,0.5); margin-top: 30px; padding-bottom: 20px; }
+
+  .required { color: #C4687A; }
+  .error-msg { font-size: 11px; color: #C0444A; margin-top: 4px; display: none; }
+  .error-msg.show { display: block; }
+
+  .whatsapp-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; border-radius: 14px; border: none;
+    background: #25D366; color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: 'Lato', sans-serif; margin-top: 10px;
+    box-shadow: 0 4px 16px rgba(37,211,102,0.3);
+  }
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = { databaseURL: "https://los-rogeles-de-marcela-default-rtdb.firebaseio.com" };
+firebase.initializeApp(firebaseConfig);
+const dbFB = firebase.database();
+</script>
+
+</head>
+<body>
+
+
+
+<div class="header">
+  <div class="header-sub">Pedido Semanal Mayorista</div>
+  <div class="header-los">Los</div>
+  <div class="header-name">rogeles</div>
+  <div class="header-de">de Marcela</div>
+  <div class="header-info">📍 Valle Escondido, Córdoba</div>
+</div>
+
+<div class="container">
+
+  <!-- Formulario -->
+  <div id="form-screen">
+
+    <p class="section-title">Datos del punto</p>
+
+    <div class="card">
+      <label>Punto de venta <span class="required">*</span></label>
+      <select id="punto">
+                <option value="">— Seleccioná tu punto —</option>
+        <option>Valle Escondido (Casa Central)</option>
+        <option>Barrio Jardín</option>
+        <option>BlackBull</option>
+        <option>Cañitas / Valle del Golf / Causana</option>
+        <option>Camino a San Carlos</option>
+        <option>Centro (Bonafide Colón y Cañada)</option>
+        <option>Cerro de las Rosas / Urca</option>
+        <option>Cofico</option>
+        <option>Docta</option>
+        <option>Intercountry (El Bosque)</option>
+        <option>J. Claret / P. Lugones</option>
+        <option>La Cuesta / La Calera</option>
+        <option>Manantiales</option>
+        <option>Montecristo</option>
+        <option>Nueva Córdoba (Strobel Panadería / Café)</option>
+        <option>Orfeo / Dino</option>
+        <option>Sierras Chicas - Río Ceballos / Salsipuedes</option>
+        <option>Siete Soles / Tejas 3</option>
+        <option>V. Rivera Indarte / Saldán</option>
+        <option>Villa Allende / Mendiolaza</option>
+        <option>Villa Allende - Av. Padre Luchesse / Ruta E53</option>
+        <option>Villa Belgrano</option>
+      </select>
+      <div class="error-msg" id="err-punto">Por favor seleccioná tu punto de venta.</div>
+
+      <div style="margin-top:12px">
+        <label>Nombre de contacto <span class="required">*</span></label>
+        <input type="text" id="contacto" placeholder="Tu nombre" />
+        <div class="error-msg" id="err-contacto">Por favor ingresá tu nombre.</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Teléfono <span class="required">*</span></label>
+        <input type="tel" id="telefono" placeholder="Ej: 351 123-4567" />
+      </div>
+      <div style="margin-top:12px">
+        <label>Email (opcional)</label>
+        <input type="email" id="email" placeholder="tucorreo@gmail.com" />
+      </div>
+    </div>
+
+    <p class="section-title">¿Qué necesitás esta semana?</p>
+
+    <div class="size-grid">
+      <!-- ENTERO -->
+      <div class="size-card" id="card-entero">
+        <div class="size-name">ENTERO</div>
+        <div class="size-price" id="price-entero">Precio a confirmar</div>
+        <div class="qty-control">
+          <button class="qty-btn minus" data-size="entero" data-delta="-1">−</button>
+          <span class="qty-val" id="val-entero">0</span>
+          <button class="qty-btn plus" data-size="entero" data-delta="1">+</button>
+        </div>
+      </div>
+      <!-- MEDIO -->
+      <div class="size-card" id="card-medio">
+        <div class="size-name">MEDIANO</div>
+        <div class="size-price" id="price-medio">Precio a confirmar</div>
+        <div class="qty-control">
+          <button class="qty-btn minus" data-size="medio" data-delta="-1">−</button>
+          <span class="qty-val" id="val-medio">0</span>
+          <button class="qty-btn plus" data-size="medio" data-delta="1">+</button>
+        </div>
+      </div>
+      <!-- CUARTO -->
+      <div class="size-card" id="card-cuarto">
+        <div class="size-name">PEQUENO</div>
+        <div class="size-price" id="price-cuarto">Precio a confirmar</div>
+        <div class="qty-control">
+          <button class="qty-btn minus" data-size="cuarto" data-delta="-1">−</button>
+          <span class="qty-val" id="val-cuarto">0</span>
+          <button class="qty-btn plus" data-size="cuarto" data-delta="1">+</button>
+        </div>
+      </div>
+      <!-- ROGELITO -->
+      <div class="size-card" id="card-rogelito">
+        <div class="size-name">PORCION</div>
+        <div class="size-price" id="price-rogelito">Precio a confirmar</div>
+        <div class="qty-control">
+          <button class="qty-btn minus" data-size="rogelito" data-delta="-1">−</button>
+          <span class="qty-val" id="val-rogelito">0</span>
+          <button class="qty-btn plus" data-size="rogelito" data-delta="1">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg show" id="err-items" style="display:none; margin: 8px 0;">Seleccioná al menos un producto.</div>
+
+    <p class="section-title">Resumen del pedido</p>
+
+    <div class="summary">
+      <div class="summary-title">Tu pedido esta semana</div>
+      <div id="summary-content">
+        <div class="summary-empty">Todavía no cargaste productos</div>
+      </div>
+    </div>
+
+    <!-- Toggle cafe -->
+    <div style="margin-bottom:20px">
+      <button id="cafe-toggle-btn" style="width:100%;padding:14px;border-radius:14px;border:2px solid #C0392B;background:#fff;color:#C0392B;font-size:15px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-bottom:12px;">
+        ☕ Agregar pedido CHERRYSEASON
+      </button>
+      <div id="cafe-section" style="display:none;">
+        <div style="background:linear-gradient(135deg,#8B2010,#C0392B);padding:16px;border-radius:14px;margin-bottom:12px;text-align:center;">
+          <div style="font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:4px;">Café de Especialidad</div>
+          <div style="font-size:22px;font-weight:bold;color:#fff;letter-spacing:2px;">CHERRYSEASON</div>
+        </div>
+        <div style="font-size:12px;color:#8B6070;font-weight:bold;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">☕ Café en grano</div>
+        <div class="size-grid">
+          <div class="size-card" id="cafe-card-peru250">
+            <div class="size-name" style="font-size:13px;">Perú Blend 250gr</div>
+            <div class="size-price" id="cafe-price-peru250">$19.320 c/u</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" data-cafe="peru250" data-delta="-1">−</button>
+              <span class="qty-val" id="cafe-val-peru250">0</span>
+              <button class="qty-btn plus" data-cafe="peru250" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="size-card" id="cafe-card-colombia250">
+            <div class="size-name" style="font-size:13px;">Colombia El Tambo 250gr</div>
+            <div class="size-price" id="cafe-price-colombia250">$22.260 c/u</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" data-cafe="colombia250" data-delta="-1">−</button>
+              <span class="qty-val" id="cafe-val-colombia250">0</span>
+              <button class="qty-btn plus" data-cafe="colombia250" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="size-card" id="cafe-card-guatemala250">
+            <div class="size-name" style="font-size:13px;">Guatemala Anaeróbico 250gr</div>
+            <div class="size-price" id="cafe-price-guatemala250">$25.200 c/u</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" data-cafe="guatemala250" data-delta="-1">−</button>
+              <span class="qty-val" id="cafe-val-guatemala250">0</span>
+              <button class="qty-btn plus" data-cafe="guatemala250" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="size-card" id="cafe-card-peru1kg">
+            <div class="size-name" style="font-size:13px;">Perú Blend 1kg</div>
+            <div class="size-price" id="cafe-price-peru1kg">$46.369 c/u</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" data-cafe="peru1kg" data-delta="-1">−</button>
+              <span class="qty-val" id="cafe-val-peru1kg">0</span>
+              <button class="qty-btn plus" data-cafe="peru1kg" data-delta="1">+</button>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#8B6070;font-weight:bold;letter-spacing:2px;text-transform:uppercase;margin:12px 0 8px;">💊 Cápsulas (mínimo 6 cajas)</div>
+        <div class="size-grid">
+          <div class="size-card" id="cafe-card-capscolombia">
+            <div class="size-name" style="font-size:13px;">Cápsulas Colombia x10</div>
+            <div class="size-price" id="cafe-price-capscolombia">$14.760 · mín 6 cajas</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" data-cafe="capscolombia" data-delta="-1">−</button>
+              <span class="qty-val" id="cafe-val-capscolombia">0</span>
+              <button class="qty-btn plus" data-cafe="capscolombia" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="size-card" id="cafe-card-capsperu">
+            <div class="size-name" style="font-size:13px;">Cápsulas Perú Blend x10</div>
+            <div class="size-price" id="cafe-price-capsperu">$14.760 · mín 6 cajas</div>
+            <div class="qty-control">
+              <button class="qty-btn minus" data-cafe="capsperu" data-delta="-1">−</button>
+              <span class="qty-val" id="cafe-val-capsperu">0</span>
+              <button class="qty-btn plus" data-cafe="capsperu" data-delta="1">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="summary" id="cafe-summary" style="margin-top:12px;display:none;">
+          <div class="summary-title" style="color:#C0392B;">Tu pedido de café</div>
+          <div id="cafe-summary-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="enviar()">Confirmar pedido ✓</button>
+
+  </div>
+
+  <!-- Pantalla de éxito -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">🎀</div>
+    <div class="success-title">¡Pedido enviado!</div>
+    <div class="success-text">Tu pedido fue registrado correctamente.<br>Marcela lo recibirá en breve.</div>
+    <div class="success-detail" id="success-detail"></div>
+    <button class="whatsapp-btn" id="wa-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Confirmar por WhatsApp
+    </button>
+    <button id="wa-punto-btn" onclick="enviarWAPunto()" style="display:none;width:100%;padding:14px;border-radius:14px;border:none;background:#25D366;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-top:10px;">
+      📱 Confirmar al punto por WhatsApp
+    </button>
+    <a id="email-btn" style="display:none;width:100%;padding:14px;border-radius:14px;border:none;background:#C4687A;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-top:10px;text-decoration:none;text-align:center;">
+      📧 Enviar confirmación por email
+    </a>
+    <button onclick="resetForm()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid #F0D0D8;background:transparent;color:#8B6070;font-size:13px;cursor:pointer;margin-top:10px;font-family:'Lato',sans-serif;">
+      Hacer otro pedido
+    </button>
+  </div>
+
+  <div class="footer">Los Rogeles de Marcela · Valle Escondido, Córdoba<br>Pedidos mayoristas — solo domingos</div>
+</div>
+
+
+
+<script>
+  // -- Precios mayorista reales (marzo 2026) --
+  const GANANCIAS_MAY = {entero:8890, medio:5950, cuarto:3830, rogelito:4520};
+  const PRECIOS = {
+    entero:   { label: "ENTERO",   precio: 56940 },
+    medio:    { label: "MEDIANO",    precio: 35100 },
+    cuarto:   { label: "PEQUENO",   precio: 24180 },
+    rogelito: { label: "PORCION", precio: 42120, nota: "x6 unidades . $7.020 c/u" },
+  };
+
+  const WA_NUMERO = "5493513128283";
+  const SHEETS_URL = "https://script.google.com/macros/s/AKfycbxIyL8fYXhQoLp0x1prQYkZCXzOGYkL9Non99Zvd1tRCnld7nFgvXqZSo-3BeNYNqfR/exec";
+
+  const cantidades = { entero: 0, medio: 0, cuarto: 0, rogelito: 0 };
+
+  const PRECIOS_COSTO = {
+    entero:   { label: "ENTERO",   precio: 48050 },
+    medio:    { label: "MEDIANO",    precio: 29150 },
+    cuarto:   { label: "PEQUENO",   precio: 20350 },
+    rogelito: { label: "PORCION", precio: 37600, nota: "x6 unidades" },
+  };
+
+  function actualizarPrecios() {
+    const punto = document.getElementById("punto").value;
+    const esValle = punto.toLowerCase().includes("valle escondido");
+    // Rogeles
+    Object.keys(PRECIOS).forEach(k => {
+      const p = PRECIOS[k];
+      const el = document.getElementById(`price-${k}`);
+      if (el) {
+        if(esValle) {
+          el.textContent = "Precio interno";
+        } else {
+          el.textContent = p.precio ? "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.nota ? " . " + p.nota : "") : "";
+        }
+      }
+    });
+    // Cafe - ocultar precios para Valle Escondido
+    Object.keys(CAFE_PRODS).forEach(k => {
+      const el = document.getElementById(`cafe-price-${k}`);
+      if(el) {
+        if(esValle) {
+          el.textContent = "Precio interno";
+        } else {
+          const p = CAFE_PRODS[k];
+          el.textContent = "$" + p.precio.toLocaleString("es-AR") + " c/u" + (p.minimo>1 ? ` . mín ${p.minimo} cajas` : "");
+        }
+      }
+    });
+  }
+
+  // Actualizar cuando cambia el punto
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("punto").addEventListener("change", actualizarPrecios);
+    actualizarPrecios();
+
+    // Wire rogeles buttons
+    const sizes = ['entero','medio','cuarto','rogelito'];
+    sizes.forEach(s => {
+      document.querySelectorAll('[data-size="'+s+'"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          cambiar(s, parseInt(this.dataset.delta));
+        });
+      });
+    });
+
+    // Wire cafe buttons
+    const cafes = ['peru250','colombia250','guatemala250','peru1kg','capscolombia','capsperu'];
+    cafes.forEach(id => {
+      document.querySelectorAll('[data-cafe="'+id+'"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          cambiarCafe(id, parseInt(this.dataset.delta));
+        });
+      });
+    });
+
+    // Wire toggleCafe
+    const toggleBtn = document.getElementById('cafe-toggle-btn');
+    if(toggleBtn) toggleBtn.addEventListener('click', toggleCafe);
+  });
+
+  function cambiar(tipo, delta) {
+    cantidades[tipo] = Math.max(0, cantidades[tipo] + delta);
+    document.getElementById(`val-${tipo}`).textContent = cantidades[tipo];
+    const card = document.getElementById(`card-${tipo}`);
+    card.classList.toggle("active", cantidades[tipo] > 0);
+    actualizarResumen();
+  }
+
+  function actualizarResumen() {
+    const cont = document.getElementById("summary-content");
+    const items = Object.entries(cantidades).filter(([, v]) => v > 0);
+
+    if (items.length === 0) {
+      cont.innerHTML = '<div class="summary-empty">Todavia no cargaste productos</div>';
+      return;
+    }
+
+    cont.innerHTML = items.map(([k, v]) => {
+      const p = PRECIOS[k];
+      const subtotal = p.precio ? "$" + (p.precio * v).toLocaleString("es-AR") : "-";
+      return `<div class="summary-row">
+        <span class="summary-label">${p.label} x${v}</span>
+        <span class="summary-val">${subtotal}</span>
+      </div>`;
+    }).join("");
+
+    // Total si hay precios
+    const total = items.reduce((a, [k, v]) => a + (PRECIOS[k].precio ? PRECIOS[k].precio * v : 0), 0);
+    if (total > 0) {
+      cont.innerHTML += `<div class="summary-row" style="margin-top:6px;padding-top:8px;border-top:1.5px solid rgba(196,104,122,0.2)">
+        <span style="font-weight:700;color:#5C3340">Total</span>
+        <span style="font-weight:700;color:#C4687A;font-size:15px">$${total.toLocaleString("es-AR")}</span>
+      </div>`;
+    }
+  }
+
+  // -- CAFE --
+  const CAFE_PRODS = {
+    peru250:     {nombre:"Peru Blend 250gr",        precio:19320, minimo:1},
+    colombia250: {nombre:"Colombia El Tambo 250gr", precio:22260, minimo:1},
+    guatemala250:{nombre:"Guatemala Anaeróbico 250gr",precio:25200,minimo:1},
+    peru1kg:     {nombre:"Peru Blend 1kg",           precio:46369, minimo:1},
+    capscolombia:{nombre:"Capsulas Colombia x10",    precio:14760, minimo:6},
+    capsperu:    {nombre:"Capsulas Peru Blend x10",  precio:14760, minimo:6},
+  };
+  const cantidadesCafe = {peru250:0,colombia250:0,guatemala250:0,peru1kg:0,capscolombia:0,capsperu:0};
+  let cafeVisible = false;
+
+  // Mostrar precios iniciales (despues de definir CAFE_PRODS)
+  actualizarPrecios();
+
+  function toggleCafe() {
+    cafeVisible = !cafeVisible;
+    document.getElementById("cafe-section").style.display = cafeVisible ? "block" : "none";
+    document.getElementById("cafe-toggle-btn").style.background = cafeVisible ? "#C0392B" : "#fff";
+    document.getElementById("cafe-toggle-btn").style.color = cafeVisible ? "#fff" : "#C0392B";
+  }
+
+  function cambiarCafe(id, delta) {
+    cantidadesCafe[id] = Math.max(0, cantidadesCafe[id] + delta);
+    document.getElementById("cafe-val-"+id).textContent = cantidadesCafe[id];
+    const card = document.getElementById("cafe-card-"+id);
+    card.classList.toggle("active", cantidadesCafe[id]>0);
+    actualizarResumenCafe();
+  }
+
+  function actualizarResumenCafe() {
+    const items = Object.entries(cantidadesCafe).filter(([,v])=>v>0);
+    const summaryDiv = document.getElementById("cafe-summary");
+    const contentDiv = document.getElementById("cafe-summary-content");
+    if(items.length===0){summaryDiv.style.display="none";return;}
+    summaryDiv.style.display="block";
+    const total = items.reduce((a,[k,v])=>a+(CAFE_PRODS[k].precio*v),0);
+    contentDiv.innerHTML = items.map(([k,v])=>`<div class="summary-row"><span class="summary-label">${CAFE_PRODS[k].nombre} x${v}</span><span class="summary-val">$${(CAFE_PRODS[k].precio*v).toLocaleString("es-AR")}</span></div>`).join("") +
+      `<div class="summary-row" style="margin-top:6px;border-top:1.5px solid rgba(192,57,43,0.2);padding-top:6px"><span style="font-weight:700">Total cafe</span><span style="font-weight:700;color:#C0392B;font-size:15px">$${total.toLocaleString("es-AR")}</span></div>`;
+  }
+
+  let _msgPunto = "";
+  let _telPunto = "";
+  let _emailPunto = "";
+
+  function enviarWAPunto() {
+    if(_telPunto) window.open("https://wa.me/54" + _telPunto + "?text=" + encodeURIComponent(_msgPunto), "_blank");
+  }
+
+  function enviar() {
+    let ok = true;
+
+    const punto = document.getElementById("punto").value;
+    const contacto = document.getElementById("contacto").value.trim();
+    const errPunto = document.getElementById("err-punto");
+    const errContacto = document.getElementById("err-contacto");
+    const errItems = document.getElementById("err-items");
+
+    errPunto.classList.remove("show");
+    errContacto.classList.remove("show");
+    errItems.style.display = "none";
+
+    if (!punto) { errPunto.classList.add("show"); ok = false; }
+    if (!contacto) { errContacto.classList.add("show"); ok = false; }
+
+    const items = Object.entries(cantidades).filter(([, v]) => v > 0);
+    if (items.length === 0) { errItems.style.display = "block"; ok = false; }
+
+    if (!ok) return;
+
+    // Armar resumen para pantalla de éxito
+    const semana = getSemana();
+    const itemsTexto = items.map(([k, v]) => `${PRECIOS[k].label}: ${v}`).join(", ");
+    const total = items.reduce((a, [k, v]) => a + (PRECIOS[k].precio ? PRECIOS[k].precio * v : 0), 0);
+
+    document.getElementById("success-detail").innerHTML = `
+      <p><strong>Punto:</strong> ${punto}</p>
+      <p><strong>Contacto:</strong> ${contacto}</p>
+      <p><strong>Semana:</strong> ${semana}</p>
+      <p><strong>Pedido:</strong> ${itemsTexto}</p>
+      ${total > 0 ? `<p><strong>Total:</strong> $${total.toLocaleString("es-AR")}</p>` : ""}
+    `;
+
+    // Armar mensaje de WhatsApp
+    const tel = document.getElementById("telefono").value.trim();
+    let msg = ` *PEDIDO SEMANAL - Los Rogeles de Marcela*\n\n` +
+      ` *Punto:* ${punto}\n` +
+      ` *Contacto:* ${contacto}${tel ? `\n *Tel:* ${tel}` : ""}\n` +
+      ` *Semana:* ${semana}\n\n` +
+      `*Pedido:*\n` +
+      items.map(([k, v]) => `- ${PRECIOS[k].label}: ${v} unid.`).join("\n") +
+      (total > 0 ? `\n\n *Total: $${total.toLocaleString("es-AR")}*` : "") +
+      `\n\n Pedido confirmado`;
+
+    // Validar minimo capsulas
+    const capsIds = ["capscolombia","capsperu"];
+    for(const cid of capsIds) {
+      const cv = cantidadesCafe[cid];
+      if(cv>0 && cv<CAFE_PRODS[cid].minimo) {
+        alert("Minimo "+CAFE_PRODS[cid].minimo+" cajas de "+CAFE_PRODS[cid].nombre);
+        return;
+      }
+    }
+
+    // Agregar cafe al mensaje si hay pedido
+    const cafeItems = Object.entries(cantidadesCafe).filter(([,v])=>v>0);
+    if(cafeItems.length>0) {
+      const cafeLineas = cafeItems.map(([k,v])=>"- "+CAFE_PRODS[k].nombre+": "+v).join("\n");
+      const cafeTotal = cafeItems.reduce((a,[k,v])=>a+(CAFE_PRODS[k].precio*v),0);
+      msg += "\n\nPEDIDO CHERRYSEASON:\n"+cafeLineas+"\nTotal cafe: $"+cafeTotal.toLocaleString("es-AR");
+    }
+
+    // Guardar en Firebase para sincronizacion en tiempo real
+    const pedidoFB = {
+      id: Date.now(),
+      punto: punto,
+      contacto: contacto,
+      semana: semana,
+      ENTERO: cantidades.entero||0,
+      MEDIANO: cantidades.medio||0,
+      PEQUENO: cantidades.cuarto||0,
+      PORCION: cantidades.rogelito||0,
+      fecha: new Date().toISOString(),
+      cantidadesCafe: Object.fromEntries(Object.entries(cantidadesCafe).filter(([,v])=>v>0))
+    };
+    const esValle = punto.toLowerCase().includes("valle escondido");
+    if(!esValle) {
+      const GMay = {ENTERO:8890, MEDIANO:5950, PEQUENO:3830, PORCION:2960};
+      pedidoFB.ganancia = (pedidoFB.ENTERO*GMay.ENTERO) + (pedidoFB.MEDIANO*GMay.MEDIANO) + (pedidoFB.PEQUENO*GMay.PEQUENO) + (pedidoFB.PORCION*GMay.PORCION);
+    } else {
+      pedidoFB.ganancia = 0;
+    }
+    dbFB.ref("peds/"+pedidoFB.id).set(pedidoFB).catch(e=>console.log("FB error:",e));
+
+    const waUrl = `https://wa.me/${WA_NUMERO}?text=${encodeURIComponent(msg)}`;
+    document.getElementById("wa-btn").onclick = () => window.open(waUrl, "_blank");
+
+    // Confirmacion al punto
+    const telRaw = document.getElementById("telefono").value.trim().replace(/[^0-9]/g,"");
+    const emailVal = document.getElementById("email").value.trim();
+    const fecha = new Date().toLocaleDateString("es-AR");
+    const lineasPedido = items.map(([k,v]) => PRECIOS[k].label.toUpperCase() + ": " + v).join("\n");
+    const totalRogeles = items.reduce((a,[k,v]) => a + (PRECIOS[k].precio ? PRECIOS[k].precio * v : 0), 0);
+    
+    // Cafe lines for point confirmation
+    const cafeItems = Object.entries(cantidadesCafe).filter(([,v])=>v>0);
+    const CAFE_NOMBRES = {
+      peru250:"Peru Blend 250gr", col250:"Colombia El Tambo 250gr", 
+      guat250:"Guatemala Anaerobico 250gr", peru1kg:"Peru Blend 1kg",
+      capscolombia:"Capsulas Colombia x10", capsperu:"Capsulas Peru Blend x10"
+    };
+    const CAFE_PRECIOS_MA = {peru250:19320,col250:22260,guat250:25200,peru1kg:46369,capscolombia:14760,capsperu:14760};
+    const lineasCafe = cafeItems.map(([k,v]) => (CAFE_NOMBRES[k]||k) + ": " + v).join("\n");
+    const totalCafePunto = cafeItems.reduce((a,[k,v]) => a + ((CAFE_PRECIOS_MA[k]||0)*v), 0);
+    const totalFinalPunto = totalRogeles + totalCafePunto;
+    
+    let msgDetalle = lineasPedido;
+    if(lineasCafe) msgDetalle += "\n\nCAFE CHERRY SEASON:\n" + lineasCafe;
+    const totalStr = totalFinalPunto > 0 ? "\n\nTotal rogeles: $" + totalRogeles.toLocaleString("es-AR") + (totalCafePunto>0?"\nTotal cafe: $"+totalCafePunto.toLocaleString("es-AR"):"") + "\n*TOTAL A PAGAR: $" + totalFinalPunto.toLocaleString("es-AR")+"*" : "";
+    _msgPunto = "Los Rogeles de Marcela\n\nHola " + contacto + "! Tu pedido fue confirmado\n\n" + msgDetalle + totalStr + "\n\n" + fecha + "\nGracias!";
+    _telPunto = telRaw;
+    _emailPunto = emailVal;
+
+    if(telRaw.length >= 8) {
+      document.getElementById("wa-punto-btn").style.display = "block";
+    }
+    if(emailVal) {
+      const subj = encodeURIComponent("Los Rogeles de Marcela - Pedido confirmado");
+      const body = encodeURIComponent(_msgPunto);
+      const emailEl = document.getElementById("email-btn");
+      emailEl.href = "mailto:" + emailVal + "?subject=" + subj + "&body=" + body;
+      emailEl.style.display = "block";
+    }
+
+    // Enviar a Google Sheets
+    const payload = {
+      fecha:     new Date().toLocaleDateString("es-AR"),
+      semana:    getSemana(),
+      punto:     punto,
+      contacto:  contacto,
+      entero:    cantidades.entero,
+      medio:     cantidades.medio,
+      cuarto:    cantidades.cuarto,
+      rogelito:  cantidades.rogelito,
+    };
+
+    fetch(SHEETS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {}); // silencioso si falla
+
+    document.getElementById("form-screen").style.display = "none";
+    document.getElementById("success-screen").style.display = "block";
+    window.scrollTo(0, 0);
+  }
+
+  function getSemana() {
+    const d = new Date();
+    const day = d.getDay();
+    const diffLun = day === 0 ? -6 : 1 - day;
+    const lun = new Date(d); lun.setDate(d.getDate() + diffLun);
+    const dom = new Date(lun); dom.setDate(lun.getDate() + 6);
+    const fmt = x => x.toLocaleDateString("es-AR", {day:"2-digit", month:"2-digit", year:"numeric"});
+    return "Pedido semanal " + fmt(lun) + " - " + fmt(dom);
+  }
+
+  function resetForm() {
+    Object.keys(cantidades).forEach(k => {
+      cantidades[k] = 0;
+      document.getElementById(`val-${k}`).textContent = "0";
+      document.getElementById(`card-${k}`).classList.remove("active");
+    });
+    document.getElementById("punto").value = "";
+    document.getElementById("contacto").value = "";
+    document.getElementById("telefono").value = "";
+    actualizarResumen();
+    document.getElementById("form-screen").style.display = "block";
+    document.getElementById("success-screen").style.display = "none";
+    window.scrollTo(0, 0);
+  }
+</script>
+</body>
 </html>
