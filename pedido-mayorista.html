@@ -239,9 +239,9 @@
         <div class="size-name">ENTERO</div>
         <div class="size-price" id="price-entero">Precio a confirmar</div>
         <div class="qty-control">
-          <button class="qty-btn minus" data-size="entero" data-delta="-1">−</button>
+          <button class="qty-btn minus" onclick="cambiar('entero',-1)">−</button>
           <span class="qty-val" id="val-entero">0</span>
-          <button class="qty-btn plus" data-size="entero" data-delta="1">+</button>
+          <button class="qty-btn plus" onclick="cambiar('entero',1)">+</button>
         </div>
       </div>
       <!-- MEDIO -->
@@ -249,9 +249,9 @@
         <div class="size-name">MEDIANO</div>
         <div class="size-price" id="price-medio">Precio a confirmar</div>
         <div class="qty-control">
-          <button class="qty-btn minus" data-size="medio" data-delta="-1">−</button>
+          <button class="qty-btn minus" onclick="cambiar('medio',-1)">−</button>
           <span class="qty-val" id="val-medio">0</span>
-          <button class="qty-btn plus" data-size="medio" data-delta="1">+</button>
+          <button class="qty-btn plus" onclick="cambiar('medio',1)">+</button>
         </div>
       </div>
       <!-- CUARTO -->
@@ -259,9 +259,9 @@
         <div class="size-name">PEQUENO</div>
         <div class="size-price" id="price-cuarto">Precio a confirmar</div>
         <div class="qty-control">
-          <button class="qty-btn minus" data-size="cuarto" data-delta="-1">−</button>
+          <button class="qty-btn minus" onclick="cambiar('cuarto',-1)">−</button>
           <span class="qty-val" id="val-cuarto">0</span>
-          <button class="qty-btn plus" data-size="cuarto" data-delta="1">+</button>
+          <button class="qty-btn plus" onclick="cambiar('cuarto',1)">+</button>
         </div>
       </div>
       <!-- ROGELITO -->
@@ -269,9 +269,9 @@
         <div class="size-name">PORCION</div>
         <div class="size-price" id="price-rogelito">Precio a confirmar</div>
         <div class="qty-control">
-          <button class="qty-btn minus" data-size="rogelito" data-delta="-1">−</button>
+          <button class="qty-btn minus" onclick="cambiar('rogelito',-1)">−</button>
           <span class="qty-val" id="val-rogelito">0</span>
-          <button class="qty-btn plus" data-size="rogelito" data-delta="1">+</button>
+          <button class="qty-btn plus" onclick="cambiar('rogelito',1)">+</button>
         </div>
       </div>
     </div>
@@ -289,7 +289,7 @@
 
     <!-- Toggle cafe -->
     <div style="margin-bottom:20px">
-      <button id="cafe-toggle-btn" style="width:100%;padding:14px;border-radius:14px;border:2px solid #C0392B;background:#fff;color:#C0392B;font-size:15px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-bottom:12px;">
+      <button onclick="toggleCafe()" id="cafe-toggle-btn" style="width:100%;padding:14px;border-radius:14px;border:2px solid #C0392B;background:#fff;color:#C0392B;font-size:15px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-bottom:12px;">
         ☕ Agregar pedido CHERRYSEASON
       </button>
       <div id="cafe-section" style="display:none;">
@@ -303,36 +303,36 @@
             <div class="size-name" style="font-size:13px;">Perú Blend 250gr</div>
             <div class="size-price" id="cafe-price-peru250">$19.320 c/u</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="peru250" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('peru250',-1)">−</button>
               <span class="qty-val" id="cafe-val-peru250">0</span>
-              <button class="qty-btn plus" data-cafe="peru250" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('peru250',1)">+</button>
             </div>
           </div>
           <div class="size-card" id="cafe-card-colombia250">
             <div class="size-name" style="font-size:13px;">Colombia El Tambo 250gr</div>
             <div class="size-price" id="cafe-price-colombia250">$22.260 c/u</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="colombia250" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('colombia250',-1)">−</button>
               <span class="qty-val" id="cafe-val-colombia250">0</span>
-              <button class="qty-btn plus" data-cafe="colombia250" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('colombia250',1)">+</button>
             </div>
           </div>
           <div class="size-card" id="cafe-card-guatemala250">
             <div class="size-name" style="font-size:13px;">Guatemala Anaeróbico 250gr</div>
             <div class="size-price" id="cafe-price-guatemala250">$25.200 c/u</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="guatemala250" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('guatemala250',-1)">−</button>
               <span class="qty-val" id="cafe-val-guatemala250">0</span>
-              <button class="qty-btn plus" data-cafe="guatemala250" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('guatemala250',1)">+</button>
             </div>
           </div>
           <div class="size-card" id="cafe-card-peru1kg">
             <div class="size-name" style="font-size:13px;">Perú Blend 1kg</div>
             <div class="size-price" id="cafe-price-peru1kg">$46.369 c/u</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="peru1kg" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('peru1kg',-1)">−</button>
               <span class="qty-val" id="cafe-val-peru1kg">0</span>
-              <button class="qty-btn plus" data-cafe="peru1kg" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('peru1kg',1)">+</button>
             </div>
           </div>
         </div>
@@ -342,18 +342,18 @@
             <div class="size-name" style="font-size:13px;">Cápsulas Colombia x10</div>
             <div class="size-price" id="cafe-price-capscolombia">$14.760 · mín 6 cajas</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="capscolombia" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('capscolombia',-1)">−</button>
               <span class="qty-val" id="cafe-val-capscolombia">0</span>
-              <button class="qty-btn plus" data-cafe="capscolombia" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('capscolombia',1)">+</button>
             </div>
           </div>
           <div class="size-card" id="cafe-card-capsperu">
             <div class="size-name" style="font-size:13px;">Cápsulas Perú Blend x10</div>
             <div class="size-price" id="cafe-price-capsperu">$14.760 · mín 6 cajas</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="capsperu" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('capsperu',-1)">−</button>
               <span class="qty-val" id="cafe-val-capsperu">0</span>
-              <button class="qty-btn plus" data-cafe="capsperu" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('capsperu',1)">+</button>
             </div>
           </div>
         </div>
@@ -450,29 +450,7 @@
     document.getElementById("punto").addEventListener("change", actualizarPrecios);
     actualizarPrecios();
 
-    // Wire rogeles buttons
-    const sizes = ['entero','medio','cuarto','rogelito'];
-    sizes.forEach(s => {
-      document.querySelectorAll('[data-size="'+s+'"]').forEach(btn => {
-        btn.addEventListener('click', function() {
-          cambiar(s, parseInt(this.dataset.delta));
-        });
-      });
-    });
 
-    // Wire cafe buttons
-    const cafes = ['peru250','colombia250','guatemala250','peru1kg','capscolombia','capsperu'];
-    cafes.forEach(id => {
-      document.querySelectorAll('[data-cafe="'+id+'"]').forEach(btn => {
-        btn.addEventListener('click', function() {
-          cambiarCafe(id, parseInt(this.dataset.delta));
-        });
-      });
-    });
-
-    // Wire toggleCafe
-    const toggleBtn = document.getElementById('cafe-toggle-btn');
-    if(toggleBtn) toggleBtn.addEventListener('click', toggleCafe);
   });
 
   function cambiar(tipo, delta) {
@@ -961,9 +939,9 @@ const dbFB = firebase.database();
         <div class="size-name">ENTERO</div>
         <div class="size-price" id="price-entero">Precio a confirmar</div>
         <div class="qty-control">
-          <button class="qty-btn minus" data-size="entero" data-delta="-1">−</button>
+          <button class="qty-btn minus" onclick="cambiar('entero',-1)">−</button>
           <span class="qty-val" id="val-entero">0</span>
-          <button class="qty-btn plus" data-size="entero" data-delta="1">+</button>
+          <button class="qty-btn plus" onclick="cambiar('entero',1)">+</button>
         </div>
       </div>
       <!-- MEDIO -->
@@ -971,9 +949,9 @@ const dbFB = firebase.database();
         <div class="size-name">MEDIANO</div>
         <div class="size-price" id="price-medio">Precio a confirmar</div>
         <div class="qty-control">
-          <button class="qty-btn minus" data-size="medio" data-delta="-1">−</button>
+          <button class="qty-btn minus" onclick="cambiar('medio',-1)">−</button>
           <span class="qty-val" id="val-medio">0</span>
-          <button class="qty-btn plus" data-size="medio" data-delta="1">+</button>
+          <button class="qty-btn plus" onclick="cambiar('medio',1)">+</button>
         </div>
       </div>
       <!-- CUARTO -->
@@ -981,9 +959,9 @@ const dbFB = firebase.database();
         <div class="size-name">PEQUENO</div>
         <div class="size-price" id="price-cuarto">Precio a confirmar</div>
         <div class="qty-control">
-          <button class="qty-btn minus" data-size="cuarto" data-delta="-1">−</button>
+          <button class="qty-btn minus" onclick="cambiar('cuarto',-1)">−</button>
           <span class="qty-val" id="val-cuarto">0</span>
-          <button class="qty-btn plus" data-size="cuarto" data-delta="1">+</button>
+          <button class="qty-btn plus" onclick="cambiar('cuarto',1)">+</button>
         </div>
       </div>
       <!-- ROGELITO -->
@@ -991,9 +969,9 @@ const dbFB = firebase.database();
         <div class="size-name">PORCION</div>
         <div class="size-price" id="price-rogelito">Precio a confirmar</div>
         <div class="qty-control">
-          <button class="qty-btn minus" data-size="rogelito" data-delta="-1">−</button>
+          <button class="qty-btn minus" onclick="cambiar('rogelito',-1)">−</button>
           <span class="qty-val" id="val-rogelito">0</span>
-          <button class="qty-btn plus" data-size="rogelito" data-delta="1">+</button>
+          <button class="qty-btn plus" onclick="cambiar('rogelito',1)">+</button>
         </div>
       </div>
     </div>
@@ -1011,7 +989,7 @@ const dbFB = firebase.database();
 
     <!-- Toggle cafe -->
     <div style="margin-bottom:20px">
-      <button id="cafe-toggle-btn" style="width:100%;padding:14px;border-radius:14px;border:2px solid #C0392B;background:#fff;color:#C0392B;font-size:15px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-bottom:12px;">
+      <button onclick="toggleCafe()" id="cafe-toggle-btn" style="width:100%;padding:14px;border-radius:14px;border:2px solid #C0392B;background:#fff;color:#C0392B;font-size:15px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;margin-bottom:12px;">
         ☕ Agregar pedido CHERRYSEASON
       </button>
       <div id="cafe-section" style="display:none;">
@@ -1025,36 +1003,36 @@ const dbFB = firebase.database();
             <div class="size-name" style="font-size:13px;">Perú Blend 250gr</div>
             <div class="size-price" id="cafe-price-peru250">$19.320 c/u</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="peru250" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('peru250',-1)">−</button>
               <span class="qty-val" id="cafe-val-peru250">0</span>
-              <button class="qty-btn plus" data-cafe="peru250" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('peru250',1)">+</button>
             </div>
           </div>
           <div class="size-card" id="cafe-card-colombia250">
             <div class="size-name" style="font-size:13px;">Colombia El Tambo 250gr</div>
             <div class="size-price" id="cafe-price-colombia250">$22.260 c/u</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="colombia250" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('colombia250',-1)">−</button>
               <span class="qty-val" id="cafe-val-colombia250">0</span>
-              <button class="qty-btn plus" data-cafe="colombia250" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('colombia250',1)">+</button>
             </div>
           </div>
           <div class="size-card" id="cafe-card-guatemala250">
             <div class="size-name" style="font-size:13px;">Guatemala Anaeróbico 250gr</div>
             <div class="size-price" id="cafe-price-guatemala250">$25.200 c/u</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="guatemala250" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('guatemala250',-1)">−</button>
               <span class="qty-val" id="cafe-val-guatemala250">0</span>
-              <button class="qty-btn plus" data-cafe="guatemala250" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('guatemala250',1)">+</button>
             </div>
           </div>
           <div class="size-card" id="cafe-card-peru1kg">
             <div class="size-name" style="font-size:13px;">Perú Blend 1kg</div>
             <div class="size-price" id="cafe-price-peru1kg">$46.369 c/u</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="peru1kg" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('peru1kg',-1)">−</button>
               <span class="qty-val" id="cafe-val-peru1kg">0</span>
-              <button class="qty-btn plus" data-cafe="peru1kg" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('peru1kg',1)">+</button>
             </div>
           </div>
         </div>
@@ -1064,18 +1042,18 @@ const dbFB = firebase.database();
             <div class="size-name" style="font-size:13px;">Cápsulas Colombia x10</div>
             <div class="size-price" id="cafe-price-capscolombia">$14.760 · mín 6 cajas</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="capscolombia" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('capscolombia',-1)">−</button>
               <span class="qty-val" id="cafe-val-capscolombia">0</span>
-              <button class="qty-btn plus" data-cafe="capscolombia" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('capscolombia',1)">+</button>
             </div>
           </div>
           <div class="size-card" id="cafe-card-capsperu">
             <div class="size-name" style="font-size:13px;">Cápsulas Perú Blend x10</div>
             <div class="size-price" id="cafe-price-capsperu">$14.760 · mín 6 cajas</div>
             <div class="qty-control">
-              <button class="qty-btn minus" data-cafe="capsperu" data-delta="-1">−</button>
+              <button class="qty-btn minus" onclick="cambiarCafe('capsperu',-1)">−</button>
               <span class="qty-val" id="cafe-val-capsperu">0</span>
-              <button class="qty-btn plus" data-cafe="capsperu" data-delta="1">+</button>
+              <button class="qty-btn plus" onclick="cambiarCafe('capsperu',1)">+</button>
             </div>
           </div>
         </div>
