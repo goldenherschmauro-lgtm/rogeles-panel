@@ -395,7 +395,8 @@ const dbFB = firebase.database();
 
 <script>
   // -- Precios mayorista reales (marzo 2026) --
-  const PRECIOS = {
+  const GANANCIAS_MAY = {entero:8890, medio:5950, cuarto:3830, rogelito:4520};
+    const PRECIOS = {
     entero:   { label: "ENTERO",   precio: 56940 },
     medio:    { label: "MEDIANO",    precio: 35100 },
     cuarto:   { label: "PEQUENO",   precio: 24180 },
@@ -604,7 +605,8 @@ const dbFB = firebase.database();
       MEDIANO: cantidades.medio||0,
       PEQUENO: cantidades.cuarto||0,
       PORCION: cantidades.rogelito||0,
-      fecha: new Date().toISOString()
+      fecha: new Date().toISOString(),
+      cantidadesCafe: Object.fromEntries(Object.entries(cantidadesCafe).filter(([,v])=>v>0))
     };
     const esValle = punto.toLowerCase().includes("valle escondido");
     if(!esValle) {
@@ -623,9 +625,24 @@ const dbFB = firebase.database();
     const emailVal = document.getElementById("email").value.trim();
     const fecha = new Date().toLocaleDateString("es-AR");
     const lineasPedido = items.map(([k,v]) => PRECIOS[k].label.toUpperCase() + ": " + v).join("\n");
-    const totalPunto = items.reduce((a,[k,v]) => a + (PRECIOS[k].precio ? PRECIOS[k].precio * v : 0), 0);
-    const totalStr = totalPunto > 0 ? "\n\n\uD83D\uDCB0 Total a pagar: $" + totalPunto.toLocaleString("es-AR") : "";
-    _msgPunto = "\uD83C\uDF82 Los Rogeles de Marcela\n\nHola " + contacto + "! Tu pedido fue confirmado \u2713\n\n" + lineasPedido + totalStr + "\n\n\uD83D\uDCC5 " + fecha + "\nGracias!";
+    const totalRogeles = items.reduce((a,[k,v]) => a + (PRECIOS[k].precio ? PRECIOS[k].precio * v : 0), 0);
+    
+    // Cafe lines for point confirmation
+    const cafeItems = Object.entries(cantidadesCafe).filter(([,v])=>v>0);
+    const CAFE_NOMBRES = {
+      peru250:"Peru Blend 250gr", col250:"Colombia El Tambo 250gr", 
+      guat250:"Guatemala Anaerobico 250gr", peru1kg:"Peru Blend 1kg",
+      capscolombia:"Capsulas Colombia x10", capsperu:"Capsulas Peru Blend x10"
+    };
+    const CAFE_PRECIOS_MA = {peru250:19320,col250:22260,guat250:25200,peru1kg:46369,capscolombia:14760,capsperu:14760};
+    const lineasCafe = cafeItems.map(([k,v]) => (CAFE_NOMBRES[k]||k) + ": " + v).join("\n");
+    const totalCafePunto = cafeItems.reduce((a,[k,v]) => a + ((CAFE_PRECIOS_MA[k]||0)*v), 0);
+    const totalFinalPunto = totalRogeles + totalCafePunto;
+    
+    let msgDetalle = lineasPedido;
+    if(lineasCafe) msgDetalle += "\n\nCAFE CHERRY SEASON:\n" + lineasCafe;
+    const totalStr = totalFinalPunto > 0 ? "\n\nTotal rogeles: $" + totalRogeles.toLocaleString("es-AR") + (totalCafePunto>0?"\nTotal cafe: $"+totalCafePunto.toLocaleString("es-AR"):"") + "\n*TOTAL A PAGAR: $" + totalFinalPunto.toLocaleString("es-AR")+"*" : "";
+    _msgPunto = "Los Rogeles de Marcela\n\nHola " + contacto + "! Tu pedido fue confirmado\n\n" + msgDetalle + totalStr + "\n\n" + fecha + "\nGracias!";
     _telPunto = telRaw;
     _emailPunto = emailVal;
 
