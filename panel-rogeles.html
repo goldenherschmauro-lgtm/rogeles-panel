@@ -463,31 +463,27 @@ function App() {
     showT(pf.id?"Pedido actualizado":"Pedido guardado");
   };
 
-  const enviarPedido = () => {
+    const enviarPedido = () => {
     const tot = SIZES.reduce((a,s)=>a+con[s],0);
     if(tot===0) { showT("No hay pedidos cargados",false); return; }
-    const porPunto = {};
-    ps.forEach(p => {
-      if(!porPunto[p.punto]) porPunto[p.punto]={Entero:0,Medio:0,Cuarto:0,Rogelito:0};
-      SIZES.forEach(s => { porPunto[p.punto][s]+=(parseInt(p[s])||0); });
-    });
-    const totalE=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Entero||0),0);
-    const totalM=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Medio||0),0);
-    const totalC=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Cuarto||0),0);
-    const totalR=Object.values(porPunto).filter((_,i)=>!Object.keys(porPunto)[i].toLowerCase().includes("valle")).reduce((a,p)=>a+(p.Rogelito||0),0);
-    const msg = "Rodri te paso el pedido\n\nENTEROS: "+con.Entero+"\nMEDIOS: "+con.Medio+"\nCUARTOS: "+con.Cuarto+"\nCAJA ROGELITOS: "+con.Rogelito+"\n\nGracias";
+    const totalE = ps.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+(parseInt(p.ENTERO)||0),0);
+    const totalM = ps.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+(parseInt(p.MEDIANO)||0),0);
+    const totalP = ps.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+(parseInt(p.PEQUENO)||0),0);
+    const totalPo = ps.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+(parseInt(p.PORCION)||0),0);
+    const msg = "Rodri te paso el pedido de la semana\n\n"
+      +(totalE>0?"ENTEROS: "+totalE+"\n":"")
+      +(totalM>0?"MEDIANOS: "+totalM+"\n":"")
+      +(totalP>0?"PEQUENOS: "+totalP+"\n":"")
+      +(totalPo>0?"PORCIONES (cajas): "+totalPo+"\n":"")
+      +"\nTotal puntos: "+ps.filter(p=>!p.punto.toLowerCase().includes("valle")).length
+      +"\n\nGracias!";
     window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
     showT("Pedido enviado a Rodri");
   };
 
-  const enviarRepartida = () => {
+    const enviarRepartida = () => {
     const tot = SIZES.reduce((a,s)=>a+con[s],0);
     if(tot===0) { showT("No hay pedidos cargados",false); return; }
-    const porPunto = {};
-    ps.forEach(p => {
-      if(!porPunto[p.punto]) porPunto[p.punto]={Entero:0,Medio:0,Cuarto:0,Rogelito:0};
-      SIZES.forEach(s => { porPunto[p.punto][s]+=(parseInt(p[s])||0); });
-    });
     const REPARTIDA = [
       {key:"Manantiales",label:"MANANTIALES",retira:""},
       {key:"Camino a San Carlos",label:"CAMINO A SAN CARLOS",retira:"retira Fran"},
@@ -495,18 +491,21 @@ function App() {
     ];
     let rep = "";
     REPARTIDA.forEach(r => {
-      const key = Object.keys(porPunto).find(k=>k.toLowerCase().includes(r.key.toLowerCase()));
-      const p = key ? porPunto[key] : {Entero:0,Medio:0,Cuarto:0,Rogelito:0};
+      const pedido = ps.find(p=>p.punto.toLowerCase().includes(r.key.toLowerCase()));
       const titulo = r.retira ? r.label+" ("+r.retira+")" : r.label;
-      const lineas = [];
-      if(p.Entero>0) lineas.push("Entero: "+p.Entero);
-      if(p.Medio>0) lineas.push("Medio: "+p.Medio);
-      if(p.Cuarto>0) lineas.push("Cuarto: "+p.Cuarto);
-      if(p.Rogelito>0) lineas.push("Caja Rogelito: "+p.Rogelito);
-      rep += "\n"+titulo+"\n"+(lineas.length>0?lineas.join("\n"):"Sin pedido")+"\n";
+      if(pedido) {
+        const lineas = [];
+        if((pedido.ENTERO||0)>0) lineas.push("Entero: "+pedido.ENTERO);
+        if((pedido.MEDIANO||0)>0) lineas.push("Mediano: "+pedido.MEDIANO);
+        if((pedido.PEQUENO||0)>0) lineas.push("Pequeno: "+pedido.PEQUENO);
+        if((pedido.PORCION||0)>0) lineas.push("Porcion (cajas): "+pedido.PORCION);
+        rep += "\n"+titulo+"\n"+lineas.join("\n")+"\n";
+      } else {
+        rep += "\n"+titulo+"\nSin pedido\n";
+      }
     });
     rep += "\nRESTO EN CASA";
-    const msg = "Repartida de la semana\n"+rep+"\n\nGracias";
+    const msg = "Repartida de la semana\n"+rep+"\n\nGracias!";
     window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
     showT("Repartida enviada");
   };
@@ -527,19 +526,25 @@ function App() {
     showT("Pedido cafe guardado");
   };
 
-  const cerrarCafe = () => {
+    const cerrarCafe = () => {
     const tot = CAFE.reduce((a,p)=>a+conCafe[p.id],0);
     if(tot===0) { showT("No hay pedidos de cafe",false); return; }
     let det = "";
-    psCafe.forEach(p => {
-      const ls = CAFE.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.n+": "+p.cantidades[prod.id]);
-      if(ls.length>0) det += "\n"+p.punto.toUpperCase()+"\n"+ls.join("\n")+"\n";
+    let totalPagar = 0;
+    psCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).forEach(p => {
+      const ls = CAFE.filter(prod=>(p.cantidades[prod.id]||0)>0).map(prod=>prod.n+": "+p.cantidades[prod.id]);
+      if(ls.length>0) {
+        det += "\n"+p.punto.toUpperCase()+"\n"+ls.join("\n")+"\n";
+        totalPagar += CAFE.reduce((a,prod)=>a+(prod.ma*(p.cantidades[prod.id]||0)),0);
+      }
     });
-    // Totales incluyendo Valle Escondido
-    const conTodo = CAFE.reduce((acc,p)=>{acc[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0);return acc;},{});
-    const tots = "\nTOTAL (todos los puntos):\n"+CAFE.filter(p=>conTodo[p.id]>0).map(p=>"- "+p.n+": "+conTodo[p.id]).join("\n");
-    window.open("https://wa.me/5493513128283?text="+encodeURIComponent("Pedido CHERRYSEASON\n"+det+tots+"\n\nGracias!"),"_blank");
-    showT("Pedido cafe enviado");
+    const ganSem = psCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).reduce((a,p)=>a+CAFE.reduce((b,prod)=>b+(prod.gma*(p.cantidades[prod.id]||0)),0),0);
+    const tots = "\nTOTAL POR PRODUCTO:\n"+CAFE.filter(p=>conCafe[p.id]>0).map(p=>"- "+p.n+": "+conCafe[p.id]).join("\n");
+    const tots2 = CAFE.filter(p=>conCafe[p.id]>0).map(p=>"- "+p.n+": "+conCafe[p.id]).join("\n");
+    const msg = "Pedido CHERRYSEASON\n\n"+tots2+"\n\nGracias!";
+    const WA_CHERRY = "5493513128283";
+    window.open("https://wa.me/"+WA_CHERRY+"?text="+encodeURIComponent(msg),"_blank");
+    showT("Pedido cafe enviado a Cherry Season");
   };
 
   const procesarPedidosSheets = React.useCallback((data, pedsCopy) => {
