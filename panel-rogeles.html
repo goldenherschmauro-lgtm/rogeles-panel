@@ -1200,6 +1200,10 @@ function App() {
                 <div style={{textAlign:"right"}}>
                   {p.ganancia>0 && <div style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>}
                   {p.ganancia===0 && <div style={{fontSize:11,color:C.marronL}}>Valle Escondido</div>}
+                  <div style={{display:"flex",gap:4,marginTop:6,justifyContent:"flex-end"}}>
+                    <button onClick={()=>{setCafeForm({...p,cantidades:{...p.cantidades}});setShowCafeForm(true);window.scrollTo(0,0);}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
+                    <button onClick={()=>{if(window.confirm("Eliminar pedido cafe de "+p.punto+"?")){fbRemove("pedsCafe/"+p.id);showT("Pedido eliminado");}}} style={{fontSize:10,background:C.rojo,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Eliminar</button>
+                  </div>
                 </div>
               </div>
             </div>
