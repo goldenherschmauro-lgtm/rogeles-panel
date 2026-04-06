@@ -221,7 +221,10 @@ const dbFB = firebase.database();
   }
 
   // Actualizar cuando cambia el punto
-  document.getElementById("punto").addEventListener("change", actualizarPrecios);
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("punto").addEventListener("change", actualizarPrecios);
+    actualizarPrecios();
+  });
 
   function cambiar(tipo, delta) {
     cantidades[tipo] = Math.max(0, cantidades[tipo] + delta);
