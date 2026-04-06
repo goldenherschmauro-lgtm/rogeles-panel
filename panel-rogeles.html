@@ -1092,9 +1092,29 @@ function App() {
                       <div style={{fontSize:12,color:C.naranja,fontWeight:"bold",borderTop:"1px solid "+C.border,marginTop:3,paddingTop:3}}>Total: +{fmt(totalGan)}</div>
                     </div> : null;
                   })()}
-                  <div style={{display:"flex",gap:4,marginTop:6,justifyContent:"flex-end"}}>
-                    <button onClick={()=>{setSpf(true);setPf({...p});}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
+                  <div style={{display:"flex",gap:4,marginTop:6,justifyContent:"flex-end",flexWrap:"wrap"}}>
+                    <button onClick={()=>{setSpf(true);setPf({...p});window.scrollTo(0,0);}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
                     <button onClick={()=>{if(window.confirm("Eliminar pedido de "+p.punto+"?")){fbRemove("peds/"+p.id);showT("Pedido eliminado");}}} style={{fontSize:10,background:C.rojo,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Eliminar</button>
+                    {p.contacto&&(()=>{
+                      const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
+                      const totalRog = SIZES.reduce((a,s)=>a+(PMay[s]*(p[s]||0)),0);
+                      const totalCaf = pedCafe ? CAFE.reduce((a,prod)=>a+(prod.ma*(pedCafe.cantidades[prod.id]||0)),0) : 0;
+                      const totalFinal = totalRog + totalCaf;
+                      let msgWA = "Los Rogeles de Marcela\n\nHola "+p.contacto+"! Tu pedido de esta semana:\n\n";
+                      msgWA += SIZES.filter(s=>(p[s]||0)>0).map(s=>s+": "+p[s]).join("\n");
+                      if(pedCafe && CAFE.some(prod=>(pedCafe.cantidades[prod.id]||0)>0)) {
+                        msgWA += "\n\nCafe Cherry Season:\n"+CAFE.filter(prod=>(pedCafe.cantidades[prod.id]||0)>0).map(prod=>prod.n+": "+pedCafe.cantidades[prod.id]).join("\n");
+                        msgWA += "\n\nSubtotal rogeles: $"+totalRog.toLocaleString("es-AR");
+                        msgWA += "\nSubtotal cafe: $"+totalCaf.toLocaleString("es-AR");
+                      }
+                      msgWA += "\n\n*TOTAL A PAGAR: $"+totalFinal.toLocaleString("es-AR")+"*";
+                      msgWA += "\n\nGracias!";
+                      const tel = p.contacto.replace(/\D/g,"");
+                      return <button onClick={()=>window.open("https://wa.me/54"+tel+"?text="+encodeURIComponent(msgWA),"_blank")}
+                        style={{fontSize:10,background:"#25D366",color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
+                        WA punto
+                      </button>;
+                    })()}
                   </div>
                 </div>
               </div>
