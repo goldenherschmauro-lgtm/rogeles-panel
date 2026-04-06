@@ -1041,7 +1041,16 @@ function App() {
                   <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
                 </div>
                 <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:14,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>
+                  <div style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>Rog: +{fmt(p.ganancia)}</div>
+                  {(()=>{
+                    const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
+                    const ganCafePunto = pedCafe ? CAFE.reduce((a,prod)=>a+(prod.gma*(pedCafe.cantidades[prod.id]||0)),0) : 0;
+                    const totalGan = p.ganancia + ganCafePunto;
+                    return ganCafePunto>0 ? <div>
+                      <div style={{fontSize:11,color:"#C0392B",fontWeight:"bold"}}>Cafe: +{fmt(ganCafePunto)}</div>
+                      <div style={{fontSize:12,color:C.naranja,fontWeight:"bold",borderTop:"1px solid "+C.border,marginTop:3,paddingTop:3}}>Total: +{fmt(totalGan)}</div>
+                    </div> : null;
+                  })()}
                   <div style={{display:"flex",gap:4,marginTop:6,justifyContent:"flex-end"}}>
                     <button onClick={()=>{setSpf(true);setPf({...p});}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
                     <button onClick={()=>{if(window.confirm("Eliminar pedido de "+p.punto+"?")){fbRemove("peds/"+p.id);showT("Pedido eliminado");}}} style={{fontSize:10,background:C.rojo,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Eliminar</button>
@@ -1055,7 +1064,7 @@ function App() {
           <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
             <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>CHERRYSEASON - Cafe</div>
             <div style={{marginBottom:12}}>
-              <button onClick={cerrarCafe} style={{...btnFill("#C0392B"),width:"100%",fontSize:12}}>Cerrar pedido cafe - Enviar WhatsApp</button>
+              <button onClick={cerrarCafe} style={{...btnFill("#C0392B"),width:"100%",fontSize:12}}>Enviar pedido a Cherry Season</button>
             </div>
             <div style={{background:C.bg,borderRadius:12,padding:12,border:"1px solid #E8C5C0"}}>
               {CAFE.map(p => (
@@ -1146,8 +1155,8 @@ function App() {
           {pedsCafe.length===0 && !showCafeForm && <Empty text="No hay pedidos de cafe esta semana"/>}
           {pedsCafe.map(p => (
             <div key={p.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid #E8C5C0"}}>
-              <div style={{display:"flex",justifyContent:"space-between"}}>
-                <div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div style={{flex:1}}>
                   <div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div>
                   <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{CAFE.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.n+": "+p.cantidades[prod.id]).join(" / ")}</div>
                   <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
