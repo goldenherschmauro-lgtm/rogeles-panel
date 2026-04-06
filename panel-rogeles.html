@@ -34,15 +34,15 @@ const C = {
 // Rogeles data
 const SIZES = ["ENTERO","MEDIANO","PEQUENO","PORCION"];
 const PM = {ENTERO:73000, MEDIANO:45000, PEQUENO:31000, PORCION:9000};
-const PMay = {ENTERO:56940, MEDIANO:35100, PEQUENO:24180, PORCION:40560};
+const PMay = {ENTERO:56940, MEDIANO:35100, PEQUENO:24180, PORCION:42120};
 const COSTO = {ENTERO:48050, MEDIANO:29150, PEQUENO:20350, PORCION:37600};
 const GM = {ENTERO:24950, MEDIANO:15850, PEQUENO:10650, PORCION:1400};
-const GMay = {ENTERO:8890, MEDIANO:5950, PEQUENO:3830, PORCION:2960};
+const GMay = {ENTERO:8890, MEDIANO:5950, PEQUENO:3830, PORCION:4520};
 
 // Puntos
 const PUNTOS = [
   "Valle Escondido (Casa Central)",
-  "Barrio Jardin","Canitas / Valle del Golf / Causana","Camino a San Carlos",
+  "Barrio Jardin","BlackBull","Canitas / Valle del Golf / Causana","Camino a San Carlos",
   "Centro (Bonafide Colon y Canada)","Cerro de las Rosas / Urca","Cofico","Docta",
   "Intercountry (El Bosque)","J. Claret / P. Lugones","La Cuesta / La Calera",
   "Manantiales","Montecristo","Nueva Cordoba (Strobel Panaderia / Cafe)",
@@ -338,60 +338,7 @@ function App() {
 
 
   // Auto-sync every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchSheets("stock", (json) => {
-        if(json.ok && json.data && Object.keys(json.data).length>0) {
-          const d = json.data;
-          setStock(prev => {
-            const ns = {ENTERO:parseInt(d.ENTERO)||0,MEDIANO:parseInt(d.MEDIANO)||0,PEQUENO:parseInt(d.PEQUENO)||0,PORCION:parseInt(d.PORCION)||0};
-            if(JSON.stringify(prev)===JSON.stringify(ns)) return prev;
-            return ns;
-          });
-          setStockCafe(prev => {
-            const ns = {peru250:parseInt(d.peru250)||0,col250:parseInt(d.col250)||0,guat250:parseInt(d.guat250)||0,peru1kg:parseInt(d.peru1kg)||0,capscol:parseInt(d.capscol)||0,capsperu:parseInt(d.capsperu)||0};
-            if(JSON.stringify(prev)===JSON.stringify(ns)) return prev;
-            return ns;
-          });
-        }
-      });
-      fetchSheets("ventas", (json) => {
-        if(json.ok && json.data && json.data.length>0) {
-          const ventasSheets = json.data.map(v => ({
-            id:v.id, cliente:v.cliente, celular:v.celular||"", tamano:v.tamano,
-            cantidad:parseInt(v.cantidad)||1, tipo:v.tipo, precio:parseInt(v.precio)||0,
-            ganancia:parseInt(v.ganancia)||0, pagado:v.pagado===true||v.pagado==="TRUE",
-            entregado:v.entregado===true||v.entregado==="TRUE", senia:parseInt(v.senia)||0,
-            retira:v.retira||"", fecha:v.fecha||""
-          }));
-          setVentas(prev => {
-            if(JSON.stringify(prev)===JSON.stringify(ventasSheets)) return prev;
-            return ventasSheets;
-          });
-        }
-      });
-      fetchSheets("pedidos", (json) => {
-        if(json.ok && json.data) {
-          setPeds(prev => {
-            const pedsCopy = [...prev];
-            let cambio = false;
-            json.data.forEach(row => {
-              if(!row.punto||!row.semana) return;
-              const yaExiste = pedsCopy.some(p=>p.punto===row.punto&&p.semana===row.semana);
-              if(!yaExiste) {
-                const esValle=row.punto.toLowerCase().includes("valle");
-                const g=esValle?0:((parseInt(row.entero)||0)*GMay.ENTERO+(parseInt(row.medio)||0)*GMay.MEDIANO+(parseInt(row.cuarto)||0)*GMay.PEQUENO+(parseInt(row.porcion)||0)*GMay.PORCION);
-                pedsCopy.unshift({id:Date.now(),punto:row.punto,semana:row.semana,ENTERO:parseInt(row.entero)||0,MEDIANO:parseInt(row.medio)||0,PEQUENO:parseInt(row.cuarto)||0,PORCION:parseInt(row.porcion)||0,ganancia:g,contacto:row.contacto||""});
-                cambio=true;
-              }
-            });
-            return cambio ? pedsCopy : prev;
-          });
-        }
-      });
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  
 
   const showT = (msg, ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),2500); };
   const pv = (t,tipo) => tipo==="minorista" ? PM[t] : PMay[t];
@@ -487,11 +434,20 @@ function App() {
     if(tot===0) { showT("Ingresa al menos un producto",false); return; }
     const esV = pf.punto.toLowerCase().includes("valle");
     const g = esV ? 0 : SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0);
-    const newPed = {...pf,id:Date.now(),semana:sem,ganancia:g};
-    fbSet("peds/"+newPed.id, newPed);
+    const pedId = pf.id || Date.now();
+    const newPed = {...pf,id:pedId,semana:pf.semana||sem,ganancia:g};
+    fbSet("peds/"+pedId, newPed);
+    // Send WhatsApp to point if editing
+    if(pf.id && pf.celular) {
+      const msg = "Hola! Tu pedido actualizado:\n\n"
+        +SIZES.filter(s=>newPed[s]>0).map(s=>s+": "+newPed[s]).join("\n")
+        +"\n\nTotal: $"+fmt(SIZES.reduce((a,s)=>a+(PMay[s]*(newPed[s]||0)),0))
+        +"\n\nGracias!";
+      window.open("https://wa.me/54"+pf.celular.replace(/\D/g,"")+  "?text="+encodeURIComponent(msg),"_blank");
+    }
     setPf({punto:PUNTOS[0],ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
     setSpf(false);
-    showT("Pedido guardado");
+    showT(pf.id?"Pedido actualizado":"Pedido guardado");
   };
 
   const enviarPedido = () => {
@@ -1073,14 +1029,23 @@ function App() {
           {peds.length===0 && !spf && <Empty text="No hay pedidos esta semana"/>}
           {peds.map(p => (
             <div key={p.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+C.border}}>
-              <div style={{display:"flex",justifyContent:"space-between"}}>
-                <div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div style={{flex:1}}>
                   <div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div>
                   <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{SIZES.filter(s=>p[s]>0).map(s=>s+": "+p[s]).join(" - ")}</div>
+                  {p.cantidadesCafe && Object.values(p.cantidadesCafe).some(v=>v>0) && (
+                    <div style={{fontSize:10,color:"#C0392B",marginTop:3}}>
+                      Cafe: {CAFE.filter(prod=>p.cantidadesCafe[prod.id]>0).map(prod=>prod.n+": "+p.cantidadesCafe[prod.id]).join(" - ")}
+                    </div>
+                  )}
                   <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
                 </div>
                 <div style={{textAlign:"right"}}>
                   <div style={{fontSize:14,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>
+                  <div style={{display:"flex",gap:4,marginTop:6,justifyContent:"flex-end"}}>
+                    <button onClick={()=>{setSpf(true);setPf({...p});}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
+                    <button onClick={()=>{if(window.confirm("Eliminar pedido de "+p.punto+"?")){fbRemove("peds/"+p.id);showT("Pedido eliminado");}}} style={{fontSize:10,background:C.rojo,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Eliminar</button>
+                  </div>
                 </div>
               </div>
             </div>
