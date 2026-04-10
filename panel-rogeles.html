@@ -482,12 +482,13 @@ function App() {
   };
 
     const enviarRepartida = () => {
-    const tot = SIZES.reduce((a,s)=>a+con[s],0);
-    if(tot===0) { showT("No hay pedidos cargados",false); return; }
+    if(ps.length===0) { showT("No hay pedidos cargados",false); return; }
     const REPARTIDA = [
-      {key:"Manantiales",label:"MANANTIALES",retira:""},
-      {key:"Camino a San Carlos",label:"CAMINO A SAN CARLOS",retira:"retira Fran"},
-      {key:"Montecristo",label:"MONTECRISTO",retira:"retira Belen"},
+      {key:"Manantiales",       label:"MANANTIALES",                         retira:""},
+      {key:"Barrio Jardin",     label:"BARRIO JARDIN",                       retira:"retira papa coti"},
+      {key:"Camino a San Carlos",label:"CAMINO SAN CARLOS",                  retira:"retira Fran"},
+      {key:"Montecristo",       label:"MONTECRISTO",                         retira:"retira Belen"},
+      {key:"Nueva Cordoba",     label:"NUEVA CORDOBA",                       retira:"Fabrica nueva"},
     ];
     let rep = "";
     REPARTIDA.forEach(r => {
@@ -980,6 +981,66 @@ function App() {
           </div>
           <button onClick={sincronizarSheets} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid "+C.rosa,background:C.rosaBg,color:C.rosa,fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
             Sincronizar pedidos del formulario
+          </button>
+          <button onClick={()=>{
+            const win = window.open("","_blank");
+            const CAFE_NAMES = {peru250:"Peru Blend 250gr",col250:"Colombia El Tambo 250gr",guat250:"Guatemala Anaerobico 250gr",peru1kg:"Peru Blend 1kg",capscol:"Capsulas Colombia x10",capsperu:"Capsulas Peru Blend x10"};
+            let html = `<html><head><meta charset="UTF-8"><title>Planilla Repartida</title><style>
+              @page{size:A4 landscape;margin:8mm}
+              body{font-family:Arial,sans-serif;margin:0;background:#fff;width:277mm}
+              h1{text-align:center;font-size:13px;margin-bottom:2px;color:#C4687A}
+              h2{text-align:center;font-size:9px;color:#888;margin-bottom:8px}
+              .grid{display:flex;flex-wrap:wrap;gap:5px}
+              .punto{border:2px solid #C4687A;border-radius:6px;padding:6px 8px;flex:1;min-width:100px;max-width:140px;page-break-inside:avoid}
+              .punto-nombre{font-weight:bold;font-size:9px;color:#C4687A;border-bottom:1px solid #F0D0D8;padding-bottom:3px;margin-bottom:4px;line-height:1.2}
+              .item{font-size:9px;color:#333;margin-bottom:1px}
+              .cafe-item{font-size:8px;color:#C0392B;margin-bottom:1px}
+              .cafe-titulo{font-size:7px;font-weight:bold;color:#C0392B;margin-top:3px;margin-bottom:1px;text-transform:uppercase}
+              .totales{margin-top:8px;border:2px solid #5C3340;border-radius:6px;padding:8px;display:inline-block;min-width:200px}
+              .totales h3{font-size:10px;color:#5C3340;margin-bottom:6px;text-align:center;text-transform:uppercase}
+              .total-item{font-size:9px;margin-bottom:3px;display:flex;justify-content:space-between;gap:20px}
+              @media print{.no-print{display:none}}
+            </style></head><body>
+            <h1>Los Rogeles de Marcela - Planilla de Repartida</h1>
+            <h2>${sem}</h2>
+            <div class="grid">`;
+            
+            peds.filter(p=>!p.punto.toLowerCase().includes("valle")).forEach(p => {
+              const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
+              html += `<div class="punto">
+                <div class="punto-nombre">${p.punto}</div>`;
+              if((p.ENTERO||0)>0) html += `<div class="item">ENTERO: ${p.ENTERO}</div>`;
+              if((p.MEDIANO||0)>0) html += `<div class="item">MEDIANO: ${p.MEDIANO}</div>`;
+              if((p.PEQUENO||0)>0) html += `<div class="item">PEQUENO: ${p.PEQUENO}</div>`;
+              if((p.PORCION||0)>0) html += `<div class="item">PORCION: ${p.PORCION} cajas</div>`;
+              if(pedCafe && Object.values(pedCafe.cantidades||{}).some(v=>v>0)) {
+                html += `<div class="cafe-titulo">Cafe:</div>`;
+                Object.entries(pedCafe.cantidades).forEach(([k,v]) => {
+                  if(v>0) html += `<div class="cafe-item">${CAFE_NAMES[k]||k}: ${v}</div>`;
+                });
+              }
+              html += `</div>`;
+            });
+            
+            // Totales
+            const totE = peds.reduce((a,p)=>a+(parseInt(p.ENTERO)||0),0);
+            const totM = peds.reduce((a,p)=>a+(parseInt(p.MEDIANO)||0),0);
+            const totP = peds.reduce((a,p)=>a+(parseInt(p.PEQUENO)||0),0);
+            const totPo = peds.reduce((a,p)=>a+(parseInt(p.PORCION)||0),0);
+            html += `</div>
+            <div class="totales">
+              <h3>TOTALES DEL PEDIDO</h3>
+              ${totE>0?`<div class="total-item"><span>ENTERO:</span><span>${totE} u.</span></div>`:""}
+              ${totM>0?`<div class="total-item"><span>MEDIANO:</span><span>${totM} u.</span></div>`:""}
+              ${totP>0?`<div class="total-item"><span>PEQUENO:</span><span>${totP} u.</span></div>`:""}
+              ${totPo>0?`<div class="total-item"><span>PORCION:</span><span>${totPo} cajas</span></div>`:""}
+            </div>
+            <script>window.print();</script>
+            </body></html>`;
+            win.document.write(html);
+            win.document.close();
+          }} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid #5C3340",background:"#FDF6F0",color:"#5C3340",fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
+            Imprimir planilla repartida
           </button>
           <Card title={"Consolidado - "+sem} titleColor={C.rosa}>
             {SIZES.map(s => (
