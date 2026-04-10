@@ -1140,15 +1140,20 @@ function App() {
                   <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
                 </div>
                 <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>Rog: +{fmt(p.ganancia)}</div>
                   {(()=>{
                     const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
                     const ganCafePunto = pedCafe ? CAFE.reduce((a,prod)=>a+(prod.gma*(pedCafe.cantidades[prod.id]||0)),0) : 0;
-                    const totalGan = p.ganancia + ganCafePunto;
-                    return ganCafePunto>0 ? <div>
-                      <div style={{fontSize:11,color:"#C0392B",fontWeight:"bold"}}>Cafe: +{fmt(ganCafePunto)}</div>
-                      <div style={{fontSize:12,color:C.naranja,fontWeight:"bold",borderTop:"1px solid "+C.border,marginTop:3,paddingTop:3}}>Total: +{fmt(totalGan)}</div>
-                    </div> : null;
+                    const montoPagarRog = SIZES.reduce((a,s)=>a+(PMay[s]*(p[s]||0)),0);
+                    const montoPagarCafe = pedCafe ? CAFE.reduce((a,prod)=>a+(prod.ma*(pedCafe.cantidades[prod.id]||0)),0) : 0;
+                    const totalMonto = montoPagarRog + montoPagarCafe;
+                    return <div>
+                      <div style={{fontSize:11,color:C.marronL,marginBottom:2}}>Monto a pagar:</div>
+                      <div style={{fontSize:14,color:C.naranja,fontWeight:"bold"}}>{fmt(totalMonto)}</div>
+                      {montoPagarCafe>0 && <div style={{fontSize:9,color:"#C0392B",marginTop:1}}>Rog: {fmt(montoPagarRog)} + Cafe: {fmt(montoPagarCafe)}</div>}
+                      <div style={{borderTop:"1px solid "+C.border,marginTop:4,paddingTop:4}}>
+                        <div style={{fontSize:10,color:C.verde,fontWeight:"bold"}}>Gan: +{fmt(p.ganancia+(ganCafePunto||0))}</div>
+                      </div>
+                    </div>;
                   })()}
                   <div style={{display:"flex",gap:4,marginTop:6,justifyContent:"flex-end",flexWrap:"wrap"}}>
                     <button onClick={()=>{setSpf(true);setPf({...p});window.scrollTo(0,0);}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
