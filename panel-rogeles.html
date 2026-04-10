@@ -1027,16 +1027,13 @@ function App() {
             const totM = peds.reduce((a,p)=>a+(parseInt(p.MEDIANO)||0),0);
             const totP = peds.reduce((a,p)=>a+(parseInt(p.PEQUENO)||0),0);
             const totPo = peds.reduce((a,p)=>a+(parseInt(p.PORCION)||0),0);
-            html += `</div>
-            <div class="totales">
-              <h3>TOTALES DEL PEDIDO</h3>
-              ${totE>0?`<div class="total-item"><span>ENTERO:</span><span>${totE} u.</span></div>`:""}
-              ${totM>0?`<div class="total-item"><span>MEDIANO:</span><span>${totM} u.</span></div>`:""}
-              ${totP>0?`<div class="total-item"><span>PEQUENO:</span><span>${totP} u.</span></div>`:""}
-              ${totPo>0?`<div class="total-item"><span>PORCION:</span><span>${totPo} cajas</span></div>`:""}
-            </div>
-            <script>window.print();</script>
-            </body></html>`;
+            let totalesHtml = '<div class="totales"><h3>TOTALES DEL PEDIDO</h3>';
+            if(totE>0) totalesHtml += '<div class="total-item"><span>ENTERO:</span><span>'+totE+' u.</span></div>';
+            if(totM>0) totalesHtml += '<div class="total-item"><span>MEDIANO:</span><span>'+totM+' u.</span></div>';
+            if(totP>0) totalesHtml += '<div class="total-item"><span>PEQUENO:</span><span>'+totP+' u.</span></div>';
+            if(totPo>0) totalesHtml += '<div class="total-item"><span>PORCION:</span><span>'+totPo+' cajas</span></div>';
+            totalesHtml += '</div>';
+            html += '</div>' + totalesHtml + '<script>window.print();<\/script></body></html>';
             win.document.write(html);
             win.document.close();
           }} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid #5C3340",background:"#FDF6F0",color:"#5C3340",fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
