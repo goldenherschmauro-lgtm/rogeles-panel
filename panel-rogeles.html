@@ -107,7 +107,7 @@ const getSem = () => {
   const diff = day===0 ? -6 : 1-day;
   const lun = new Date(d); lun.setDate(d.getDate()+diff);
   const dom = new Date(lun); dom.setDate(lun.getDate()+6);
-  const f = x => x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const f = x => x.getDate()+"/"+(x.getMonth()+1)+"/"+x.getFullYear();
   return "Pedido semanal "+f(lun)+" - "+f(dom);
 };
 
