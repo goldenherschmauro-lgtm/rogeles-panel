@@ -1075,23 +1075,10 @@ function App() {
               </Card>;
             });
           })()}
-
-            {ganCafe>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:11}}>
-              <span style={{color:"#C0392B"}}>Inc. cafe Cherry Season</span>
-              <span style={{color:"#C0392B",fontWeight:"bold"}}>{fmt(ganCafe)}</span>
-            </div>}
-            {psCafe.length>0&&<div style={{marginTop:10,paddingTop:8,borderTop:"1px solid #E8C5C0"}}>
-              <div style={{fontSize:10,color:"#C0392B",fontWeight:"bold",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Cherry Season</div>
-              {CAFE.map(p=>conCafe[p.id]>0?<div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:"1px solid #F5E5E0"}}>
-                <span style={{fontSize:11,color:"#8B6070"}}>{p.n}</span>
-                <span style={{fontWeight:"bold",fontSize:11,color:"#5C3340"}}>{conCafe[p.id]} u.</span>
-              </div>:null)}
-            </div>}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
-              <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
-              <button onClick={enviarRepartida} style={{...btnFill(C.rosa),fontSize:11}}>Enviar repartida</button>
-            </div>
-          </Card>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14,marginBottom:14}}>
+            <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
+            <button onClick={enviarRepartida} style={{...btnFill(C.rosa),fontSize:11}}>Enviar repartida</button>
+          </div>
           {spf && <Card title="Cargar pedido de punto" titleColor={C.rosa}>
             <Lbl>Punto de venta</Lbl>
             <select value={pf.punto} onChange={e=>setPf(f=>({...f,punto:e.target.value}))}
