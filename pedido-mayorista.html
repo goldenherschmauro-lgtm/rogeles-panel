@@ -259,12 +259,12 @@ const dbFB = firebase.database();
 
   function obtenerSemana() {
     const hoy = new Date();
-    const dow = hoy.getDay();
-    const diff = dow === 0 ? 0 : (dow <= 3 ? -dow : 7 - dow);
-    const lunes = new Date(hoy); lunes.setDate(hoy.getDate() + diff);
-    const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+    const day = hoy.getDay();
+    const diff = day===0 ? 0 : (day<=3 ? -day : 7-day);
+    const dom = new Date(hoy); dom.setDate(hoy.getDate()+diff);
+    const vie = new Date(dom); vie.setDate(dom.getDate()+6);
     const fmt = d => d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear();
-    return "Pedido semanal "+fmt(lunes)+" - "+fmt(domingo);
+    return "Pedido semanal "+fmt(dom)+" - "+fmt(vie);
   }
 
   // State
