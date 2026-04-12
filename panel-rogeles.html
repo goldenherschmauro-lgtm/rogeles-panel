@@ -982,57 +982,33 @@ function App() {
           <button onClick={()=>{
             const win = window.open("","_blank");
             const CAFE_NAMES = {peru250:"Peru Blend 250gr",col250:"Colombia El Tambo 250gr",guat250:"Guatemala Anaerobico 250gr",peru1kg:"Peru Blend 1kg",capscol:"Capsulas Colombia x10",capsperu:"Capsulas Peru Blend x10"};
-            let html = `<html><head><meta charset="UTF-8"><title>Planilla Repartida</title><style>
-              @page{size:A4 landscape;margin:8mm}
-              body{font-family:Arial,sans-serif;margin:0;background:#fff;width:277mm}
-              h1{text-align:center;font-size:13px;margin-bottom:2px;color:#C4687A}
-              h2{text-align:center;font-size:9px;color:#888;margin-bottom:8px}
-              .grid{display:flex;flex-wrap:wrap;gap:5px}
-              .punto{border:2px solid #C4687A;border-radius:6px;padding:6px 8px;flex:1;min-width:100px;max-width:140px;page-break-inside:avoid}
-              .punto-nombre{font-weight:bold;font-size:9px;color:#C4687A;border-bottom:1px solid #F0D0D8;padding-bottom:3px;margin-bottom:4px;line-height:1.2}
-              .item{font-size:9px;color:#333;margin-bottom:1px}
-              .cafe-item{font-size:8px;color:#C0392B;margin-bottom:1px}
-              .cafe-titulo{font-size:7px;font-weight:bold;color:#C0392B;margin-top:3px;margin-bottom:1px;text-transform:uppercase}
-              .totales{margin-top:8px;border:2px solid #5C3340;border-radius:6px;padding:8px;display:inline-block;min-width:200px}
-              .totales h3{font-size:10px;color:#5C3340;margin-bottom:6px;text-align:center;text-transform:uppercase}
-              .total-item{font-size:9px;margin-bottom:3px;display:flex;justify-content:space-between;gap:20px}
-              @media print{.no-print{display:none}}
-            </style></head><body>
-            <h1>Los Rogeles de Marcela - Planilla de Repartida</h1>
-            <h2>${sem}</h2>
-            <div class="grid">`;
-            
-            peds.filter(p=>!p.punto.toLowerCase().includes("valle")).forEach(p => {
+            let html = '<html><head><meta charset="UTF-8"><title>Planilla Repartida</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;margin:0;background:#fff;width:277mm}h1{text-align:center;font-size:13px;margin-bottom:2px;color:#C4687A}h2{text-align:center;font-size:9px;color:#888;margin-bottom:8px}.grid{display:flex;flex-wrap:wrap;gap:5px}.punto{border:2px solid #C4687A;border-radius:6px;padding:6px 8px;flex:1;min-width:100px;max-width:140px}.punto-nombre{font-weight:bold;font-size:9px;color:#C4687A;border-bottom:1px solid #F0D0D8;padding-bottom:3px;margin-bottom:4px}.item{font-size:9px;color:#333;margin-bottom:1px}.cafe-item{font-size:8px;color:#C0392B;margin-bottom:1px}.cafe-titulo{font-size:7px;font-weight:bold;color:#C0392B;margin-top:3px;margin-bottom:1px;text-transform:uppercase}.totales{margin-top:8px;border:2px solid #5C3340;border-radius:6px;padding:8px;display:inline-block;min-width:200px}.totales h3{font-size:10px;color:#5C3340;margin-bottom:6px;text-align:center}.total-item{font-size:9px;margin-bottom:3px;display:flex;justify-content:space-between;gap:20px}</style></head><body>';
+            html += '<h1>Los Rogeles de Marcela - Planilla de Repartida</h1><h2>'+sem+'</h2><div class="grid">';
+            peds.filter(p=>p.semana===sem&&!p.punto.toLowerCase().includes("valle")).forEach(p => {
               const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
-              html += `<div class="punto">
-                <div class="punto-nombre">${p.punto}</div>`;
-              if((p.ENTERO||0)>0) html += `<div class="item">ENTERO: ${p.ENTERO}</div>`;
-              if((p.MEDIANO||0)>0) html += `<div class="item">MEDIANO: ${p.MEDIANO}</div>`;
-              if((p.PEQUENO||0)>0) html += `<div class="item">PEQUENO: ${p.PEQUENO}</div>`;
-              if((p.PORCION||0)>0) html += `<div class="item">PORCION: ${p.PORCION} cajas</div>`;
+              html += '<div class="punto"><div class="punto-nombre">'+p.punto+'</div>';
+              if((p.ENTERO||0)>0) html += '<div class="item">ENTERO: '+p.ENTERO+'</div>';
+              if((p.MEDIANO||0)>0) html += '<div class="item">MEDIANO: '+p.MEDIANO+'</div>';
+              if((p.PEQUENO||0)>0) html += '<div class="item">PEQUENO: '+p.PEQUENO+'</div>';
+              if((p.PORCION||0)>0) html += '<div class="item">PORCION: '+p.PORCION+' cajas</div>';
               if(pedCafe && Object.values(pedCafe.cantidades||{}).some(v=>v>0)) {
-                html += `<div class="cafe-titulo">Cafe:</div>`;
-                Object.entries(pedCafe.cantidades).forEach(([k,v]) => {
-                  if(v>0) html += `<div class="cafe-item">${CAFE_NAMES[k]||k}: ${v}</div>`;
-                });
+                html += '<div class="cafe-titulo">Cafe:</div>';
+                Object.entries(pedCafe.cantidades).forEach(([k,v]) => { if(v>0) html += '<div class="cafe-item">'+(CAFE_NAMES[k]||k)+': '+v+'</div>'; });
               }
-              html += `</div>`;
+              html += '</div>';
             });
-            
-            // Totales
-            const totE = peds.reduce((a,p)=>a+(parseInt(p.ENTERO)||0),0);
-            const totM = peds.reduce((a,p)=>a+(parseInt(p.MEDIANO)||0),0);
-            const totP = peds.reduce((a,p)=>a+(parseInt(p.PEQUENO)||0),0);
-            const totPo = peds.reduce((a,p)=>a+(parseInt(p.PORCION)||0),0);
-            let totalesHtml = '<div class="totales"><h3>TOTALES DEL PEDIDO</h3>';
-            if(totE>0) totalesHtml += '<div class="total-item"><span>ENTERO:</span><span>'+totE+' u.</span></div>';
-            if(totM>0) totalesHtml += '<div class="total-item"><span>MEDIANO:</span><span>'+totM+' u.</span></div>';
-            if(totP>0) totalesHtml += '<div class="total-item"><span>PEQUENO:</span><span>'+totP+' u.</span></div>';
-            if(totPo>0) totalesHtml += '<div class="total-item"><span>PORCION:</span><span>'+totPo+' cajas</span></div>';
-            totalesHtml += '</div>';
-            html += '</div>' + totalesHtml + '<script>window.print();<\/script></body></html>';
-            win.document.write(html);
-            win.document.close();
+            const totE=ps.reduce((a,p)=>a+(parseInt(p.ENTERO)||0),0);
+            const totM=ps.reduce((a,p)=>a+(parseInt(p.MEDIANO)||0),0);
+            const totP=ps.reduce((a,p)=>a+(parseInt(p.PEQUENO)||0),0);
+            const totPo=ps.reduce((a,p)=>a+(parseInt(p.PORCION)||0),0);
+            let tot='<div class="totales"><h3>TOTALES DEL PEDIDO</h3>';
+            if(totE>0) tot+='<div class="total-item"><span>ENTERO:</span><span>'+totE+' u.</span></div>';
+            if(totM>0) tot+='<div class="total-item"><span>MEDIANO:</span><span>'+totM+' u.</span></div>';
+            if(totP>0) tot+='<div class="total-item"><span>PEQUENO:</span><span>'+totP+' u.</span></div>';
+            if(totPo>0) tot+='<div class="total-item"><span>PORCION:</span><span>'+totPo+' cajas</span></div>';
+            tot+='</div>';
+            html += '</div>'+tot+'<script>window.print();<\/script></body></html>';
+            win.document.write(html); win.document.close();
           }} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid #5C3340",background:"#FDF6F0",color:"#5C3340",fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
             Imprimir planilla repartida
           </button>
@@ -1062,11 +1038,11 @@ function App() {
               </div>
             </div>
           </Card>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14,marginBottom:14}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
             <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
             <button onClick={enviarRepartida} style={{...btnFill(C.rosa),fontSize:11}}>Enviar repartida</button>
           </div>
-          {spf && <Card title="Cargar pedido de punto" titleColor={C.rosa}>
+          {spf && <Card title={pf.id?"Editar pedido":"Cargar pedido de punto"} titleColor={C.rosa}>
             <Lbl>Punto de venta</Lbl>
             <select value={pf.punto} onChange={e=>setPf(f=>({...f,punto:e.target.value}))}
               style={{...inp(),marginBottom:14}}>
@@ -1091,13 +1067,12 @@ function App() {
                 </div>
               );
             })}
-            <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12}}>
+            <div style={{background:C.rosaBg,borderRadius:12,padding:12,marginBottom:12,marginTop:8}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
                 <span style={{color:C.marronL}}>Ganancia:</span>
-                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(SIZES.reduce((a,s)=>a+(GMay[s]*(pf[s]||0)),0))}</span>
+                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(SIZES.reduce((a,s)=>{const esV=pf.punto.toLowerCase().includes("valle");return a+(esV?0:GMay[s]*(pf[s]||0));},0))}</span>
               </div>
             </div>
-            {/* Cafe en pedido mayorista */}
             <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border}}>
               <div style={{fontSize:10,color:"#C0392B",fontWeight:"bold",textTransform:"uppercase",marginBottom:8}}>Cafe Cherry Season (opcional)</div>
               {CAFE.map(prod => {
@@ -1120,25 +1095,23 @@ function App() {
                 </div>;
               })}
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <button onClick={()=>setSpf(false)} style={btnOut()}>Cancelar</button>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:8}}>
+              <button onClick={()=>{setSpf(false);setPf({punto:PUNTOS[0],ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0,cantidadesCafe:{}});}} style={btnOut()}>Cancelar</button>
               <button onClick={addPed} style={btnFill(C.rosa)}>Guardar</button>
             </div>
           </Card>}
           {peds.length===0 && !spf && <Empty text="No hay pedidos esta semana"/>}
           {peds.map(p => {
             const esSemActual = p.semana===sem;
-            const cardColor = esSemActual ? "1px solid "+C.rosa : "1px solid #CCC";
-            const cardBg = esSemActual ? C.card : "#F5F5F5";
             return (
-            <div key={p.id} style={{background:cardBg,borderRadius:14,padding:14,marginBottom:10,border:cardColor,opacity:esSemActual?1:0.7}}>
+            <div key={p.id} style={{background:esSemActual?C.card:"#F5F5F5",borderRadius:14,padding:14,marginBottom:10,border:esSemActual?"1px solid "+C.rosa:"1px solid #CCC",opacity:esSemActual?1:0.7}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                 <div style={{flex:1}}>
                   <div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div>
-                  <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{SIZES.filter(s=>p[s]>0).map(s=>s+": "+p[s]).join(" - ")}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{SIZES.filter(s=>(p[s]||0)>0).map(s=>s+": "+p[s]).join(" - ")}</div>
                   {p.cantidadesCafe && Object.values(p.cantidadesCafe).some(v=>v>0) && (
                     <div style={{fontSize:10,color:"#C0392B",marginTop:3}}>
-                      Cafe: {CAFE.filter(prod=>p.cantidadesCafe[prod.id]>0).map(prod=>prod.n+": "+p.cantidadesCafe[prod.id]).join(" - ")}
+                      Cafe: {CAFE.filter(prod=>(p.cantidadesCafe[prod.id]||0)>0).map(prod=>prod.n+": "+p.cantidadesCafe[prod.id]).join(" - ")}
                     </div>
                   )}
                   <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
@@ -1162,7 +1135,7 @@ function App() {
                   <div style={{display:"flex",gap:4,marginTop:6,justifyContent:"flex-end",flexWrap:"wrap"}}>
                     <button onClick={()=>{setSpf(true);setPf({...p});window.scrollTo(0,0);}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
                     <button onClick={()=>{if(window.confirm("Eliminar pedido de "+p.punto+"?")){fbRemove("peds/"+p.id);showT("Pedido eliminado");}}} style={{fontSize:10,background:C.rojo,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Eliminar</button>
-                    {p.contacto&&(()=>{
+                    {(()=>{
                       const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
                       const totalRog = SIZES.reduce((a,s)=>a+(PMay[s]*(p[s]||0)),0);
                       const totalCaf = pedCafe ? CAFE.reduce((a,prod)=>a+(prod.ma*(pedCafe.cantidades[prod.id]||0)),0) : 0;
@@ -1174,9 +1147,10 @@ function App() {
                         msgWA += "\n\nSubtotal rogeles: $"+totalRog.toLocaleString("es-AR");
                         msgWA += "\nSubtotal cafe: $"+totalCaf.toLocaleString("es-AR");
                       }
-                      msgWA += "\n\n*TOTAL A PAGAR: $"+totalFinal.toLocaleString("es-AR")+"*";
-                      msgWA += "\n\nGracias!";
-                      const telRaw = p.contacto.replace(/\D/g,""); const tel = telRaw.startsWith("54") ? telRaw : "54"+telRaw;
+                      msgWA += "\n\n*TOTAL A PAGAR: $"+totalFinal.toLocaleString("es-AR")+"*\n\nGracias!";
+                      const telRaw = (p.telefono||p.contacto||"").replace(/\D/g,"");
+                      const tel = telRaw.startsWith("54") ? telRaw : "54"+telRaw;
+                      if(!telRaw || telRaw.length < 8) return null;
                       return <button onClick={()=>window.open("https://wa.me/"+tel+"?text="+encodeURIComponent(msgWA),"_blank")}
                         style={{fontSize:10,background:"#25D366",color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
                         WA punto
@@ -1186,7 +1160,8 @@ function App() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {/* CAFE en Mayoristas */}
           <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #E8C5C0"}}>
@@ -1194,21 +1169,6 @@ function App() {
             <div style={{marginBottom:12}}>
               <button onClick={cerrarCafe} style={{...btnFill("#C0392B"),width:"100%",fontSize:12}}>Enviar pedido a Cherry Season</button>
             </div>
-            <div style={{background:C.bg,borderRadius:12,padding:12,border:"1px solid #E8C5C0"}}>
-              {CAFE.map(p => (
-                <div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #F5E5E0"}}>
-                  <span style={{fontSize:11,color:C.marronL}}>{p.n}</span>
-                  <span style={{fontWeight:"bold",fontSize:11,color:conCafe[p.id]>0?C.marron:"#E8C5C0"}}>{conCafe[p.id]} u.</span>
-                </div>
-              ))}
-              <div style={{display:"flex",justifyContent:"space-between",marginTop:8,paddingTop:6,borderTop:"1px solid #E8C5C0"}}>
-                <span style={{fontSize:11,color:C.marronL}}>{psCafe.filter(p=>!p.punto.toLowerCase().includes("valle")).length} puntos</span>
-                <span style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>Gan: {fmt(ganCafe)}</span>
-              </div>
-            </div>
-          </div>
-        </div>}
-
         {/* CAFE */}
         {tab==="cafe" && <div>
           <div style={{background:"#8B2010",padding:"20px 16px",margin:"0 -14px",marginBottom:16,textAlign:"center"}}>
