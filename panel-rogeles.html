@@ -287,7 +287,7 @@ function App() {
   const [anio, setAnio] = useState("2026");
   const [pedsCafe, setPedsCafe] = useState([]);
   const [showCafeForm, setShowCafeForm] = useState(false);
-  const [cafeForm, setCafeForm] = useState({punto:PUNTOS[0],cantidades:{}});
+  const [cafeForm, setCafeForm] = useState({punto:PUNTOS[0],cantidades:{peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}});
   const [stockCafe, setStockCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [calMes, setCalMes] = useState(new Date().getMonth());
@@ -522,7 +522,7 @@ function App() {
     const g = esV ? 0 : CAFE.reduce((a,p)=>a+(p.gma*(cafeForm.cantidades[p.id]||0)),0);
     const newPedCafe = {...cafeForm,id:Date.now(),semana:sem,ganancia:g};
     fbSet("pedsCafe/"+newPedCafe.id, newPedCafe);
-    setCafeForm({punto:PUNTOS[0],cantidades:{}});
+    setCafeForm({punto:PUNTOS[0],cantidades:{peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}});
     setShowCafeForm(false);
     showT("Pedido cafe guardado");
   };
@@ -1218,7 +1218,7 @@ function App() {
                 {CAFE.filter(p=>p.t===tipo).map(prod => {
                   const esV = cafeForm.punto.toLowerCase().includes("valle");
                   const precio = esV ? prod.cv : prod.ma;
-                  const cant = cafeForm.cantidades[prod.id]||0;
+                  const cant = (cafeForm.cantidades||{})[prod.id]||0;
                   return (
                     <div key={prod.id} style={rowStyle}>
                       <div style={{flex:1}}>
@@ -1253,14 +1253,14 @@ function App() {
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                 <div style={{flex:1}}>
                   <div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div>
-                  <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{CAFE.filter(prod=>p.cantidades[prod.id]>0).map(prod=>prod.n+": "+p.cantidades[prod.id]).join(" / ")}</div>
+                  <div style={{fontSize:11,color:C.marronL,marginTop:4}}>{CAFE.filter(prod=>(p.cantidades||{})[prod.id]>0).map(prod=>prod.n+": "+(p.cantidades||{})[prod.id]).join(" / ")}</div>
                   <div style={{fontSize:10,color:C.rosaL,marginTop:2}}>{p.semana}</div>
                 </div>
                 <div style={{textAlign:"right"}}>
                   {p.ganancia>0 && <div style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>+{fmt(p.ganancia)}</div>}
                   {p.ganancia===0 && <div style={{fontSize:11,color:C.marronL}}>Valle Escondido</div>}
                   <div style={{display:"flex",gap:4,marginTop:6,justifyContent:"flex-end"}}>
-                    <button onClick={()=>{setCafeForm({...p,cantidades:{...p.cantidades}});setShowCafeForm(true);window.scrollTo(0,0);}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
+                    <button onClick={()=>{setCafeForm({...p,cantidades:{...(p.cantidades||{})}});setShowCafeForm(true);window.scrollTo(0,0);}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
                     <button onClick={()=>{if(window.confirm("Eliminar pedido cafe de "+p.punto+"?")){fbRemove("pedsCafe/"+p.id);showT("Pedido eliminado");}}} style={{fontSize:10,background:C.rojo,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Eliminar</button>
                   </div>
                 </div>
