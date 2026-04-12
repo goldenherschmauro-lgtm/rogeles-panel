@@ -352,7 +352,7 @@ function App() {
   const mes = new Date().getMonth()+1 + "-" + new Date().getFullYear();
   const ventasMes = ventas.filter(v => { try { const p=v.fecha.split("/"); return (parseInt(p[1])-1+1)+"-"+parseInt(p[2])===mes; } catch{return true;} });
   const gmi = ventasMes.filter(v => v.tipo==="minorista").reduce((a,v) => a+v.ganancia, 0);
-  const gma = peds.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+p.ganancia, 0);
+  const gma = ps.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+(p.ganancia||0), 0);
   const ps = peds.filter(p => p.semana===sem);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
   const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
