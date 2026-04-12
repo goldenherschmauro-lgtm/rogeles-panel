@@ -354,12 +354,14 @@ function App() {
   const gmi = ventasMes.filter(v => v.tipo==="minorista").reduce((a,v) => a+v.ganancia, 0);
   const ps = peds.filter(p => p.semana===sem);
   const gma = ps.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+(p.ganancia||0), 0);
+  const gmaMes = peds.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+(p.ganancia||0), 0);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
   const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
 
   // Cafe metrics
   const psCafe = pedsCafe.filter(p => p.semana===sem);
-  const ganCafe = psCafe.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*(p.cantidades[prod.id]||0)),0), 0);
+  const ganCafe = psCafe.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
+  const ganCafeMes = pedsCafe.filter(p => !p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
   const invValleCafe = psCafe.filter(p => p.punto.toLowerCase().includes("valle")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.cv*(p.cantidades[prod.id]||0)),0), 0);
   const conCafe = CAFE.reduce((acc,p) => { acc[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0); return acc; }, {});
 
@@ -666,7 +668,7 @@ function App() {
           <ST>Resumen del dia</ST>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
             <KPI label="Total Caja" value={fmt(caja)} sub="cobrado" color={C.verde}/>
-            <KPI label="Ganancia Total" value={fmt(gmi+gma+ganCafe)} sub="rogeles+cafe" color={C.naranja}/>
+            <KPI label="Ganancia Total" value={fmt(gmi+gmaMes+ganCafeMes)} sub="rogeles+cafe" color={C.naranja}/>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
             <div onClick={()=>{setTab("ventas");setFiltroVentas("hoy");}} style={{cursor:"pointer"}}><KPI label="Ventas hoy" value={hoy.length} sub="toca para ver" color={C.rosa}/></div>
@@ -1276,7 +1278,7 @@ function App() {
           {/* GANANCIA ROGELES */}
           <Card title="Ganancia ROGELES" titleColor={C.rosa}>
             <div style={{textAlign:"center",padding:"12px 0"}}>
-              <div style={{fontSize:38,fontWeight:"bold",color:C.rosa}}>{fmt(gmi+gma)}</div>
+              <div style={{fontSize:38,fontWeight:"bold",color:C.rosa}}>{fmt(gmi+gmaMes)}</div>
               <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Minorista + Mayorista</div>
             </div>
             <div style={{borderTop:"1px solid "+C.border,paddingTop:10,marginTop:4}}>
@@ -1286,7 +1288,7 @@ function App() {
               </div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
                 <span style={{color:C.marronL}}>Mayorista rogeles</span>
-                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(gma)}</span>
+                <span style={{fontWeight:"bold",color:C.verde}}>{fmt(gmaMes)}</span>
               </div>
             </div>
           </Card>
@@ -1317,7 +1319,7 @@ function App() {
           {/* TOTAL GENERAL */}
           <Card title="TOTAL GENERAL" titleColor={C.naranja}>
             <div style={{textAlign:"center",padding:"12px 0"}}>
-              <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gma+ganCafe)}</div>
+              <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gmaMes+ganCafeMes)}</div>
               <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Rogeles + Cafe</div>
             </div>
           </Card>
