@@ -161,13 +161,24 @@ const dbFB = firebase.database();
         </div>
         <div class="cafe-card">
           <div class="cafe-info">
+            <div class="cafe-name">Brasil 250gr</div>
+            <div class="cafe-price" id="cafe-price-brasil250">$19.320 c/u</div>
+          </div>
+          <div class="qty-row">
+            <button class="qty-btn minus" id="btn-cafe-brasil250-minus">-</button>
+            <span class="qty-val" id="cafe-val-brasil250">0</span>
+            <button class="qty-btn plus" id="btn-cafe-brasil250-plus">+</button>
+          </div>
+        </div>
+        <div class="cafe-card">
+          <div class="cafe-info">
             <div class="cafe-name">Colombia El Tambo 250gr</div>
             <div class="cafe-price" id="cafe-price-col250">$22.260 c/u</div>
           </div>
           <div class="qty-row">
             <button class="qty-btn minus" id="btn-cafe-col250-minus">-</button>
             <span class="qty-val" id="cafe-val-col250">0</span>
-            <button class="qty-btn plus" id="btn-cafe-col250-plus">+</button>
+            <button class="qty-btn plus" id="btn-cafe-brasil250-plus">+</button>
           </div>
         </div>
         <div class="cafe-card">
@@ -247,7 +258,8 @@ const dbFB = firebase.database();
   };
   const PRECIOS_COSTO = {entero:48050, medio:29150, cuarto:20350, rogelito:37600};
   const CAFE_PRODS = {
-    peru250:  {label:"Peru Blend 250gr",         precio:19320, costo:15791, gan:3529, minimo:1},
+    peru250:  {label:"Peru Blend 250gr",         precio:19320, costo:14420, gan:4900, minimo:1},
+    brasil250:{label:"Brasil 250gr",             precio:19320, costo:14420, gan:4900, minimo:1},
     col250:   {label:"Colombia El Tambo 250gr",  precio:22260, costo:20873, gan:1387, minimo:1},
     guat250:  {label:"Guatemala Anaerobico 250gr",precio:25200,costo:21054, gan:4146, minimo:1},
     peru1kg:  {label:"Peru Blend 1kg",           precio:46369, costo:39780, gan:6589, minimo:1},
@@ -269,7 +281,7 @@ const dbFB = firebase.database();
 
   // State
   const cantidades = {entero:0, medio:0, cuarto:0, rogelito:0};
-  const cantidadesCafe = {peru250:0, col250:0, guat250:0, peru1kg:0, capscol:0, capsperu:0};
+  const cantidadesCafe = {peru250:0, brasil250:0, col250:0, guat250:0, peru1kg:0, capscol:0, capsperu:0};
   let cafeVisible = false;
   let esValle = false;
 
@@ -463,7 +475,7 @@ const dbFB = firebase.database();
     });
     
     // Cafe buttons
-    const cafeSizes = ["peru250","col250","guat250","peru1kg","capscol","capsperu"];
+    const cafeSizes = ["peru250","brasil250","col250","guat250","peru1kg","capscol","capsperu"];
     cafeSizes.forEach(id => {
       document.getElementById("btn-cafe-"+id+"-minus").addEventListener("click", ()=>cambiarCafe(id,-1));
       document.getElementById("btn-cafe-"+id+"-plus").addEventListener("click", ()=>cambiarCafe(id,1));

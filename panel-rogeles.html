@@ -53,7 +53,8 @@ const PUNTOS = [
 
 // Cafe data
 const CAFE = [
-  {id:"peru250",     n:"Peru Blend 250gr",        t:"grano",   cv:15791, mi:23000, ma:19320, gm:7209,  gma:3529, min:1},
+  {id:"peru250",     n:"Peru Blend 250gr",        t:"grano",   cv:14420, mi:23000, ma:19320, gm:8580,  gma:4900, min:1},
+  {id:"brasil250",   n:"Brasil 250gr",            t:"grano",   cv:14420, mi:23000, ma:19320, gm:8580,  gma:4900, min:1},
   {id:"col250",      n:"Colombia El Tambo 250gr",  t:"grano",   cv:20873, mi:26500, ma:22260, gm:5627,  gma:1387, min:1},
   {id:"guat250",     n:"Guatemala Anaer. 250gr",   t:"grano",   cv:21054, mi:30000, ma:25200, gm:8946,  gma:4146, min:1},
   {id:"peru1kg",     n:"Peru Blend 1kg",           t:"grano",   cv:39780, mi:52100, ma:46369, gm:12320, gma:6589, min:1},
@@ -287,6 +288,7 @@ function App() {
   const [anio, setAnio] = useState("2026");
   const [pedsCafe, setPedsCafe] = useState([]);
   const [showCafeForm, setShowCafeForm] = useState(false);
+  const [semVista, setSemVista] = React.useState(sem);
   const [cafeForm, setCafeForm] = useState({punto:PUNTOS[0],cantidades:{peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}});
   const [stockCafe, setStockCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
@@ -352,14 +354,15 @@ function App() {
   const mes = new Date().getMonth()+1 + "-" + new Date().getFullYear();
   const ventasMes = ventas.filter(v => { try { const p=v.fecha.split("/"); return (parseInt(p[1])-1+1)+"-"+parseInt(p[2])===mes; } catch{return true;} });
   const gmi = ventasMes.filter(v => v.tipo==="minorista").reduce((a,v) => a+v.ganancia, 0);
-  const ps = peds.filter(p => p.semana===sem);
+  const semActiva = semVista || sem;
+  const ps = peds.filter(p => p.semana===semActiva);
   const gma = ps.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
   const gmaMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
   const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
 
   // Cafe metrics
-  const psCafe = pedsCafe.filter(p => p.semana===sem);
+  const psCafe = pedsCafe.filter(p => p.semana===semActiva);
   const ganCafe = psCafe.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
   const ganCafeMes = pedsCafe.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
   const invValleCafe = psCafe.filter(p => p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.cv*(p.cantidades[prod.id]||0)),0), 0);
@@ -982,6 +985,20 @@ function App() {
           <button onClick={sincronizarSheets} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid "+C.rosa,background:C.rosaBg,color:C.rosa,fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
             Sincronizar pedidos del formulario
           </button>
+          {(()=>{
+            const semanas = [...new Set(peds.map(p=>p.semana))].sort().reverse();
+            return semanas.length > 1 ? <div style={{marginBottom:12}}>
+              <div style={{fontSize:10,color:C.marronL,marginBottom:6,letterSpacing:1,textTransform:"uppercase"}}>Ver semana:</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {semanas.map(s => (
+                  <button key={s} onClick={()=>setSemVista(s)}
+                    style={{padding:"6px 10px",borderRadius:10,border:"2px solid "+(semVista===s?C.rosa:C.border),background:semVista===s?C.rosaBg:"transparent",color:semVista===s?C.rosa:C.marronL,fontSize:10,cursor:"pointer",fontWeight:semVista===s?"bold":"normal"}}>
+                    {s.replace("Pedido semanal ","Sem. ")}
+                  </button>
+                ))}
+              </div>
+            </div> : null;
+          })()}
           <button onClick={()=>{
             const win = window.open("","_blank");
             const CAFE_NAMES = {peru250:"Peru Blend 250gr",col250:"Colombia El Tambo 250gr",guat250:"Guatemala Anaerobico 250gr",peru1kg:"Peru Blend 1kg",capscol:"Capsulas Colombia x10",capsperu:"Capsulas Peru Blend x10"};
@@ -1015,7 +1032,7 @@ function App() {
           }} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid #5C3340",background:"#FDF6F0",color:"#5C3340",fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
             Imprimir planilla repartida
           </button>
-          <Card title={"Consolidado - "+sem} titleColor={C.rosa}>
+          <Card title={"Consolidado - "+semActiva} titleColor={C.rosa}>
             {SIZES.map(s => (
               <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
                 <span style={{fontSize:13,color:C.marronL}}>{s}</span>
