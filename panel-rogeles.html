@@ -396,7 +396,7 @@ function App() {
     setStock(p => {
       const ns = {...p};
       SIZES.forEach(s => { if((cants[s]||0)>0) ns[s]=(ns[s]||0)-(cants[s]||0); });
-      if(window._stockFBLoaded) fbSet("stock", ns);
+      fbSet("stock", ns);
       return ns;
     });
     postSheets({tipo:"venta", ...v});
@@ -424,11 +424,26 @@ function App() {
     if(!v) return;
     if(!window.confirm("Anular la venta de "+v.cliente+"? Se devuelve el stock.")) return;
     fbRemove("ventas/"+id);
-    setStock(p => ({...p,[v.tamano]:p[v.tamano]+v.cantidad}));
+    setStock(p => {
+      const ns = {...p};
+      if(v.cantidades) {
+        SIZES.forEach(s => { if((v.cantidades[s]||0)>0) ns[s]=(ns[s]||0)+(v.cantidades[s]||0); });
+      } else if(v.tamano) {
+        const t = v.tamano.toUpperCase();
+        const c = parseInt(v.cantidad)||1;
+        if(t.includes("ENTERO")) ns.ENTERO=(ns.ENTERO||0)+c;
+        else if(t.includes("MEDIANO")) ns.MEDIANO=(ns.MEDIANO||0)+c;
+        else if(t.includes("PEQUENO")||t.includes("CUARTO")) ns.PEQUENO=(ns.PEQUENO||0)+c;
+        else if(t.includes("PORCION")||t.includes("ROGELITO")) ns.PORCION=(ns.PORCION||0)+c;
+      }
+      setTimeout(()=>fbSet("stock",ns),300);
+      return ns;
+    });
     if(v.cafeCantidades) {
       setStockCafe(s => {
         const ns = {...s};
         CAFE.forEach(p => { if((v.cafeCantidades[p.id]||0)>0) ns[p.id]=(ns[p.id]||0)+(v.cafeCantidades[p.id]||0); });
+        setTimeout(()=>fbSet("stockCafe",ns),300);
         return ns;
       });
     }
@@ -930,7 +945,7 @@ function App() {
                 </div>
               </div>
               <div style={{display:"flex",gap:8,marginTop:12}}>
-                <button onClick={()=>setStock(p=>({...p,[s]:Math.max(0,p[s]-1)}))} style={{flex:1,padding:11,borderRadius:10,border:"1px solid "+C.border,background:C.bg,color:C.marron,fontSize:20,cursor:"pointer",fontWeight:"bold"}}>-</button>
+                <button onClick={()=>setStock(p=>({...p,[s]:(p[s]||0)-1}))} style={{flex:1,padding:11,borderRadius:10,border:"1px solid "+C.border,background:C.bg,color:C.marron,fontSize:20,cursor:"pointer",fontWeight:"bold"}}>-</button>
                 <button onClick={()=>setStock(p=>({...p,[s]:p[s]+1}))} style={{flex:1,padding:11,borderRadius:10,border:"none",background:C.rosa,color:"#fff",fontSize:20,cursor:"pointer",fontWeight:"bold"}}>+</button>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8,alignItems:"center"}}>
