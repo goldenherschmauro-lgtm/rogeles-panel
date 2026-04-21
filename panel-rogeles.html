@@ -481,6 +481,26 @@ function App() {
     }
     setPf({punto:PUNTOS[0],ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0,cantidadesCafe:{}});
     setSpf(false);
+    // Si es edicion, ofrecer enviar WA al punto
+    if(pf.id && pf.telefono) {
+      const totalRog = SIZES.reduce((a,s)=>a+(PMay[s]*(newPed[s]||0)),0);
+      const totalCaf = CAFE.reduce((a,p)=>a+(p.ma*((pf.cantidadesCafe||{})[p.id]||0)),0);
+      const totalFinal = totalRog + totalCaf;
+      let msgWA = "Los Rogeles de Marcela\n\nHola "+pf.contacto+"! Tu pedido actualizado:\n\n";
+      msgWA += SIZES.filter(s=>(newPed[s]||0)>0).map(s=>s+": "+newPed[s]).join("\n");
+      if(totalCaf>0) {
+        msgWA += "\n\nCafe Cherry Season:\n";
+        msgWA += CAFE.filter(p=>(pf.cantidadesCafe||{})[p.id]>0).map(p=>p.n+": "+pf.cantidadesCafe[p.id]).join("\n");
+        msgWA += "\n\nSubtotal rogeles: $"+totalRog.toLocaleString("es-AR");
+        msgWA += "\nSubtotal cafe: $"+totalCaf.toLocaleString("es-AR");
+      }
+      msgWA += "\n\n*TOTAL A PAGAR: $"+totalFinal.toLocaleString("es-AR")+"*\n\nGracias!";
+      const telRaw = pf.telefono.replace(/\D/g,"");
+      const tel = telRaw.startsWith("54") ? telRaw : "54"+telRaw;
+      if(window.confirm("Enviar pedido actualizado a "+pf.contacto+" por WhatsApp?")) {
+        window.open("https://wa.me/"+tel+"?text="+encodeURIComponent(msgWA),"_blank");
+      }
+    }
     showT(pf.id?"Pedido actualizado":"Pedido guardado");
   };
 
@@ -1087,6 +1107,10 @@ function App() {
               style={{...inp(),marginBottom:14}}>
               {PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}
             </select>
+            <Lbl>Contacto</Lbl>
+            <input placeholder="Nombre contacto" value={pf.contacto||""} onChange={e=>setPf(f=>({...f,contacto:e.target.value}))} style={inp()}/>
+            <Lbl>Telefono (para WA)</Lbl>
+            <input type="tel" placeholder="Ej: 3516123456" value={pf.telefono||""} onChange={e=>setPf(f=>({...f,telefono:e.target.value}))} style={inp()}/>
             <Lbl>Cantidades</Lbl>
             {SIZES.map(s => {
               const esV = pf.punto.toLowerCase().includes("valle escondido");
