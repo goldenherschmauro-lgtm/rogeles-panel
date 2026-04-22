@@ -296,6 +296,7 @@ function App() {
   const [calAnio, setCalAnio] = useState(new Date().getFullYear());
   const [filtroVentas, setFiltroVentas] = useState('hoy');
   const [editVenta, setEditVenta] = useState(null);
+  const [waPedidoEditado, setWaPedidoEditado] = useState(null);
   const [editForm, setEditForm] = useState({});
 
   // Firebase listeners - sync in real time
@@ -497,9 +498,9 @@ function App() {
       msgWA += "\n\n*TOTAL A PAGAR: $"+totalFinal.toLocaleString("es-AR")+"*\n\nGracias!";
       const telRaw = pf.telefono.replace(/\D/g,"");
       const tel = telRaw.startsWith("54") ? telRaw : "54"+telRaw;
-      window._waPedidoEditado = {url:"https://wa.me/"+tel+"?text="+encodeURIComponent(msgWA), nombre:pf.contacto};
+      setWaPedidoEditado({url:"https://wa.me/"+tel+"?text="+encodeURIComponent(msgWA), nombre:pf.contacto});
     } else {
-      window._waPedidoEditado = null;
+      setWaPedidoEditado(null);
     }
     showT(pf.id?"Pedido actualizado - envialo por WA!":"Pedido guardado");
   };
@@ -1101,9 +1102,9 @@ function App() {
             <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
             <button onClick={enviarRepartida} style={{...btnFill(C.rosa),fontSize:11}}>Enviar repartida</button>
           </div>
-          {window._waPedidoEditado&&<button onClick={()=>{window.open(window._waPedidoEditado.url,"_blank");window._waPedidoEditado=null;showT("WA enviado!");}}
+          {waPedidoEditado&&<button onClick={()=>{window.open(waPedidoEditado.url,"_blank");setWaPedidoEditado(null);showT("WA enviado!");}}
             style={{width:"100%",padding:12,borderRadius:12,border:"none",background:"#25D366",color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
-            Enviar pedido actualizado a {window._waPedidoEditado.nombre} por WA
+            Enviar pedido actualizado a {waPedidoEditado.nombre} por WA
           </button>}
           {spf && <Card title={pf.id?"Editar pedido":"Cargar pedido de punto"} titleColor={C.rosa}>
             <Lbl>Punto de venta</Lbl>
