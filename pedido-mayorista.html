@@ -410,8 +410,6 @@ const dbFB = firebase.database();
       msgMauro += "\n *Subtotal cafe: $"+totalCafe.toLocaleString("es-AR")+"*";
     }
     msgMauro += "\n\n *TOTAL A PAGAR: $"+totalFinal.toLocaleString("es-AR")+"*";
-    msgMauro += "\n *Ganancia rogeles: $"+ganRog.toLocaleString("es-AR")+"*";
-    if(ganCafe>0) msgMauro += "\n *Ganancia cafe: $"+ganCafe.toLocaleString("es-AR")+"*";
     msgMauro += "\n\nPedido confirmado";
 
     // Mensaje al punto
