@@ -661,7 +661,34 @@ function App() {
   };
 
   const guardarEdicion = () => {
-    fbUpdate("ventas/"+editVenta, editForm);
+    const vOrig = ventas.find(x=>x.id===editVenta);
+    const cants = editForm.cantidades || vOrig?.cantidades || {};
+    const tipo = vOrig?.tipo || "minorista";
+    const totalUnidades = SIZES.reduce((a,s)=>a+(cants[s]||0),0);
+    const resumen = SIZES.filter(s=>(cants[s]||0)>0).map(s=>s+" x"+cants[s]).join(", ");
+    const newPrecio = SIZES.reduce((a,s)=>a+(pv(s,tipo)*(cants[s]||0)),0) || vOrig?.precio || 0;
+    const newGan = SIZES.reduce((a,s)=>a+((tipo==="minorista"?GM[s]:GMay[s])*(cants[s]||0)),0) || vOrig?.ganancia || 0;
+    const updates = {
+      ...editForm,
+      cantidades: cants,
+      cantidad: totalUnidades || vOrig?.cantidad,
+      tamano: resumen || vOrig?.tamano,
+      precio: newPrecio,
+      ganancia: newGan
+    };
+    fbUpdate("ventas/"+editVenta, updates);
+    // Update stock difference
+    if(vOrig?.cantidades) {
+      setStock(p => {
+        const ns = {...p};
+        SIZES.forEach(s => {
+          const diff = (cants[s]||0) - (vOrig.cantidades[s]||0);
+          ns[s] = (ns[s]||0) - diff;
+        });
+        setTimeout(()=>fbSet("stock",ns),300);
+        return ns;
+      });
+    }
     setEditVenta(null);
     setEditForm({});
     showT("Venta actualizada");
@@ -926,15 +953,29 @@ function App() {
                   {!v.pagado && (v.senia||0)>0 && <div style={{fontSize:10,color:C.rojo,fontWeight:"bold"}}>Saldo: {fmt(v.precio-v.senia)}</div>}
                   {!v.entregado && v.retira && <div style={{fontSize:9,color:C.marronL,marginTop:2}}>Retira: {v.retira}</div>}
                   {!v.pagado && <button onClick={()=>anularVenta(v.id)} style={btnSm(C.rojo)}>Anular</button>}
-                  <button onClick={()=>{setEditVenta(v.id);setEditForm({cliente:v.cliente,celular:v.celular||"",retira:v.retira||"",precio:v.precio,tamano:v.tamano});}} style={btnSm("#6B7280")}>Editar</button>
+                  <button onClick={()=>{setEditVenta(v.id);setEditForm({cliente:v.cliente,celular:v.celular||"",retira:v.retira||"",precio:v.precio,tamano:v.tamano,cantidades:v.cantidades||{}});}} style={btnSm("#6B7280")}>Editar</button>
                   {editVenta===v.id&&<div style={{marginTop:8,background:"#F9FAFB",borderRadius:10,padding:10,border:"1px solid #E5E7EB"}}>
                     <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Nombre</div>
                     <input value={editForm.cliente||""} onChange={e=>setEditForm(f=>({...f,cliente:e.target.value}))} style={{...inp(),marginBottom:6,fontSize:12}}/>
                     <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Celular</div>
-                    <input value={editForm.celular||""} onChange={e=>setEditForm(f=>({...f,celular:e.target.value}))} style={{...inp(),marginBottom:6,fontSize:12}}/>
+                    <input type="tel" value={editForm.celular||""} onChange={e=>setEditForm(f=>({...f,celular:e.target.value}))} style={{...inp(),marginBottom:6,fontSize:12}}/>
                     <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Fecha retira</div>
-                    <input type="date" value={editForm.retira||""} onChange={e=>setEditForm(f=>({...f,retira:e.target.value}))} style={{...inp(),marginBottom:8,fontSize:12}}/>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                    <input type="date" value={editForm.retira||""} onChange={e=>setEditForm(f=>({...f,retira:e.target.value}))} style={{...inp(),marginBottom:6,fontSize:12}}/>
+                    <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Cantidades</div>
+                    {SIZES.map(s=>{
+                      const cant = (editForm.cantidades||{})[s]||0;
+                      return <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,background:"#fff",borderRadius:8,padding:"6px 10px",border:"1px solid #E5E7EB"}}>
+                        <span style={{fontSize:12,color:C.marron,fontWeight:"bold"}}>{s}</span>
+                        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                          <button onClick={()=>setEditForm(f=>({...f,cantidades:{...(f.cantidades||{}),[s]:Math.max(0,((f.cantidades||{})[s]||0)-1)}}))}
+                            style={{width:28,height:28,borderRadius:6,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",fontSize:16,fontWeight:"bold"}}>-</button>
+                          <span style={{width:24,textAlign:"center",fontSize:16,fontWeight:"bold"}}>{cant}</span>
+                          <button onClick={()=>setEditForm(f=>({...f,cantidades:{...(f.cantidades||{}),[s]:((f.cantidades||{})[s]||0)+1}}))}
+                            style={{width:28,height:28,borderRadius:6,border:"none",background:C.rosa,color:"#fff",cursor:"pointer",fontSize:16,fontWeight:"bold"}}>+</button>
+                        </div>
+                      </div>;
+                    })}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:8}}>
                       <button onClick={()=>{setEditVenta(null);setEditForm({});}} style={{padding:8,borderRadius:8,border:"1px solid #E5E7EB",background:"transparent",color:C.marronL,cursor:"pointer",fontSize:12}}>Cancelar</button>
                       <button onClick={guardarEdicion} style={{padding:8,borderRadius:8,border:"none",background:C.rosa,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:"bold"}}>Guardar</button>
                     </div>
@@ -1041,7 +1082,7 @@ function App() {
             const CAFE_NAMES = {peru250:"Peru Blend 250gr",col250:"Colombia El Tambo 250gr",guat250:"Guatemala Anaerobico 250gr",peru1kg:"Peru Blend 1kg",capscol:"Capsulas Colombia x10",capsperu:"Capsulas Peru Blend x10"};
             let html = '<html><head><meta charset="UTF-8"><title>Planilla Repartida</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;margin:0;background:#fff;width:277mm}h1{text-align:center;font-size:13px;margin-bottom:2px;color:#C4687A}h2{text-align:center;font-size:9px;color:#888;margin-bottom:8px}.grid{display:flex;flex-wrap:wrap;gap:5px}.punto{border:2px solid #C4687A;border-radius:6px;padding:6px 8px;flex:1;min-width:100px;max-width:140px}.punto-nombre{font-weight:bold;font-size:9px;color:#C4687A;border-bottom:1px solid #F0D0D8;padding-bottom:3px;margin-bottom:4px}.item{font-size:9px;color:#333;margin-bottom:1px}.cafe-item{font-size:8px;color:#C0392B;margin-bottom:1px}.cafe-titulo{font-size:7px;font-weight:bold;color:#C0392B;margin-top:3px;margin-bottom:1px;text-transform:uppercase}.totales{margin-top:8px;border:2px solid #5C3340;border-radius:6px;padding:8px;display:inline-block;min-width:200px}.totales h3{font-size:10px;color:#5C3340;margin-bottom:6px;text-align:center}.total-item{font-size:9px;margin-bottom:3px;display:flex;justify-content:space-between;gap:20px}</style></head><body>';
             html += '<h1>Los Rogeles de Marcela - Planilla de Repartida</h1><h2>'+sem+'</h2><div class="grid">';
-            peds.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).forEach(p => {
+            ps.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).forEach(p => {
               const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
               html += '<div class="punto"><div class="punto-nombre">'+p.punto+'</div>';
               if((p.ENTERO||0)>0) html += '<div class="item">ENTERO: '+p.ENTERO+'</div>';
@@ -1054,11 +1095,10 @@ function App() {
               }
               html += '</div>';
             });
-            const allPeds=peds.filter(p=>!p.punto.toLowerCase().includes("valle escondido"));
-            const totE=allPeds.reduce((a,p)=>a+(parseInt(p.ENTERO)||0),0);
-            const totM=allPeds.reduce((a,p)=>a+(parseInt(p.MEDIANO)||0),0);
-            const totP=allPeds.reduce((a,p)=>a+(parseInt(p.PEQUENO)||0),0);
-            const totPo=allPeds.reduce((a,p)=>a+(parseInt(p.PORCION)||0),0);
+            const totE=ps.reduce((a,p)=>a+(parseInt(p.ENTERO)||0),0);
+            const totM=ps.reduce((a,p)=>a+(parseInt(p.MEDIANO)||0),0);
+            const totP=ps.reduce((a,p)=>a+(parseInt(p.PEQUENO)||0),0);
+            const totPo=ps.reduce((a,p)=>a+(parseInt(p.PORCION)||0),0);
             let tot='<div class="totales"><h3>TOTALES DEL PEDIDO</h3>';
             if(totE>0) tot+='<div class="total-item"><span>ENTERO:</span><span>'+totE+' u.</span></div>';
             if(totM>0) tot+='<div class="total-item"><span>MEDIANO:</span><span>'+totM+' u.</span></div>';
