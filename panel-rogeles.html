@@ -1083,7 +1083,7 @@ function App() {
             let html = '<html><head><meta charset="UTF-8"><title>Planilla Repartida</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;margin:0;background:#fff;width:277mm}h1{text-align:center;font-size:13px;margin-bottom:2px;color:#C4687A}h2{text-align:center;font-size:9px;color:#888;margin-bottom:8px}.grid{display:flex;flex-wrap:wrap;gap:5px}.punto{border:2px solid #C4687A;border-radius:6px;padding:6px 8px;flex:1;min-width:100px;max-width:140px}.punto-nombre{font-weight:bold;font-size:9px;color:#C4687A;border-bottom:1px solid #F0D0D8;padding-bottom:3px;margin-bottom:4px}.item{font-size:9px;color:#333;margin-bottom:1px}.cafe-item{font-size:8px;color:#C0392B;margin-bottom:1px}.cafe-titulo{font-size:7px;font-weight:bold;color:#C0392B;margin-top:3px;margin-bottom:1px;text-transform:uppercase}.totales{margin-top:8px;border:2px solid #5C3340;border-radius:6px;padding:8px;display:inline-block;min-width:200px}.totales h3{font-size:10px;color:#5C3340;margin-bottom:6px;text-align:center}.total-item{font-size:9px;margin-bottom:3px;display:flex;justify-content:space-between;gap:20px}</style></head><body>';
             html += '<h1>Los Rogeles de Marcela - Planilla de Repartida</h1><h2>'+sem+'</h2><div class="grid">';
             ps.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).forEach(p => {
-              const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
+              const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto && pc.semana===sem);
               html += '<div class="punto"><div class="punto-nombre">'+p.punto+'</div>';
               if((p.ENTERO||0)>0) html += '<div class="item">ENTERO: '+p.ENTERO+'</div>';
               if((p.MEDIANO||0)>0) html += '<div class="item">MEDIANO: '+p.MEDIANO+'</div>';
@@ -1105,7 +1105,29 @@ function App() {
             if(totP>0) tot+='<div class="total-item"><span>PEQUENO:</span><span>'+totP+' u.</span></div>';
             if(totPo>0) tot+='<div class="total-item"><span>PORCION:</span><span>'+totPo+' cajas</span></div>';
             tot+='</div>';
-            html += '</div>'+tot+'<script>window.print();<\/script></body></html>';
+            // CHATA box - sum specific points
+            const chataPuntos = ["V. Rivera Indarte","Villa Allende","Intercountry"];
+            const chataPeds = peds.filter(p=>chataPuntos.some(cp=>p.punto.toLowerCase().includes(cp.toLowerCase())));
+            const chataE = chataPeds.reduce((a,p)=>a+(parseInt(p.ENTERO)||0),0);
+            const chataM = chataPeds.reduce((a,p)=>a+(parseInt(p.MEDIANO)||0),0);
+            const chataP = chataPeds.reduce((a,p)=>a+(parseInt(p.PEQUENO)||0),0);
+            const chataPo = chataPeds.reduce((a,p)=>a+(parseInt(p.PORCION)||0),0);
+            const chataCafePeds = pedsCafe.filter(p=>p.semana===sem&&chataPuntos.some(cp=>p.punto.toLowerCase().includes(cp.toLowerCase())));
+            let chataHtml = '<div style="margin-top:12px;border:3px solid #5C3340;border-radius:6px;padding:10px;background:#FDF6F0"><h3 style="font-size:12px;color:#5C3340;margin-bottom:8px;text-align:center;text-transform:uppercase;letter-spacing:2px">CHATA</h3>';
+            chataHtml += '<div style="font-size:9px;color:#666;margin-bottom:6px">V. Rivera Indarte / Villa Allende / Intercountry</div>';
+            if(chataE>0) chataHtml += '<div style="font-size:10px;margin-bottom:3px;display:flex;justify-content:space-between"><span>ENTERO:</span><span>'+chataE+' u.</span></div>';
+            if(chataM>0) chataHtml += '<div style="font-size:10px;margin-bottom:3px;display:flex;justify-content:space-between"><span>MEDIANO:</span><span>'+chataM+' u.</span></div>';
+            if(chataP>0) chataHtml += '<div style="font-size:10px;margin-bottom:3px;display:flex;justify-content:space-between"><span>PEQUENO:</span><span>'+chataP+' u.</span></div>';
+            if(chataPo>0) chataHtml += '<div style="font-size:10px;margin-bottom:3px;display:flex;justify-content:space-between"><span>PORCION:</span><span>'+chataPo+' cajas</span></div>';
+            if(chataCafePeds.length>0) {
+              chataHtml += '<div style="font-size:9px;font-weight:bold;color:#C0392B;margin-top:6px;margin-bottom:3px">CAFE:</div>';
+              const CAFE_NAMES2 = {peru250:"Peru Blend 250gr",brasil250:"Brasil 250gr",col250:"Colombia El Tambo 250gr",guat250:"Guatemala Anaerobico 250gr",peru1kg:"Peru Blend 1kg",capscol:"Capsulas Colombia x10",capsperu:"Capsulas Peru Blend x10"};
+              const cafeTots = {};
+              chataCafePeds.forEach(p=>{ Object.entries(p.cantidades||{}).forEach(([k,v])=>{ cafeTots[k]=(cafeTots[k]||0)+v; }); });
+              Object.entries(cafeTots).filter(([,v])=>v>0).forEach(([k,v])=>{ chataHtml += '<div style="font-size:9px;margin-bottom:2px;display:flex;justify-content:space-between"><span>'+(CAFE_NAMES2[k]||k)+':</span><span>'+v+'</span></div>'; });
+            }
+            chataHtml += '</div>';
+            html += '</div>'+tot+chataHtml+'<script>window.print();<\/script></body></html>';
             win.document.write(html); win.document.close();
           }} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid #5C3340",background:"#FDF6F0",color:"#5C3340",fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
             Imprimir planilla repartida
@@ -1237,7 +1259,7 @@ function App() {
                 </div>
                 <div style={{textAlign:"right"}}>
                   {(()=>{
-                    const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
+                    const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto && pc.semana===sem);
                     const ganCafePunto = pedCafe ? CAFE.reduce((a,prod)=>a+(prod.gma*(pedCafe.cantidades[prod.id]||0)),0) : 0;
                     const esValle = p.punto.toLowerCase().includes("valle escondido");
                     const montoPagarRog = esValle ? SIZES.reduce((a,s)=>a+(COSTO[s]*(p[s]||0)),0) : SIZES.reduce((a,s)=>a+(PMay[s]*(p[s]||0)),0);
@@ -1256,7 +1278,7 @@ function App() {
                     <button onClick={()=>{setSpf(true);setPf({...p});window.scrollTo(0,0);}} style={{fontSize:10,background:C.naranja,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Editar</button>
                     <button onClick={()=>{if(window.confirm("Eliminar pedido de "+p.punto+"?")){fbRemove("peds/"+p.id);showT("Pedido eliminado");}}} style={{fontSize:10,background:C.rojo,color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>Eliminar</button>
                     {(()=>{
-                      const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
+                      const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto && pc.semana===sem);
                       const totalRog = SIZES.reduce((a,s)=>a+(PMay[s]*(p[s]||0)),0);
                       const totalCaf = pedCafe ? CAFE.reduce((a,prod)=>a+(prod.ma*(pedCafe.cantidades[prod.id]||0)),0) : 0;
                       const totalFinal = totalRog + totalCaf;
