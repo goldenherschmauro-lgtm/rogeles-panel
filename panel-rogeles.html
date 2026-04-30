@@ -990,7 +990,7 @@ function App() {
         {tab==="stock" && <div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}>
             <ST noTop>Control de Stock</ST>
-            <button onClick={()=>{if(!window._stockFBLoaded){showT("Esperando carga...",false);return;}fbSet("stock",stock);fbSet("stockCafe",stockCafe);showT("Stock guardado!");}}
+            <button onClick={()=>{fbSet("stock",stock);fbSet("stockCafe",stockCafe);showT("Stock guardado!");}}
               style={{padding:"8px 16px",borderRadius:12,border:"none",background:C.verde,color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:12}}>
               Guardar stock
             </button>
