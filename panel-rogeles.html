@@ -298,10 +298,20 @@ function App() {
   const [filtroVentas, setFiltroVentas] = useState('hoy');
   const [editVenta, setEditVenta] = useState(null);
   const [waPedidoEditado, setWaPedidoEditado] = useState(null);
+  const [gastos, setGastos] = useState([]);
+  const [gastoForm, setGastoForm] = useState({categoria:"AFIP", descripcion:"", monto:""});
   const [editForm, setEditForm] = useState({});
 
   // Firebase listeners - sync in real time
   useEffect(() => {
+    // Load gastos
+    const refGastos = db.ref("gastos");
+    refGastos.on("value", snap => {
+      const v = snap.val();
+      if(v) setGastos(Object.values(v).sort((a,b)=>b.id-a.id));
+      else setGastos([]);
+    });
+
     // Stock: load once only - set loaded flag after
     db.ref("stock").once("value").then(snap => { 
       const v=snap.val(); 
@@ -335,7 +345,7 @@ function App() {
       else setPedsCafe([]);
     });
     return () => {
-      refVentas.off(); refPeds.off(); refPedsCafe.off();
+      refGastos.off(); refVentas.off(); refPeds.off(); refPedsCafe.off();
     };
   }, []);
 
@@ -707,6 +717,7 @@ function App() {
     {id:"mayoristas",icon:"M",label:"Mayorista"},
     {id:"cafe",icon:"C",label:"Cafe"},
     {id:"ganancia",icon:"G",label:"Ganancia"},
+    {id:"gastos",icon:"G2",label:"Gastos"},
     {id:"stats",icon:"ST",label:"Stats"},
     {id:"historial",icon:"H",label:"2026"},
   ];
@@ -1461,37 +1472,29 @@ function App() {
 }
 
 
-function StatsTab({ventas}) {
+function StatsTab({ventas, peds, pedsCafe}) {
+  const [vista, setVista] = React.useState("ventas");
   const mesActual = new Date().getMonth();
   const anioActual = new Date().getFullYear();
   const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
   const parseDate = (fecha) => {
     if(!fecha) return null;
-    // Handle D/M/YYYY or DD/MM/YYYY
     const p = fecha.split("/");
-    if(p.length===3) {
-      const dia = parseInt(p[0]);
-      const mes = parseInt(p[1])-1;
-      const anio = parseInt(p[2]);
-      if(!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) return new Date(anio, mes, dia);
-    }
-    const d = new Date(fecha);
-    return isNaN(d.getTime()) ? null : d;
+    if(p.length===3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+    return new Date(fecha);
   };
 
   const ventasMes = ventas.filter(v => {
     if(!v.fecha) return false;
     const d = parseDate(v.fecha);
-    if(!d) return false;
-    return d.getMonth()===mesActual && d.getFullYear()===anioActual;
+    return d && d.getMonth()===mesActual && d.getFullYear()===anioActual;
   });
 
   const getCant = (v, tipo) => {
     if(v.cantidades) return v.cantidades[tipo]||0;
     if(!v.tamano) return 0;
-    const t = v.tamano.toUpperCase();
-    const c = parseInt(v.cantidad)||1;
+    const t = v.tamano.toUpperCase(); const c = parseInt(v.cantidad)||1;
     if(tipo==="ENTERO") return t.includes("ENTERO")?c:0;
     if(tipo==="MEDIANO") return t.includes("MEDIANO")?c:0;
     if(tipo==="PEQUENO") return (t.includes("PEQUENO")||t.includes("CUARTO"))?c:0;
@@ -1499,6 +1502,7 @@ function StatsTab({ventas}) {
     return 0;
   };
 
+  // STATS VENTAS MINORISTAS
   const porDia = {};
   ventasMes.forEach(v => {
     const d = parseDate(v.fecha);
@@ -1529,116 +1533,181 @@ function StatsTab({ventas}) {
   const totPo = ventasMes.reduce((a,v)=>a+getCant(v,"PORCION"),0);
   const totGan = ventasMes.reduce((a,v)=>a+(v.ganancia||0),0);
   const findeVentas = porSemana[5]+porSemana[6]+porSemana[0];
-  const totalVentas = Object.values(porSemana).reduce((a,b)=>a+b,0);
-  const findePct = totalVentas>0 ? Math.round(findeVentas/totalVentas*100) : 0;
+  const totalVentasSem = Object.values(porSemana).reduce((a,b)=>a+b,0);
+  const findePct = totalVentasSem>0 ? Math.round(findeVentas/totalVentasSem*100) : 0;
   const dowNames = ["Dom","Lun","Mar","Mie","Jue","Vie","Sab"];
 
+  // STATS MAYORISTAS por punto
+  const statsPunto = {};
+  peds.forEach(p => {
+    if(p.punto.toLowerCase().includes("valle escondido")) return;
+    if(!statsPunto[p.punto]) statsPunto[p.punto] = {entero:0,mediano:0,pequeno:0,porcion:0,ganancia:0,pedidos:0,cafe:{}};
+    const sp = statsPunto[p.punto];
+    sp.entero += p.ENTERO||0;
+    sp.mediano += p.MEDIANO||0;
+    sp.pequeno += p.PEQUENO||0;
+    sp.porcion += p.PORCION||0;
+    sp.ganancia += p.ganancia||0;
+    sp.pedidos++;
+  });
+  pedsCafe.forEach(pc => {
+    if(pc.punto.toLowerCase().includes("valle escondido")) return;
+    if(!statsPunto[pc.punto]) statsPunto[pc.punto] = {entero:0,mediano:0,pequeno:0,porcion:0,ganancia:0,pedidos:0,cafe:{}};
+    Object.entries(pc.cantidades||{}).forEach(([k,v]) => {
+      statsPunto[pc.punto].cafe[k] = (statsPunto[pc.punto].cafe[k]||0) + v;
+    });
+    statsPunto[pc.punto].ganancia += pc.ganancia||0;
+  });
+
+  const puntosOrdenados = Object.entries(statsPunto)
+    .sort((a,b)=>b[1].ganancia-a[1].ganancia);
+
+  const maxGanPunto = Math.max(...puntosOrdenados.map(([,s])=>s.ganancia), 1);
+
+  const CAFE_NAMES = {peru250:"Peru 250",brasil250:"Brasil 250",col250:"Colombia 250",guat250:"Guatemala 250",peru1kg:"Peru 1kg",capscol:"Caps Col",capsperu:"Caps Peru"};
+
   return <div style={{paddingBottom:20}}>
-    <div style={{fontSize:12,color:"#E8A0A8",letterSpacing:2.5,textTransform:"uppercase",paddingTop:20,marginBottom:14,fontWeight:"bold"}}>Estadisticas - {MESES[mesActual]} {anioActual}</div>
-
-    {/* Resumen */}
-    <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-        <div style={{background:"#FDF6F0",borderRadius:12,padding:12,textAlign:"center"}}>
-          <div style={{fontSize:28,fontWeight:"bold",color:"#C4687A"}}>{ventasMes.length}</div>
-          <div style={{fontSize:10,color:"#8B6070"}}>ventas del mes</div>
-        </div>
-        <div style={{background:"#FDF6F0",borderRadius:12,padding:12,textAlign:"center"}}>
-          <div style={{fontSize:22,fontWeight:"bold",color:"#7BAE84"}}>{fmt(totGan)}</div>
-          <div style={{fontSize:10,color:"#8B6070"}}>ganancia</div>
-        </div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
-        {[["ENTERO",totE,"#C4687A"],["MEDIANO",totM,"#D4845A"],["PEQUENO",totP,"#7BAE84"],["PORCION",totPo,"#9B59B6"]].map(([n,v,col])=>(
-          <div key={n} style={{background:"#FDF6F0",borderRadius:10,padding:8,textAlign:"center"}}>
-            <div style={{fontSize:20,fontWeight:"bold",color:col}}>{v}</div>
-            <div style={{fontSize:8,color:"#8B6070"}}>{n}</div>
-          </div>
-        ))}
-      </div>
+    {/* Toggle */}
+    <div style={{display:"flex",gap:8,paddingTop:16,marginBottom:16}}>
+      <button onClick={()=>setVista("ventas")} style={{flex:1,padding:10,borderRadius:10,border:"none",background:vista==="ventas"?C.rosa:"#F0D0D8",color:vista==="ventas"?"#fff":C.rosa,fontWeight:"bold",cursor:"pointer",fontSize:12}}>Minorista</button>
+      <button onClick={()=>setVista("mayorista")} style={{flex:1,padding:10,borderRadius:10,border:"none",background:vista==="mayorista"?C.rosa:"#F0D0D8",color:vista==="mayorista"?"#fff":C.rosa,fontWeight:"bold",cursor:"pointer",fontSize:12}}>Mayorista por punto</button>
     </div>
 
-    {/* Grafico por dia */}
-    <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
-      <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Ventas por dia del mes</div>
-      {dias.length===0
-        ? <div style={{textAlign:"center",color:"#8B6070",fontSize:12,padding:20}}>Sin ventas este mes aun</div>
-        : <div style={{overflowX:"auto"}}>
-            <div style={{display:"flex",gap:3,alignItems:"flex-end",height:130,minWidth:dias.length*34}}>
-              {dias.map(dia=>{
-                const d=porDia[dia];
-                const h=Math.max(8,Math.round((d.total/maxVenta)*110));
-                const esFinde=d.dow===5||d.dow===6||d.dow===0;
-                return <div key={dia} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,flex:"0 0 30px"}}>
-                  <div style={{fontSize:7,color:"#8B6070"}}>{fmt(d.total).replace("$","").replace(".000","k").replace(",",".")}</div>
-                  <div style={{width:22,background:esFinde?"#C4687A":"#F5D0D6",borderRadius:"4px 4px 0 0",height:h+"px"}}/>
-                  <div style={{fontSize:9,color:esFinde?"#C4687A":"#8B6070",fontWeight:esFinde?"bold":"normal"}}>{dia}</div>
-                  <div style={{fontSize:7,color:"#8B6070"}}>{dowNames[d.dow]}</div>
-                </div>;
-              })}
-            </div>
-            <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:8}}>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#C4687A",borderRadius:2}}/><span style={{fontSize:9,color:"#8B6070"}}>Finde</span></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,background:"#F5D0D6",borderRadius:2}}/><span style={{fontSize:9,color:"#8B6070"}}>Semana</span></div>
-            </div>
-          </div>
-      }
-    </div>
+    {vista==="ventas" && <div>
+      <div style={{fontSize:11,color:C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>{MESES[mesActual]} {anioActual} - Ventas minoristas</div>
 
-    {/* Grafico por dia de semana */}
-    <div style={{background:"#fff",borderRadius:16,padding:16,marginBottom:14,border:"1px solid #F0D0D8"}}>
-      <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Por dia de semana</div>
-      <div style={{display:"flex",gap:6,alignItems:"flex-end",height:100}}>
-        {[1,2,3,4,5,6,0].map(dow=>{
-          const val=porSemana[dow];
-          const h=Math.max(4,Math.round((val/maxSem)*80));
-          const esFinde=dow===5||dow===6||dow===0;
-          return <div key={dow} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-            <div style={{fontSize:7,color:"#8B6070"}}>{val>0?fmt(val).replace("$","").replace(".000","k"):""}</div>
-            <div style={{width:"100%",background:esFinde?"#C4687A":"#F5D0D6",borderRadius:"4px 4px 0 0",height:h+"px"}}/>
-            <div style={{fontSize:10,color:esFinde?"#C4687A":"#8B6070",fontWeight:esFinde?"bold":"normal"}}>{["Dom","Lun","Mar","Mie","Jue","Vie","Sab"][dow]}</div>
+      {/* Resumen */}
+      <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid "+C.border}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+          <div style={{background:C.bg,borderRadius:12,padding:12,textAlign:"center"}}>
+            <div style={{fontSize:28,fontWeight:"bold",color:C.rosa}}>{ventasMes.length}</div>
+            <div style={{fontSize:10,color:C.marronL}}>ventas del mes</div>
+          </div>
+          <div style={{background:C.bg,borderRadius:12,padding:12,textAlign:"center"}}>
+            <div style={{fontSize:20,fontWeight:"bold",color:C.verde}}>{fmt(totGan)}</div>
+            <div style={{fontSize:10,color:C.marronL}}>ganancia</div>
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
+          {[["ENTERO",totE,"#C4687A"],["MEDIANO",totM,"#D4845A"],["PEQUENO",totP,"#7BAE84"],["PORCION",totPo,"#9B59B6"]].map(([n,v,col])=>(
+            <div key={n} style={{background:C.bg,borderRadius:10,padding:8,textAlign:"center"}}>
+              <div style={{fontSize:20,fontWeight:"bold",color:col}}>{v}</div>
+              <div style={{fontSize:8,color:C.marronL}}>{n}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Grafico por dia */}
+      <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid "+C.border}}>
+        <div style={{fontSize:11,color:C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Ventas por dia</div>
+        {dias.length===0
+          ? <div style={{textAlign:"center",color:C.marronL,fontSize:12,padding:20}}>Sin ventas este mes</div>
+          : <div style={{overflowX:"auto"}}>
+              <div style={{display:"flex",gap:3,alignItems:"flex-end",height:130,minWidth:dias.length*34}}>
+                {dias.map(dia=>{
+                  const d=porDia[dia];
+                  const h=Math.max(8,Math.round((d.total/maxVenta)*110));
+                  const esFinde=d.dow===5||d.dow===6||d.dow===0;
+                  return <div key={dia} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,flex:"0 0 30px"}}>
+                    <div style={{fontSize:7,color:C.marronL}}>{fmt(d.total).replace("$","").replace(".000","k")}</div>
+                    <div style={{width:22,background:esFinde?"#C4687A":"#F5D0D6",borderRadius:"4px 4px 0 0",height:h+"px"}}/>
+                    <div style={{fontSize:9,color:esFinde?"#C4687A":C.marronL,fontWeight:esFinde?"bold":"normal"}}>{dia}</div>
+                    <div style={{fontSize:7,color:C.marronL}}>{dowNames[d.dow]}</div>
+                  </div>;
+                })}
+              </div>
+            </div>
+        }
+      </div>
+
+      {/* Por dia de semana */}
+      <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid "+C.border}}>
+        <div style={{fontSize:11,color:C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Por dia de semana</div>
+        <div style={{display:"flex",gap:6,alignItems:"flex-end",height:100}}>
+          {[1,2,3,4,5,6,0].map(dow=>{
+            const val=porSemana[dow];
+            const h=Math.max(4,Math.round((val/maxSem)*80));
+            const esFinde=dow===5||dow===6||dow===0;
+            return <div key={dow} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+              <div style={{fontSize:7,color:C.marronL}}>{val>0?fmt(val).replace("$","").replace(".000","k"):""}</div>
+              <div style={{width:"100%",background:esFinde?"#C4687A":"#F5D0D6",borderRadius:"4px 4px 0 0",height:h+"px"}}/>
+              <div style={{fontSize:10,color:esFinde?"#C4687A":C.marronL,fontWeight:esFinde?"bold":"normal"}}>{dowNames[dow]}</div>
+            </div>;
+          })}
+        </div>
+        {findePct>0&&<div style={{marginTop:10,fontSize:12,color:C.marronL,textAlign:"center"}}>
+          El <strong>{findePct}%</strong> de las ventas son Vie/Sab/Dom
+        </div>}
+      </div>
+
+      {/* Top dias */}
+      {dias.length>0&&<div style={{background:C.card,borderRadius:16,padding:16,border:"1px solid "+C.border}}>
+        <div style={{fontSize:11,color:C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Mejores dias</div>
+        {[...dias].sort((a,b)=>porDia[b].total-porDia[a].total).slice(0,5).map((dia,i)=>{
+          const d=porDia[dia];
+          const esFinde=d.dow===5||d.dow===6||d.dow===0;
+          return <div key={dia} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid "+C.border}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <div style={{width:24,height:24,borderRadius:"50%",background:i===0?"#C4687A":"#F5D0D6",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:"bold",color:i===0?"#fff":"#C4687A"}}>{i+1}</div>
+              <div>
+                <div style={{fontSize:13,fontWeight:"bold",color:C.marron}}>Dia {dia} - {dowNames[d.dow]}</div>
+                <div style={{fontSize:10,color:C.marronL}}>{d.count} ventas - E:{d.entero} M:{d.mediano} P:{d.pequeno} Po:{d.porcion}</div>
+              </div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:13,fontWeight:"bold",color:esFinde?"#C4687A":"#D4845A"}}>{fmt(d.total)}</div>
+              <div style={{fontSize:10,color:"#7BAE84"}}>+{fmt(d.gan)}</div>
+            </div>
           </div>;
         })}
-      </div>
-    </div>
-
-    {/* Alerta pedido */}
-    {findePct>0&&<div style={{background:"#FFF8E1",borderRadius:16,padding:16,marginBottom:14,border:"2px solid #F59E0B"}}>
-      <div style={{fontSize:11,color:"#92400E",letterSpacing:2,textTransform:"uppercase",marginBottom:8,fontWeight:"bold"}}>Alerta de pedido</div>
-      <div style={{fontSize:13,color:"#92400E",marginBottom:8}}>El <strong>{findePct}%</strong> de tus ventas son Vie/Sab/Dom</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:8}}>
-        {[["ENTERO",Math.ceil(totE/Math.max(dias.length,1)*7)],["MEDIANO",Math.ceil(totM/Math.max(dias.length,1)*7)],["PEQUENO",Math.ceil(totP/Math.max(dias.length,1)*7)],["PORCION",Math.ceil(totPo/Math.max(dias.length,1)*7)]].map(([n,v])=>(
-          <div key={n} style={{background:"#FEF3C7",borderRadius:8,padding:"6px 10px",display:"flex",justifyContent:"space-between"}}>
-            <span style={{fontSize:11,color:"#78350F"}}>{n}</span>
-            <span style={{fontWeight:"bold",color:"#92400E"}}>{v} u.</span>
-          </div>
-        ))}
-      </div>
+      </div>}
     </div>}
 
-    {/* Top dias */}
-    {dias.length>0&&<div style={{background:"#fff",borderRadius:16,padding:16,border:"1px solid #F0D0D8"}}>
-      <div style={{fontSize:11,color:"#E8A0A8",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Mejores dias del mes</div>
-      {[...dias].sort((a,b)=>porDia[b].total-porDia[a].total).slice(0,5).map((dia,i)=>{
-        const d=porDia[dia];
-        const esFinde=d.dow===5||d.dow===6||d.dow===0;
-        return <div key={dia} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #F0D0D8"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <div style={{width:24,height:24,borderRadius:"50%",background:i===0?"#C4687A":"#F5D0D6",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:"bold",color:i===0?"#fff":"#C4687A"}}>{i+1}</div>
-            <div>
-              <div style={{fontSize:13,fontWeight:"bold",color:"#5C3340"}}>Dia {dia} - {dowNames[d.dow]}</div>
-              <div style={{fontSize:10,color:"#8B6070"}}>{d.count} ventas - E:{d.entero} M:{d.mediano} P:{d.pequeno} Po:{d.porcion}</div>
+    {vista==="mayorista" && <div>
+      <div style={{fontSize:11,color:C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Estadisticas por punto mayorista</div>
+
+      {puntosOrdenados.length===0 && <div style={{textAlign:"center",color:C.marronL,padding:30}}>Sin datos de pedidos</div>}
+
+      {puntosOrdenados.map(([punto, sp]) => {
+        const totalUnid = sp.entero+sp.mediano+sp.pequeno+sp.porcion;
+        const barW = Math.round((sp.ganancia/maxGanPunto)*100);
+        const cafePedidos = Object.entries(sp.cafe).filter(([,v])=>v>0);
+        return <div key={punto} style={{background:C.card,borderRadius:16,padding:14,marginBottom:10,border:"1px solid "+C.border}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:"bold",color:C.marron}}>{punto}</div>
+              <div style={{fontSize:10,color:C.marronL,marginTop:2}}>{sp.pedidos} pedido{sp.pedidos!==1?"s":""}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:13,color:C.verde,fontWeight:"bold"}}>+{fmt(sp.ganancia)}</div>
             </div>
           </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:13,fontWeight:"bold",color:esFinde?"#C4687A":"#D4845A"}}>{fmt(d.total)}</div>
-            <div style={{fontSize:10,color:"#7BAE84"}}>+{fmt(d.gan)}</div>
+          {/* Barra de ganancia */}
+          <div style={{background:"#F0D0D8",borderRadius:4,height:6,marginBottom:10}}>
+            <div style={{background:C.rosa,borderRadius:4,height:6,width:barW+"%"}}/>
           </div>
+          {/* Cantidades */}
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {sp.entero>0&&<div style={{background:"#FDE8EC",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#C4687A",fontWeight:"bold"}}>E: {sp.entero}</div>}
+            {sp.mediano>0&&<div style={{background:"#FEF0E6",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#D4845A",fontWeight:"bold"}}>M: {sp.mediano}</div>}
+            {sp.pequeno>0&&<div style={{background:"#E8F5EA",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#7BAE84",fontWeight:"bold"}}>P: {sp.pequeno}</div>}
+            {sp.porcion>0&&<div style={{background:"#F0E8F8",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#9B59B6",fontWeight:"bold"}}>Po: {sp.porcion} cajas</div>}
+          </div>
+          {cafePedidos.length>0&&<div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border}}>
+            <div style={{fontSize:9,color:"#C0392B",fontWeight:"bold",textTransform:"uppercase",marginBottom:4}}>Cafe:</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {cafePedidos.map(([k,v])=>(
+                <div key={k} style={{background:"#FFF0EE",borderRadius:8,padding:"3px 8px",fontSize:10,color:"#C0392B"}}>{CAFE_NAMES[k]||k}: {v}</div>
+              ))}
+            </div>
+          </div>}
         </div>;
       })}
     </div>}
   </div>;
 }
+
 
 function HistorialTab({anio, setAnio}) {
   const H = anio==="2026" ? H2026 : H2025;
