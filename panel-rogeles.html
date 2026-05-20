@@ -1458,9 +1458,9 @@ function App() {
           const mesNombre=MESES2[mesActual]+" "+anioActual;
           const gastosMes=gastos.filter(g=>{const d=new Date(g.fecha);return d.getMonth()===mesActual&&d.getFullYear()===anioActual;});
           const totalGastosMes=gastosMes.reduce((a,g)=>a+(g.monto||0),0);
-          const ganMayoMes=ps.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+(p.ganancia||0),0);
-          const ganCafeMes=psCafe.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+(p.ganancia||0),0);
-          const ganMinoMes=ventas.filter(v=>{const p=v.fecha?v.fecha.split("/"):[];return p.length===3&&parseInt(p[1])-1===mesActual&&parseInt(p[2])===anioActual;}).reduce((a,v)=>a+(v.ganancia||0),0);
+          const ganMayoMes=peds.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+(p.ganancia||0),0);
+          const ganCafeMes=pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+(p.ganancia||0),0);
+          const ganMinoMes=ventas.reduce((a,v)=>a+(v.ganancia||0),0);
           const ganTotalMes=ganMayoMes+ganCafeMes+ganMinoMes;
           const netoMes=ganTotalMes-totalGastosMes;
           const agregarGasto=()=>{
