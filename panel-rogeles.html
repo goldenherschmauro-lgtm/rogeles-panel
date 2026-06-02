@@ -53,13 +53,19 @@ const PUNTOS = [
 
 // Cafe data
 const CAFE = [
-  {id:"peru250",     n:"Peru Blend 250gr",        t:"grano",   cv:14420, mi:23000, ma:19320, gm:8580,  gma:4900, min:1},
-  {id:"brasil250",   n:"Brasil 250gr",            t:"grano",   cv:14420, mi:23000, ma:19320, gm:8580,  gma:4900, min:1},
-  {id:"col250",      n:"Colombia El Tambo 250gr",  t:"grano",   cv:20873, mi:26500, ma:22260, gm:5627,  gma:1387, min:1},
-  {id:"guat250",     n:"Guatemala Anaer. 250gr",   t:"grano",   cv:21054, mi:30000, ma:25200, gm:8946,  gma:4146, min:1},
-  {id:"peru1kg",     n:"Peru Blend 1kg",           t:"grano",   cv:39780, mi:52100, ma:46369, gm:12320, gma:6589, min:1},
-  {id:"capscol",     n:"Capsulas Colombia x10",    t:"capsula", cv:13260, mi:18000, ma:14760, gm:4740,  gma:1500, min:6},
-  {id:"capsperu",    n:"Capsulas Peru Blend x10",  t:"capsula", cv:13260, mi:18000, ma:14760, gm:4740,  gma:1500, min:6},
+  {id:"peru250",     n:"Peru Blend 250gr",        t:"grano",   cv:14420, mi:23000, ma:19320, gm:8580,  gma:4900,  min:1},
+  {id:"brasil250",   n:"Brasil 250gr",            t:"grano",   cv:16022, mi:25000, ma:21000, gm:8978,  gma:4978,  min:1},
+  {id:"col250",      n:"Colombia El Tambo 250gr", t:"grano",   cv:16022, mi:27000, ma:22680, gm:10978, gma:6658,  min:1},
+  {id:"guat250",     n:"Guatemala Anaerobico 250gr",t:"grano", cv:21054, mi:30000, ma:25200, gm:7946,  gma:4146,  min:1},
+  {id:"etiopia250",  n:"Etiopia 250gr",           t:"grano",   cv:22100, mi:30000, ma:25200, gm:7900,  gma:3100,  min:1},
+  {id:"kenia250",    n:"Kenia 250gr",             t:"grano",   cv:22100, mi:30000, ma:25200, gm:7900,  gma:3100,  min:1},
+  {id:"peru1kg",     n:"Peru Blend 1kg",          t:"grano",   cv:39780, mi:52100, ma:46369, gm:12320, gma:6589,  min:1},
+  {id:"brasil1kg",   n:"Brasil 1kg",              t:"grano",   cv:44200, mi:59000, ma:49560, gm:14800, gma:5360,  min:1},
+  {id:"col1kg",      n:"Colombia El Tambo 1kg",   t:"grano",   cv:45305, mi:65000, ma:54600, gm:19695, gma:9295,  min:1},
+  {id:"etiopia1kg",  n:"Etiopia 1kg",             t:"grano",   cv:65195, mi:85000, ma:71400, gm:19805, gma:6205,  min:1},
+  {id:"kenia1kg",    n:"Kenia 1kg",               t:"grano",   cv:65195, mi:85000, ma:71400, gm:19805, gma:6205,  min:1},
+  {id:"capscol",     n:"Capsulas Colombia x10",   t:"capsula", cv:13260, mi:18000, ma:14760, gm:4740,  gma:1500,  min:6},
+  {id:"capsperu",    n:"Capsulas Peru Blend x10", t:"capsula", cv:13260, mi:18000, ma:14760, gm:4740,  gma:1500,  min:6},
 ];
 
 // Historial 2025 mayorista
@@ -1448,6 +1454,23 @@ function App() {
               <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gmaMes+ganCafeMes)}</div>
               <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Rogeles + Cafe</div>
             </div>
+            {(()=>{
+              const totalGastos = gastos.filter(g=>{
+                const d=new Date(g.fecha);
+                return d.getMonth()===new Date().getMonth()&&d.getFullYear()===new Date().getFullYear();
+              }).reduce((a,g)=>a+(g.monto||0),0);
+              const neto = gmi+gmaMes+ganCafeMes - totalGastos;
+              return totalGastos>0 ? <div>
+                <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderTop:"1px solid "+C.border,marginTop:8}}>
+                  <span style={{fontSize:13,color:C.marronL}}>Gastos del mes:</span>
+                  <span style={{fontSize:13,color:C.rojo,fontWeight:"bold"}}>-{fmt(totalGastos)}</span>
+                </div>
+                <div style={{background:neto>=0?C.rosaBg:"#FFE5E5",borderRadius:12,padding:14,textAlign:"center",marginTop:8}}>
+                  <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>NETO DEL MES</div>
+                  <div style={{fontSize:32,fontWeight:"bold",color:neto>=0?C.verde:C.rojo}}>{fmt(neto)}</div>
+                </div>
+              </div> : null;
+            })()}
           </Card>
         </div>}
 
