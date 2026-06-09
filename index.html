@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moyito SAS — Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #eeede9;
+    --text: #1a1a18; --text2: #6b6b67; --text3: #a0a09c;
+    --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.18);
+    --blue: #185FA5; --blue-bg: #E6F1FB; --blue-text: #0C447C;
+    --green: #1D9E75; --green-bg: #E1F5EE; --green-text: #085041;
+    --red: #D85A30; --red-bg: #FAECE7; --red-text: #993C1D;
+    --amber: #BA7517; --amber-bg: #FAEEDA; --amber-text: #854F0B;
+    --gray-bg: #F1EFE8; --gray-text: #444441;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+      --text: #f0efeb; --text2: #a0a09c; --text3: #6b6b67;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); font-size: 14px; min-height: 100vh; }
+  .app { max-width: 900px; margin: 0 auto; padding: 16px; }
+
+  /* TOPBAR */
+  .topbar { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .topbar-title { font-size: 18px; font-weight: 600; color: var(--text); }
+  .topbar-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .topbar-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .topbar-controls select, .topbar-controls input[type="number"] { font-size: 12px; padding: 5px 9px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); }
+  .tc-wrap { display: flex; align-items: center; gap: 5px; }
+  .tc-wrap span { font-size: 12px; color: var(--text2); }
+  .tc-wrap input { width: 78px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 5px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab { padding: 7px 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; font-size: 12px; color: var(--text2); font-weight: 400; display: flex; align-items: center; gap: 5px; }
+  .tab:hover { background: var(--bg2); }
+  .tab.on { background: var(--bg); color: var(--text); font-weight: 500; border-color: var(--border2); }
+  .tab i { font-size: 14px; }
+
+  /* SECTIONS */
+  .sec { display: none; }
+  .sec.on { display: block; }
+
+  /* CARDS */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 12px; }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 12px; }
+  .mc { background: var(--bg2); border-radius: var(--radius); padding: 10px 13px; }
+  .mc .lbl { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+  .mc .val { font-size: 17px; font-weight: 600; color: var(--text); }
+  .mc .val.g { color: var(--green); } .mc .val.r { color: var(--red); } .mc .val.b { color: var(--blue); } .mc .val.a { color: var(--amber); }
+
+  /* GRIDS */
+  .g2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+  .g3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+  .g4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap: 8px; margin-bottom: 12px; }
+  .g5 { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); gap: 8px; margin-bottom: 12px; }
+  .fr2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .fr3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  @media(max-width:600px) {
+    .g2,.g3,.fr2,.fr3 { grid-template-columns: 1fr; }
+    .g4,.g5 { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* FORM */
+  .fg { display: flex; flex-direction: column; gap: 4px; }
+  .fg label { font-size: 11px; color: var(--text2); font-weight: 500; }
+  .fg input, .fg select, .fg textarea { padding: 8px 10px; font-size: 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); width: 100%; }
+  .fg input:focus, .fg select:focus { outline: none; border-color: var(--blue); }
+
+  /* BUTTONS */
+  .btn { padding: 8px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; color: var(--text); cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+  .btn:hover { background: var(--bg2); }
+  .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 500; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-sm { padding: 3px 8px; font-size: 11px; }
+
+  /* BADGES */
+  .bdg { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .bck { background: var(--blue-bg); color: var(--blue-text); }
+  .bmk { background: var(--green-bg); color: var(--green-text); }
+  .bcom { background: var(--gray-bg); color: var(--gray-text); }
+  .bv { background: #EAF3DE; color: #3B6D11; }
+  .bg2 { background: var(--red-bg); color: var(--red-text); }
+  .bs { background: var(--amber-bg); color: var(--amber-text); }
+  .bc { background: #EEEDFE; color: #534AB7; }
+  .bi { background: #FCEBEB; color: #A32D2D; }
+  .bo { background: var(--gray-bg); color: var(--gray-text); }
+
+  /* BANNER META */
+  .banner { border-radius: var(--radius-lg); padding: 12px 16px; margin-bottom: 14px; border: 0.5px solid; }
+  .banner.ok { background: var(--green-bg); border-color: #5DCAA5; }
+  .banner.warn { background: var(--amber-bg); border-color: #EF9F27; }
+  .banner.fail { background: var(--red-bg); border-color: #F0997B; }
+  .banner.ok .bt { color: var(--green-text); font-size: 13px; font-weight: 600; }
+  .banner.warn .bt { color: var(--amber-text); font-size: 13px; font-weight: 600; }
+  .banner.fail .bt { color: var(--red-text); font-size: 13px; font-weight: 600; }
+  .banner .bs2 { font-size: 12px; margin-top: 3px; opacity: .85; }
+  .banner.ok .bs2 { color: var(--green-text); }
+  .banner.warn .bs2 { color: var(--amber-text); }
+  .banner.fail .bs2 { color: var(--red-text); }
+  .barw { height: 6px; background: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .barf { height: 100%; border-radius: 3px; transition: width .4s; }
+
+  /* TABLA */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+  th { text-align: left; padding: 7px 8px; border-bottom: 0.5px solid var(--border2); color: var(--text2); font-weight: 500; }
+  td { padding: 7px 8px; border-bottom: 0.5px solid var(--border); color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg2); }
+
+  /* COBROS */
+  .cobrow { border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
+  .cobrow-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+
+  /* HINT */
+  .hint { background: var(--bg2); border-radius: var(--radius); padding: 9px 12px; font-size: 12px; color: var(--text2); margin-bottom: 12px; display: flex; gap: 6px; align-items: flex-start; }
+  .hint i { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+
+  /* PREVIEW BOX */
+  .preview-box { background: var(--bg2); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 12px; }
+  .preview-box .lbl { font-size: 11px; color: var(--text2); margin-bottom: 8px; }
+
+  /* LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--text2); margin-top: 8px; }
+  .legend span { display: flex; align-items: center; gap: 4px; }
+  .leg-sq { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .leg-line { width: 14px; height: 2px; display: inline-block; }
+
+  /* MSG */
+  .ms-ok { font-size: 12px; color: var(--green); display: none; margin-left: 8px; }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 24px; color: var(--text3); font-size: 13px; }
+
+  /* DIVIDER */
+  .div { border: none; border-top: 0.5px solid var(--border); margin: 12px 0; }
+
+  .section-title { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Moyito SAS</div>
+      <div class="topbar-sub">Cheeky · Markova · Meta USD 4.000/mes</div>
+    </div>
+    <div class="topbar-controls">
+      <select id="selMes"></select>
+      <div class="tc-wrap">
+        <span>TC BNA $</span>
+        <input type="number" id="inTC" value="1465" step="5">
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab on" onclick="goTab('inicio',this)"><i class="ti ti-home"></i> Inicio</button>
+    <button class="tab" onclick="goTab('cargar',this)"><i class="ti ti-plus"></i> Cargar</button>
+    <button class="tab" onclick="goTab('cobros',this)"><i class="ti ti-calendar"></i> Cobros</button>
+    <button class="tab" onclick="goTab('arqueo',this)"><i class="ti ti-building-store"></i> Arqueo</button>
+    <button class="tab" onclick="goTab('equilibrio',this)"><i class="ti ti-trending-up"></i> Equilibrio</button>
+    <button class="tab" onclick="goTab('proyeccion',this)"><i class="ti ti-chart-line"></i> Proyección</button>
+    <button class="tab" onclick="goTab('registros',this)"><i class="ti ti-list"></i> Registros</button>
+  </div>
+
+  <!-- INICIO -->
+  <div id="tab-inicio" class="sec on">
+    <div id="banner"></div>
+    <div class="g4" id="kpis"></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Ingreso real vs costos por local</div>
+        <div style="position:relative;height:155px"><canvas id="cBar" role="img" aria-label="Ingreso vs costos por local">Gráfico de barras</canvas></div>
+        <div class="legend">
+          <span><span class="leg-sq" style="background:#378ADD"></span>Ingreso real</span>
+          <span><span class="leg-sq" style="background:#D85A30"></span>Costos</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Ganancia mensual vs meta USD 4k</div>
+        <div style="position:relative;height:155px"><canvas id="cLine" role="img" aria-label="Ganancia mensual en USD">Gráfico de línea</canvas></div>
+        <div class="legend">
+          <span><span class="leg-sq" style="background:#378ADD"></span>Ganancia USD</span>
+          <span><span class="leg-line" style="background:#1D9E75"></span>Meta $4k</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Próximas liquidaciones</div>
+      <div id="proxLiq"></div>
+    </div>
+  </div>
+
+  <!-- CARGAR -->
+  <div id="tab-cargar" class="sec">
+    <div class="card">
+      <div class="card-title">Registrar venta del mes</div>
+      <div class="hint"><i class="ti ti-info-circle"></i><span>Ingresá tarjeta y EFT por separado. <strong>Cheeky</strong> → 30% × 1,21 = 36,3% · <strong>Markova</strong> → 35% del facturado.</span></div>
+      <div class="fr3">
+        <div class="fg"><label>Local</label>
+          <select id="fLocal" onchange="calcPreview()">
+            <option value="cheeky">Cheeky</option>
+            <option value="markova">Markova</option>
+          </select>
+        </div>
+        <div class="fg"><label>Mes de venta</label><input type="month" id="fMes"></div>
+        <div class="fg"><label>Fecha de registro</label><input type="date" id="fFecha"></div>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>Venta tarjeta (ARS)</label><input type="number" id="fTarj" placeholder="0" min="0" oninput="calcPreview()"></div>
+        <div class="fg"><label>Venta EFT / efectivo (ARS)</label><input type="number" id="fEft" placeholder="0" min="0" oninput="calcPreview()"></div>
+      </div>
+      <div class="preview-box">
+        <div class="lbl">Ingreso real calculado automáticamente</div>
+        <div class="g3">
+          <div><div style="font-size:10px;color:var(--text2)">Venta bruta total</div><div style="font-size:15px;font-weight:600;color:var(--text)" id="pvB">$0</div></div>
+          <div><div style="font-size:10px;color:var(--text2)" id="pvLbl">Ingreso real (36,3%)</div><div style="font-size:15px;font-weight:600;color:var(--blue)" id="pvI">$0</div></div>
+          <div><div style="font-size:10px;color:var(--text2)">Parte por transferencia</div><div style="font-size:15px;font-weight:600;color:var(--amber)" id="pvT">$0</div></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;">
+        <button class="btn btn-primary" onclick="guardarVenta()"><i class="ti ti-check"></i> Guardar venta</button>
+        <span class="ms-ok" id="msV"><i class="ti ti-check"></i> Guardado</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Registrar gasto / sueldo / impuesto</div>
+      <div class="fr3">
+        <div class="fg"><label>Tipo</label>
+          <select id="gTipo" onchange="updateGCats()">
+            <option value="gasto">Gasto fijo</option>
+            <option value="sueldo">Sueldo</option>
+            <option value="comision">Comisión</option>
+            <option value="impuesto">Impuesto</option>
+            <option value="otro">Otro gasto</option>
+          </select>
+        </div>
+        <div class="fg"><label>Local</label>
+          <select id="gLocal">
+            <option value="cheeky">Cheeky</option>
+            <option value="markova">Markova</option>
+            <option value="compartido">Compartido (ambos)</option>
+          </select>
+        </div>
+        <div class="fg"><label>Fecha</label><input type="date" id="gFecha"></div>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>Categoría</label><select id="gCat"></select></div>
+        <div class="fg"><label>Detalle (opcional)</label><input type="text" id="gDet" placeholder="Proveedor, número de factura..."></div>
+      </div>
+      <div class="fr2">
+        <div class="fg"><label>Importe (ARS)</label><input type="number" id="gImp" placeholder="0" min="0"></div>
+        <div style="display:flex;align-items:flex-end;gap:8px;">
+          <button class="btn btn-primary" onclick="guardarGasto()"><i class="ti ti-check"></i> Guardar</button>
+          <span class="ms-ok" id="msG"><i class="ti ti-check"></i> Guardado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COBROS -->
+  <div id="tab-cobros" class="sec">
+    <div class="g3" style="margin-bottom:12px" id="cobKpis"></div>
+    <div class="card">
+      <div class="card-title">Detalle de liquidaciones por mes</div>
+      <div id="cobLista"></div>
+    </div>
+  </div>
+
+  <!-- ARQUEO -->
+  <div id="tab-arqueo" class="sec">
+    <div class="card">
+      <div class="card-title">Registrar arqueo de caja</div>
+      <div class="hint"><i class="ti ti-info-circle"></i><span>Registrá el EFT de ambos locales cada vez que controlás (2 veces por semana). Se guarda el historial completo.</span></div>
+      <div class="fr3">
+        <div class="fg"><label>Fecha del arqueo</label><input type="date" id="aFecha"></div>
+        <div class="fg"><label>EFT en caja Cheeky (ARS)</label><input type="number" id="aCK" placeholder="0" min="0"></div>
+        <div class="fg"><label>EFT en caja Markova (ARS)</label><input type="number" id="aMK" placeholder="0" min="0"></div>
+      </div>
+      <div style="display:flex;align-items:center;">
+        <button class="btn btn-primary" onclick="guardarArqueo()"><i class="ti ti-check"></i> Guardar arqueo</button>
+        <span class="ms-ok" id="msA"><i class="ti ti-check"></i> Guardado</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Último arqueo registrado</div>
+      <div id="ultArqueo"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Historial de arqueos</div>
+      <div class="tbl-wrap" id="histArqueo"></div>
+    </div>
+  </div>
+
+  <!-- EQUILIBRIO -->
+  <div id="tab-equilibrio" class="sec">
+    <div id="eqCards"></div>
+  </div>
+
+  <!-- PROYECCIÓN -->
+  <div id="tab-proyeccion" class="sec">
+    <div class="card">
+      <div class="card-title">Simulador — ¿a cuánto hay que llegar?</div>
+      <div class="fr3">
+        <div class="fg"><label>Venta bruta Cheeky / mes (ARS)</label><input type="number" id="pCK" placeholder="ej: 100000000" step="1000000" oninput="calcProy()"></div>
+        <div class="fg"><label>Venta bruta Markova / mes (ARS)</label><input type="number" id="pMK" placeholder="ej: 60000000" step="1000000" oninput="calcProy()"></div>
+        <div class="fg"><label>Costos fijos totales / mes (ARS)</label><input type="number" id="pC" placeholder="ej: 45000000" step="1000000" oninput="calcProy()"></div>
+      </div>
+      <div class="g5" id="proyKpis"></div>
+      <div style="position:relative;height:170px"><canvas id="cProy" role="img" aria-label="Proyección anual de ganancia">Gráfico proyección</canvas></div>
+      <div class="legend" style="margin-top:8px">
+        <span><span class="leg-sq" style="background:#1D9E75"></span>Sobre meta USD 4k</span>
+        <span><span class="leg-sq" style="background:#D85A30"></span>Bajo meta</span>
+        <span><span class="leg-line" style="background:#BA7517"></span>Meta</span>
+      </div>
+    </div>
+    <div class="card" style="background:var(--bg2);border-color:var(--border);">
+      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">¿Cuánto hay que vender para USD 4.000?</div>
+      <div id="metaTxt" style="font-size:12px;color:var(--text2)">Completá los costos fijos para ver el cálculo.</div>
+    </div>
+  </div>
+
+  <!-- REGISTROS -->
+  <div id="tab-registros" class="sec">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div class="card-title" style="margin-bottom:0">Todos los registros</div>
+        <div style="display:flex;gap:6px;">
+          <select id="filtT" style="font-size:12px;padding:5px 9px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);" onchange="renderRegs()">
+            <option value="todos">Todo</option>
+            <option value="venta">Ventas</option>
+            <option value="gasto">Gastos / Sueldos</option>
+            <option value="arqueo">Arqueos</option>
+          </select>
+          <button class="btn" onclick="exportCSV()"><i class="ti ti-download"></i> CSV</button>
+        </div>
+      </div>
+      <div class="tbl-wrap" id="tablaRegs"></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+const SK = 'moyito-v5';
+let D = { ventas: [], gastos: [], arqueos: [] };
+let cBar = null, cLine = null, cProy = null;
+
+const GCATS = {
+  gasto: ['Alquiler fijo','Alquiler variable','Gastos propios','Fondo Promoción fijo','Fondo Promoción variable','Expensas','Intereses bancarios'],
+  sueldo: ['Sandra Dávila (CK)','Lucero Natalia (CK)','Tizi (CK)','Mayra (CK)','Katy (CK)','Mica (CK)','Luz (MKV)','Luciana (MKV)','Cecilia (MKV)','Agustina (MKV)','Mauro','F931','Gremio','Contador'],
+  comision: ['Sandra Dávila','Lucero Natalia','Mayra','Katy','Mica','Luz','Luciana','Cecilia','Agustina'],
+  impuesto: ['IIBB','Municipalidad','Imp. ganancias','Bienes personales','ADICAPIF','ENCODE','IVA','SADAIC'],
+  otro: ['Transporte','Sistema','Abono dispenser','Art. limpieza','Extraordinarios','Extras','Flores','App música']
+};
+const TLBL = { venta:'Venta', gasto:'Gasto', sueldo:'Sueldo', comision:'Comisión', impuesto:'Impuesto', otro:'Otro', arqueo:'Arqueo' };
+const TBDG = { venta:'bv', gasto:'bg2', sueldo:'bs', comision:'bc', impuesto:'bi', otro:'bo', arqueo:'bcom' };
+const LBDG = { cheeky:'bck', markova:'bmk', compartido:'bcom', ambos:'bcom' };
+const LNOM = { cheeky:'Cheeky', markova:'Markova', compartido:'Compartido', ambos:'Ambos' };
+
+function load() {
+  try { const r = localStorage.getItem(SK); if (r) D = JSON.parse(r); } catch(e) { D = { ventas:[], gastos:[], arqueos:[] }; }
+}
+function save() {
+  try { localStorage.setItem(SK, JSON.stringify(D)); } catch(e) {}
+}
+
+const tc = () => parseFloat(document.getElementById('inTC').value) || 1465;
+const getMes = () => document.getElementById('selMes').value;
+const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtU = n => 'USD ' + Math.round(n).toLocaleString('es-AR');
+const fmtM = n => Math.abs(n) >= 1e6 ? (n/1e6).toFixed(1)+'M' : (n/1e3).toFixed(0)+'k';
+
+function irv(v) {
+  const t = parseFloat(v.tarjeta)||0, e = parseFloat(v.eft)||0, b = t+e;
+  return v.local === 'cheeky' ? b*0.363 : b*0.35;
+}
+function ingresoMes(mes) { return D.ventas.filter(v => mes==='todos'||v.mes===mes).reduce((a,v)=>a+irv(v),0); }
+function ingresoLocal(mes,loc) { return D.ventas.filter(v=>(mes==='todos'||v.mes===mes)&&v.local===loc).reduce((a,v)=>a+irv(v),0); }
+function costosMes(mes) { return D.gastos.filter(g=>mes==='todos'||(g.fecha||'').substring(0,7)===mes).reduce((a,g)=>a+parseFloat(g.importe||0),0); }
+function costosLocal(mes,loc) {
+  return D.gastos.filter(g=>{
+    const gm=(g.fecha||'').substring(0,7);
+    return (mes==='todos'||gm===mes)&&(g.local===loc||g.local==='compartido');
+  }).reduce((a,g)=>a+parseFloat(g.importe||0)*(g.local==='compartido'?0.5:1),0);
+}
+
+function calcPreview() {
+  const loc = document.getElementById('fLocal').value;
+  const t = parseFloat(document.getElementById('fTarj').value)||0;
+  const e = parseFloat(document.getElementById('fEft').value)||0;
+  const b = t+e, ratio = loc==='cheeky'?0.363:0.35;
+  document.getElementById('pvB').textContent = fmt(b);
+  document.getElementById('pvI').textContent = fmt(b*ratio);
+  document.getElementById('pvT').textContent = fmt(t*ratio);
+  document.getElementById('pvLbl').textContent = `Ingreso real (${loc==='cheeky'?'36,3':'35'}%)`;
+}
+
+function updateGCats() {
+  const t = document.getElementById('gTipo').value;
+  document.getElementById('gCat').innerHTML = (GCATS[t]||[]).map(c=>`<option>${c}</option>`).join('');
+}
+
+function showMsg(id) { const el=document.getElementById(id); el.style.display='inline'; setTimeout(()=>el.style.display='none',2000); }
+
+async function guardarVenta() {
+  const loc=document.getElementById('fLocal').value, mes=document.getElementById('fMes').value;
+  const fecha=document.getElementById('fFecha').value;
+  const t=parseFloat(document.getElementById('fTarj').value)||0;
+  const e=parseFloat(document.getElementById('fEft').value)||0;
+  if(!mes||(!t&&!e)){alert('Completá el mes y al menos un importe');return;}
+  const idx=D.ventas.findIndex(v=>v.mes===mes&&v.local===loc);
+  const obj={local:loc,mes,fecha,tarjeta:t,eft:e};
+  if(idx>=0) D.ventas[idx]=obj; else D.ventas.push(obj);
+  save(); showMsg('msV');
+  document.getElementById('fTarj').value=''; document.getElementById('fEft').value=''; calcPreview();
+}
+
+async function guardarGasto() {
+  const imp=parseFloat(document.getElementById('gImp').value)||0;
+  if(imp<=0){alert('Ingresá un importe válido');return;}
+  D.gastos.push({tipo:document.getElementById('gTipo').value,local:document.getElementById('gLocal').value,fecha:document.getElementById('gFecha').value,cat:document.getElementById('gCat').value,detalle:document.getElementById('gDet').value.trim(),importe:imp});
+  save(); showMsg('msG');
+  document.getElementById('gImp').value=''; document.getElementById('gDet').value='';
+}
+
+async function guardarArqueo() {
+  const f=document.getElementById('aFecha').value;
+  if(!f){alert('Seleccioná la fecha');return;}
+  const ck=parseFloat(document.getElementById('aCK').value)||0;
+  const mk=parseFloat(document.getElementById('aMK').value)||0;
+  D.arqueos.push({fecha:f,eftCK:ck,eftMK:mk});
+  D.arqueos.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  save(); showMsg('msA');
+  document.getElementById('aCK').value=''; document.getElementById('aMK').value='';
+  renderArqueo();
+}
+
+async function delGasto(i){if(!confirm('¿Eliminar este registro?'))return;D.gastos.splice(i,1);save();renderRegs();}
+async function delVenta(i){if(!confirm('¿Eliminar esta venta?'))return;D.ventas.splice(i,1);save();renderRegs();}
+async function delArqueo(i){if(!confirm('¿Eliminar este arqueo?'))return;D.arqueos.splice(i,1);save();renderArqueo();}
+
+function getLast6() {
+  const h=new Date();
+  return Array.from({length:6},(_,i)=>{const d=new Date(h.getFullYear(),h.getMonth()-5+i,1);return d.toISOString().substring(0,7);});
+}
+
+function renderInicio() {
+  const mes=getMes(), TC=tc(), META=4000;
+  const mesRef=mes==='todos'?new Date().toISOString().substring(0,7):mes;
+  const ing=ingresoMes(mesRef), cost=costosMes(mesRef);
+  const gan=ing-cost, ganU=gan/TC;
+  const vb=D.ventas.filter(v=>v.mes===mesRef).reduce((a,v)=>a+(parseFloat(v.tarjeta)||0)+(parseFloat(v.eft)||0),0);
+  const pct=Math.min(Math.round(ganU/META*100),200);
+
+  let bc,bt,bs;
+  if(ganU>=META){bc='ok';bt=`<i class="ti ti-circle-check"></i> ¡Meta cumplida! Ganancia ${fmtU(ganU)}`;bs=`Superás la meta en ${fmtU(ganU-META)}`;}
+  else if(ganU>=META*0.7){bc='warn';bt=`<i class="ti ti-alert-triangle"></i> Cerca de la meta · Ganancia ${fmtU(ganU)}`;bs=`Faltán ${fmtU(META-ganU)} para USD 4.000`;}
+  else{bc='fail';bt=`<i class="ti ti-alert-circle"></i> Por debajo de la meta · Ganancia ${fmtU(ganU)}`;bs=vb>0?`Faltán ${fmtU(META-ganU)} para USD 4.000`:'Sin ventas cargadas en este período';}
+
+  document.getElementById('banner').innerHTML=`<div class="banner ${bc}"><div class="bt">${bt}</div><div class="bs2">${bs}</div><div class="barw"><div class="barf" style="width:${Math.min(pct,100)}%;background:${ganU>=META?'#1D9E75':ganU>=META*0.7?'#EF9F27':'#D85A30'}"></div></div></div>`;
+  document.getElementById('kpis').innerHTML=`
+    <div class="mc"><div class="lbl">Venta bruta</div><div class="val b">${fmt(vb)}</div></div>
+    <div class="mc"><div class="lbl">Ingreso real</div><div class="val b">${fmt(ing)}</div></div>
+    <div class="mc"><div class="lbl">Costos totales</div><div class="val r">${fmt(cost)}</div></div>
+    <div class="mc"><div class="lbl">Ganancia ARS</div><div class="val ${gan>=0?'g':'r'}">${fmt(gan)}</div></div>
+    <div class="mc"><div class="lbl">Ganancia USD (TC $${tc()})</div><div class="val ${ganU>=META?'g':'r'}">${fmtU(ganU)}</div></div>
+  `;
+
+  const ingCK=ingresoLocal(mesRef,'cheeky'),ingMK=ingresoLocal(mesRef,'markova');
+  const costCK=costosLocal(mesRef,'cheeky'),costMK=costosLocal(mesRef,'markova');
+  if(cBar) cBar.destroy();
+  cBar=new Chart(document.getElementById('cBar').getContext('2d'),{type:'bar',data:{labels:['Cheeky','Markova'],datasets:[{label:'Ingreso real',data:[ingCK,ingMK],backgroundColor:'#378ADD',borderRadius:4},{label:'Costos',data:[costCK,costMK],backgroundColor:'#D85A30',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>fmtM(v)}}}}});
+
+  const meses=getLast6();
+  const gansU=meses.map(m=>Math.round((ingresoMes(m)-costosMes(m))/TC));
+  if(cLine) cLine.destroy();
+  cLine=new Chart(document.getElementById('cLine').getContext('2d'),{type:'line',data:{labels:meses.map(m=>m.substring(5)),datasets:[{label:'Ganancia USD',data:gansU,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.07)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#378ADD',tension:0.3,fill:true},{label:'Meta',data:meses.map(()=>META),borderColor:'#1D9E75',borderDash:[4,3],borderWidth:1.5,pointRadius:0,backgroundColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'U$'+Math.round(v/1000)+'k'}}}}});
+
+  const vCK=D.ventas.filter(v=>v.mes===mesRef&&v.local==='cheeky');
+  const vMK=D.ventas.filter(v=>v.mes===mesRef&&v.local==='markova');
+  const eftCK=vCK.reduce((a,v)=>a+(parseFloat(v.eft)||0),0);
+  const eftMK=vMK.reduce((a,v)=>a+(parseFloat(v.eft)||0),0);
+  const transfCK=Math.max(0,ingCK-eftCK*0.363);
+  const transfMK=Math.max(0,ingMK-eftMK*0.35);
+  const [y,m]=mesRef.split('-').map(Number);
+  const nm=m+1>12?1:m+1,ny=m+1>12?y+1:y;
+  const hoy=new Date();
+  const pendCK=hoy<new Date(ny,nm-1,30),pendMK=hoy<new Date(ny,nm-1,5);
+
+  const rowLiq=(lbl,bcls,dia,mes2,ano,eft,transf,pend)=>`
+    <div class="cobrow">
+      <div class="cobrow-head">
+        <div style="display:flex;align-items:center;gap:8px"><span class="bdg ${bcls}">${lbl}</span><span style="font-size:13px;font-weight:500">Liq. ${mesRef}</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;color:var(--text2)"><i class="ti ti-calendar"></i> día ${dia}/${mes2}/${ano}</span>
+          <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:10px;background:${pend?'#FAEEDA':'#E1F5EE'};color:${pend?'#854F0B':'#085041'}">${pend?'pendiente':'cobrado'}</span>
+        </div>
+      </div>
+      <div class="g3">
+        <div class="mc"><div class="lbl">EFT ya en caja</div><div style="font-size:14px;font-weight:600;color:#1D9E75">${fmt(eft)}</div></div>
+        <div class="mc"><div class="lbl">Transferencia</div><div style="font-size:14px;font-weight:600;color:#BA7517">${fmt(transf)}</div></div>
+        <div class="mc"><div class="lbl">Total ingreso</div><div style="font-size:14px;font-weight:600;color:#185FA5">${fmt(eft+transf)}</div></div>
+      </div>
+    </div>`;
+  document.getElementById('proxLiq').innerHTML=rowLiq('Markova','bmk',5,nm,ny,eftMK,transfMK,pendMK)+rowLiq('Cheeky','bck',30,nm,ny,eftCK,transfCK,pendCK);
+}
+
+function renderCobros() {
+  const meses=[...new Set(D.ventas.map(v=>v.mes).filter(Boolean))].sort().reverse();
+  const totEft=D.ventas.reduce((a,v)=>a+(parseFloat(v.eft)||0),0);
+  const totIng=D.ventas.reduce((a,v)=>a+irv(v),0);
+  const totPend=totIng-totEft;
+  document.getElementById('cobKpis').innerHTML=`
+    <div class="mc"><div class="lbl">EFT acumulado en caja</div><div class="val g">${fmt(totEft)}</div></div>
+    <div class="mc"><div class="lbl">Transferencias pendientes</div><div class="val a">${fmt(Math.max(0,totPend))}</div></div>
+    <div class="mc"><div class="lbl">Ingreso real total</div><div class="val b">${fmt(totIng)}</div></div>
+  `;
+  if(!meses.length){document.getElementById('cobLista').innerHTML='<div class="empty">Sin ventas cargadas aún.</div>';return;}
+  let h='';
+  meses.slice(0,6).forEach(mes=>{
+    const vCK=D.ventas.filter(v=>v.mes===mes&&v.local==='cheeky');
+    const vMK=D.ventas.filter(v=>v.mes===mes&&v.local==='markova');
+    const bCK=vCK.reduce((a,v)=>a+(parseFloat(v.tarjeta)||0)+(parseFloat(v.eft)||0),0);
+    const bMK=vMK.reduce((a,v)=>a+(parseFloat(v.tarjeta)||0)+(parseFloat(v.eft)||0),0);
+    const eftCK=vCK.reduce((a,v)=>a+(parseFloat(v.eft)||0),0);
+    const eftMK=vMK.reduce((a,v)=>a+(parseFloat(v.eft)||0),0);
+    const ingCK=vCK.reduce((a,v)=>a+irv(v),0);
+    const ingMK=vMK.reduce((a,v)=>a+irv(v),0);
+    const trCK=Math.max(0,ingCK-eftCK*0.363);
+    const trMK=Math.max(0,ingMK-eftMK*0.35);
+    const [y,m]=mes.split('-').map(Number);
+    const nm=m+1>12?1:m+1,ny=m+1>12?y+1:y;
+    h+=`<div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">${mes}</div>
+      <div class="g2" style="gap:8px">
+        <div class="cobrow">
+          <div class="cobrow-head"><span class="bdg bmk">Markova</span><span style="font-size:11px;color:var(--text2)">día 5/${nm}/${ny}</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div class="mc"><div class="lbl">Venta bruta</div><div style="font-size:12px;font-weight:600">${fmt(bMK)}</div></div>
+            <div class="mc"><div class="lbl">EFT en caja</div><div style="font-size:12px;font-weight:600;color:#1D9E75">${fmt(eftMK)}</div></div>
+            <div class="mc"><div class="lbl">Transferencia</div><div style="font-size:12px;font-weight:600;color:#BA7517">${fmt(trMK)}</div></div>
+            <div class="mc"><div class="lbl">Total ingreso</div><div style="font-size:12px;font-weight:600;color:#185FA5">${fmt(ingMK)}</div></div>
+          </div>
+        </div>
+        <div class="cobrow">
+          <div class="cobrow-head"><span class="bdg bck">Cheeky</span><span style="font-size:11px;color:var(--text2)">día 30/${nm}/${ny}</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div class="mc"><div class="lbl">Venta bruta</div><div style="font-size:12px;font-weight:600">${fmt(bCK)}</div></div>
+            <div class="mc"><div class="lbl">EFT en caja</div><div style="font-size:12px;font-weight:600;color:#1D9E75">${fmt(eftCK)}</div></div>
+            <div class="mc"><div class="lbl">Transferencia</div><div style="font-size:12px;font-weight:600;color:#BA7517">${fmt(trCK)}</div></div>
+            <div class="mc"><div class="lbl">Total ingreso</div><div style="font-size:12px;font-weight:600;color:#185FA5">${fmt(ingCK)}</div></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('cobLista').innerHTML=h;
+}
+
+function renderArqueo() {
+  const arqs=[...D.arqueos].reverse();
+  if(!arqs.length){document.getElementById('ultArqueo').innerHTML='<div class="empty">Sin arqueos registrados.</div>';document.getElementById('histArqueo').innerHTML='';return;}
+  const u=arqs[0];
+  document.getElementById('ultArqueo').innerHTML=`
+    <div class="g3" style="margin-bottom:8px">
+      <div class="mc"><div class="lbl">Fecha</div><div style="font-size:14px;font-weight:600">${u.fecha}</div></div>
+      <div class="mc"><div class="lbl">EFT Cheeky</div><div class="val g">${fmt(u.eftCK)}</div></div>
+      <div class="mc"><div class="lbl">EFT Markova</div><div class="val g">${fmt(u.eftMK)}</div></div>
+    </div>
+    <div class="mc"><div class="lbl">Total EFT ambos locales</div><div class="val b">${fmt(u.eftCK+u.eftMK)}</div></div>
+  `;
+  let h='<table><colgroup><col style="width:95px"><col><col><col><col style="width:34px"></colgroup><thead><tr><th>Fecha</th><th>EFT Cheeky</th><th>EFT Markova</th><th>Total</th><th></th></tr></thead><tbody>';
+  arqs.forEach((a,i)=>{
+    const ri=D.arqueos.length-1-i;
+    h+=`<tr><td>${a.fecha}</td><td style="color:#1D9E75;font-weight:600">${fmt(a.eftCK)}</td><td style="color:#1D9E75;font-weight:600">${fmt(a.eftMK)}</td><td style="font-weight:600">${fmt(a.eftCK+a.eftMK)}</td><td><button class="btn btn-sm" onclick="delArqueo(${ri})"><i class="ti ti-x"></i></button></td></tr>`;
+  });
+  document.getElementById('histArqueo').innerHTML=h+'</tbody></table>';
+}
+
+function renderEquilibrio() {
+  const mes=getMes(), mesRef=mes==='todos'?new Date().toISOString().substring(0,7):mes;
+  const TC=tc(), META_ARS=4000*TC;
+  const items=[{k:'cheeky',l:'Cheeky',r:0.363,dot:'#185FA5'},{k:'markova',l:'Markova',r:0.35,dot:'#1D9E75'},{k:'todos',l:'Consolidado',r:null,dot:'#888780'}];
+  let h='';
+  items.forEach(loc=>{
+    const ing=loc.k==='todos'?ingresoMes(mesRef):ingresoLocal(mesRef,loc.k);
+    const cost=loc.k==='todos'?costosMes(mesRef):costosLocal(mesRef,loc.k);
+    const gan=ing-cost, ganU=Math.round(gan/TC);
+    const pct=cost>0?Math.min(Math.round(ing/cost*100),200):0, ok=ing>=cost;
+    let vCost='—', vMeta='—';
+    if(loc.r&&cost>0){vCost=fmt(cost/loc.r);vMeta=fmt((cost+META_ARS)/loc.r);}
+    h+=`<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:${loc.dot}"></div><span style="font-size:14px;font-weight:600">${loc.l}</span></div>
+        <span class="bdg ${ok?'bv':'bg2'}">${ok?'Por encima del equilibrio':'Por debajo del equilibrio'}</span>
+      </div>
+      <div class="g4" style="margin-bottom:10px">
+        <div class="mc"><div class="lbl">Ingreso real</div><div class="val b" style="font-size:15px">${fmt(ing)}</div></div>
+        <div class="mc"><div class="lbl">Costos</div><div class="val r" style="font-size:15px">${fmt(cost)}</div></div>
+        <div class="mc"><div class="lbl">Ganancia</div><div class="val ${gan>=0?'g':'r'}" style="font-size:15px">${fmt(gan)}</div></div>
+        <div class="mc"><div class="lbl">Ganancia USD</div><div class="val ${ganU>=4000?'g':'r'}" style="font-size:15px">${fmtU(ganU)}</div></div>
+        ${loc.r?`<div class="mc"><div class="lbl">Venta para cubrir costos</div><div class="val a" style="font-size:13px">${vCost}</div></div>`:''}
+        ${loc.r?`<div class="mc"><div class="lbl">Venta para llegar a USD 4.000</div><div class="val a" style="font-size:13px">${vMeta}</div></div>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Cobertura de costos: ${pct}%</div>
+      <div class="barw"><div class="barf" style="width:${Math.min(pct,100)}%;background:${ok?'#1D9E75':'#D85A30'}"></div></div>
+    </div>`;
+  });
+  document.getElementById('eqCards').innerHTML=h||'<div class="empty">Cargá datos para ver el análisis.</div>';
+}
+
+function calcProy() {
+  const ck=parseFloat(document.getElementById('pCK').value)||0;
+  const mk=parseFloat(document.getElementById('pMK').value)||0;
+  const cost=parseFloat(document.getElementById('pC').value)||0;
+  const TC=tc(), META=4000;
+  const ingCK=ck*0.363, ingMK=mk*0.35, ingT=ingCK+ingMK;
+  const gan=ingT-cost, ganU=Math.round(gan/TC);
+  document.getElementById('proyKpis').innerHTML=`
+    <div class="mc"><div class="lbl">Ingreso Cheeky</div><div class="val b" style="font-size:13px">${fmt(ingCK)}</div></div>
+    <div class="mc"><div class="lbl">Ingreso Markova</div><div class="val g" style="font-size:13px">${fmt(ingMK)}</div></div>
+    <div class="mc"><div class="lbl">Ingreso total</div><div class="val b" style="font-size:13px">${fmt(ingT)}</div></div>
+    <div class="mc"><div class="lbl">Ganancia ARS</div><div class="val ${gan>=0?'g':'r'}" style="font-size:13px">${fmt(gan)}</div></div>
+    <div class="mc"><div class="lbl">Ganancia USD</div><div class="val ${ganU>=META?'g':'r'}" style="font-size:15px">${fmtU(ganU)}</div></div>
+  `;
+  const vp=[0,-0.05,0.08,0.15,0.20,0.05,-0.10,-0.05,0.10,0.18,0.25,0.30];
+  const lbs=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const data=vp.map(v=>Math.round(ganU*(1+v)));
+  if(cProy) cProy.destroy();
+  cProy=new Chart(document.getElementById('cProy').getContext('2d'),{type:'bar',data:{labels:lbs,datasets:[{data,backgroundColor:data.map(v=>v>=META?'#1D9E75':'#D85A30'),borderRadius:3},{data:lbs.map(()=>META),type:'line',borderColor:'#BA7517',borderDash:[4,3],borderWidth:1.5,pointRadius:0,backgroundColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},autoSkip:false,maxRotation:0}},y:{ticks:{callback:v=>'U$'+v}}}}});
+  if(cost>0){
+    const ma=META*TC;
+    document.getElementById('metaTxt').innerHTML=`Con costos de <strong>${fmt(cost)}</strong>, para generar <strong>USD 4.000 de ganancia</strong> necesitás:<br>· Solo Cheeky: <strong>${fmt((cost+ma)/0.363)}</strong> de venta bruta<br>· Solo Markova: <strong>${fmt((cost+ma)/0.35)}</strong> de venta bruta<br>· Mix 50/50: <strong>${fmt((cost+ma)/(0.363*0.5+0.35*0.5))}</strong> en total entre los dos`;
+  }
+}
+
+function renderRegs() {
+  const filtro=document.getElementById('filtT').value, mes=getMes();
+  let items=[];
+  if(filtro==='todos'||filtro==='venta'){
+    D.ventas.filter(v=>mes==='todos'||v.mes===mes).forEach((v,i)=>{
+      items.push({tipo:'venta',local:v.local,fecha:v.fecha||v.mes,cat:`Tarj: ${fmt(v.tarjeta||0)} · EFT: ${fmt(v.eft||0)}`,imp:(parseFloat(v.tarjeta)||0)+(parseFloat(v.eft)||0),ir:irv(v),_s:'v',_i:i});
+    });
+  }
+  if(filtro==='todos'||filtro==='gasto'){
+    D.gastos.filter(g=>mes==='todos'||(g.fecha||'').substring(0,7)===mes).forEach((g,i)=>{
+      items.push({tipo:g.tipo,local:g.local,fecha:g.fecha,cat:g.cat+(g.detalle?' · '+g.detalle:''),imp:g.importe,ir:null,_s:'g',_i:i});
+    });
+  }
+  if(filtro==='todos'||filtro==='arqueo'){
+    D.arqueos.filter(a=>mes==='todos'||a.fecha.substring(0,7)===mes).forEach((a,i)=>{
+      items.push({tipo:'arqueo',local:'ambos',fecha:a.fecha,cat:`CK: ${fmt(a.eftCK)} · MKV: ${fmt(a.eftMK)}`,imp:a.eftCK+a.eftMK,ir:null,_s:'a',_i:i});
+    });
+  }
+  items.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  if(!items.length){document.getElementById('tablaRegs').innerHTML='<div class="empty">Sin registros en este período.</div>';return;}
+  let h='<table><colgroup><col style="width:80px"><col style="width:72px"><col style="width:68px"><col><col style="width:90px"><col style="width:88px"><col style="width:32px"></colgroup><thead><tr><th>Fecha</th><th>Tipo</th><th>Local</th><th>Detalle</th><th style="text-align:right">Importe</th><th style="text-align:right">Ing. real</th><th></th></tr></thead><tbody>';
+  items.forEach(row=>{
+    const del=row._s==='g'?`onclick="delGasto(${row._i})"`:row._s==='v'?`onclick="delVenta(${row._i})"`:row._s==='a'?`onclick="delArqueo(${row._i})"`:``;
+    h+=`<tr><td>${row.fecha||'-'}</td><td><span class="bdg ${TBDG[row.tipo]||'bo'}">${TLBL[row.tipo]||row.tipo}</span></td><td><span class="bdg ${LBDG[row.local]||'bcom'}">${LNOM[row.local]||row.local}</span></td><td title="${row.cat}">${row.cat}</td><td style="text-align:right;font-weight:600">${fmt(row.imp)}</td><td style="text-align:right;color:#1D9E75">${row.ir!==null?fmt(row.ir):'-'}</td><td><button class="btn btn-sm" ${del}><i class="ti ti-x"></i></button></td></tr>`;
+  });
+  document.getElementById('tablaRegs').innerHTML=h+'</tbody></table>';
+}
+
+function exportCSV() {
+  const rows=[];
+  D.ventas.forEach(v=>rows.push([v.fecha||v.mes,'venta',v.local,`Tarjeta:${v.tarjeta||0} EFT:${v.eft||0}`,(parseFloat(v.tarjeta)||0)+(parseFloat(v.eft)||0),Math.round(irv(v))].join(',')));
+  D.gastos.forEach(g=>rows.push([g.fecha,g.tipo,g.local,`${g.cat} ${g.detalle}`,g.importe,''].join(',')));
+  D.arqueos.forEach(a=>rows.push([a.fecha,'arqueo','ambos',`CK:${a.eftCK} MKV:${a.eftMK}`,a.eftCK+a.eftMK,''].join(',')));
+  if(!rows.length){alert('Sin datos para exportar');return;}
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(['Fecha,Tipo,Local,Detalle,Importe,IngReal',...rows].join('\n'));
+  a.download='moyito_'+new Date().toISOString().substring(0,10)+'.csv';
+  a.click();
+}
+
+function goTab(t,btn) {
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('tab-'+t).classList.add('on');
+  if(t==='inicio') renderInicio();
+  if(t==='cobros') renderCobros();
+  if(t==='arqueo') renderArqueo();
+  if(t==='equilibrio') renderEquilibrio();
+  if(t==='registros') renderRegs();
+}
+
+function initMeses() {
+  const sel=document.getElementById('selMes');
+  const h=new Date();
+  let o='<option value="todos">Todos los meses</option>';
+  for(let i=0;i<24;i++){
+    const d=new Date(h.getFullYear(),h.getMonth()-i,1);
+    const v=d.toISOString().substring(0,7);
+    const l=d.toLocaleString('es-AR',{month:'long',year:'numeric'});
+    o+=`<option value="${v}"${i===0?' selected':''}>${l}</option>`;
+  }
+  sel.innerHTML=o;
+}
+
+document.getElementById('selMes').addEventListener('change',()=>{
+  const t=document.querySelector('.sec.on')?.id?.replace('tab-','');
+  if(t==='inicio') renderInicio();
+  if(t==='equilibrio') renderEquilibrio();
+  if(t==='registros') renderRegs();
+  if(t==='cobros') renderCobros();
+});
+document.getElementById('inTC').addEventListener('change',()=>{
+  const t=document.querySelector('.sec.on')?.id?.replace('tab-','');
+  if(t==='inicio') renderInicio();
+  if(t==='equilibrio') renderEquilibrio();
+  if(t==='proyeccion') calcProy();
+});
+document.getElementById('fLocal').addEventListener('change',calcPreview);
+
+// INIT
+load();
+initMeses();
+const hoy=new Date().toISOString().split('T')[0];
+['fFecha','gFecha','aFecha'].forEach(id=>document.getElementById(id).value=hoy);
+document.getElementById('fMes').value=hoy.substring(0,7);
+updateGCats();
+renderInicio();
+</script>
+</body>
+</html>
