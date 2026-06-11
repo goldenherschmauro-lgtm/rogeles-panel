@@ -112,8 +112,8 @@ const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 
 const getSem = () => {
   const d = new Date();
-  const day = d.getDay();
-  const diff = day===0 ? 0 : (day<=3 ? -day : 7-day);
+  const day = d.getDay(); // 0=Sunday
+  const diff = -day; // go back to Sunday
   const dom = new Date(d); dom.setDate(d.getDate()+diff);
   const sab = new Date(dom); sab.setDate(dom.getDate()+6);
   const f = x => x.getDate()+"/"+(x.getMonth()+1)+"/"+x.getFullYear();

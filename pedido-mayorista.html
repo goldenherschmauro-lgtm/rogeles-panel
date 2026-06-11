@@ -344,8 +344,9 @@ const dbFB = firebase.database();
   function obtenerSemana() {
     const hoy = new Date();
     const day = hoy.getDay();
-    const diff = day===0 ? 0 : (day<=3 ? -day : 7-day);
-    const dom = new Date(hoy); dom.setDate(hoy.getDate()+diff);
+    // Semana arranca el domingo
+    const diffToDom = -day; // goes back to last Sunday (day=0 means today IS Sunday)
+    const dom = new Date(hoy); dom.setDate(hoy.getDate()+diffToDom);
     const vie = new Date(dom); vie.setDate(dom.getDate()+6);
     const fmt = d => d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear();
     return "Pedido semanal "+fmt(dom)+" - "+fmt(vie);
