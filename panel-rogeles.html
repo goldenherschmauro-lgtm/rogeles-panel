@@ -1129,6 +1129,17 @@ function App() {
           }} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid #5C3340",background:"#FDF6F0",color:"#5C3340",fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
             Imprimir planilla repartida
           </button>
+          {/* Selector de semana */}
+          {(()=>{
+            const semanas = [...new Set(peds.map(p=>p.semana))].sort().reverse();
+            if(semanas.length > 1) return <div style={{marginBottom:12}}>
+              <Lbl>Ver semana:</Lbl>
+              <select value={semVista} onChange={e=>setSemVista(e.target.value)} style={inp()}>
+                {semanas.map(s=><option key={s} value={s}>{s}{s===sem?" (actual)":""}</option>)}
+              </select>
+            </div>;
+            return null;
+          })()}
           <Card title={"Consolidado - "+semActiva} titleColor={C.rosa}>
             {SIZES.map(s => (
               <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
