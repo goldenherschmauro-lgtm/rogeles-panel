@@ -112,12 +112,12 @@ const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 
 const getSem = () => {
   const d = new Date();
-  const day = d.getDay(); // 0=Sunday
-  const diff = -day; // go back to Sunday
-  const dom = new Date(d); dom.setDate(d.getDate()+diff);
-  const sab = new Date(dom); sab.setDate(dom.getDate()+6);
+  const day = d.getDay(); // 0=Sun, 1=Mon
+  const diff = day===0 ? -6 : 1-day; // go back to Monday
+  const lun = new Date(d); lun.setDate(d.getDate()+diff);
+  const dom = new Date(lun); dom.setDate(lun.getDate()+6);
   const f = x => x.getDate()+"/"+(x.getMonth()+1)+"/"+x.getFullYear();
-  return "Pedido semanal "+f(dom)+" - "+f(sab);
+  return "Pedido semanal "+f(lun)+" - "+f(dom);
 };
 
 // Shared styles
