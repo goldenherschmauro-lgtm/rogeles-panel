@@ -33,11 +33,11 @@ const C = {
 
 // Rogeles data
 const SIZES = ["ENTERO","MEDIANO","PEQUENO","PORCION"];
-const PM = {ENTERO:73000, MEDIANO:55000, PEQUENO:44000, PORCION:9000};
-const PMay = {ENTERO:56940, MEDIANO:43000, PEQUENO:34500, PORCION:42120};
-const COSTO = {ENTERO:48050, MEDIANO:35500, PEQUENO:28900, PORCION:37600};
-const GM = {ENTERO:24950, MEDIANO:19500, PEQUENO:15100, PORCION:1400};
-const GMay = {ENTERO:8890, MEDIANO:7500, PEQUENO:5600, PORCION:4520};
+const PM = {ENTERO:77000, MEDIANO:58000, PEQUENO:46000, PORCION:9000};
+const PMay = {ENTERO:60000, MEDIANO:45500, PEQUENO:36000, PORCION:42120};
+const COSTO = {ENTERO:51100, MEDIANO:37600, PEQUENO:30700, PORCION:37600};
+const GM = {ENTERO:25900, MEDIANO:20400, PEQUENO:15300, PORCION:1400};
+const GMay = {ENTERO:8900, MEDIANO:7900, PEQUENO:5300, PORCION:4520};
 
 // Puntos
 const PUNTOS = [
@@ -89,6 +89,7 @@ const H2026 = [
   {mes:"Marzo",   gmi:1999550, gma:9040440, tot:11039990, caja:5713000, mE:59, mM:45, mC:0,  mP:9,  myE:408, myM:377, myC:0,  myP:37},
   {mes:"Abril",   gmi:2438539, gma:6089810, tot:8654602,  caja:0,       mE:0,  mM:0,  mC:0,  mP:0,  myE:0,   myM:0,   myC:0,  myP:0},
   {mes:"Mayo",    gmi:1566580, gma:5867350, tot:7542650,  caja:4603780, mE:0,  mM:0,  mC:0,  mP:0,  myE:245, myM:303, myC:253, myP:0, gcafe:108720},
+  {mes:"Junio",   gmi:1181740, gma:8561130, tot:9742870,  caja:3428540, mE:0,  mM:0,  mC:0,  mP:0,  myE:337, myM:468, myC:367, myP:0, gcafe:114920},
 ];
 
 // Firebase helpers
@@ -1102,7 +1103,7 @@ function App() {
             let html = '<html><head><meta charset="UTF-8"><title>Planilla Repartida</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;margin:0;background:#fff;width:277mm}h1{text-align:center;font-size:13px;margin-bottom:2px;color:#C4687A}h2{text-align:center;font-size:9px;color:#888;margin-bottom:8px}.grid{display:flex;flex-wrap:wrap;gap:5px}.punto{border:2px solid #C4687A;border-radius:6px;padding:6px 8px;flex:1;min-width:100px;max-width:140px}.punto-nombre{font-weight:bold;font-size:9px;color:#C4687A;border-bottom:1px solid #F0D0D8;padding-bottom:3px;margin-bottom:4px}.item{font-size:9px;color:#333;margin-bottom:1px}.cafe-item{font-size:8px;color:#C0392B;margin-bottom:1px}.cafe-titulo{font-size:7px;font-weight:bold;color:#C0392B;margin-top:3px;margin-bottom:1px;text-transform:uppercase}.totales{margin-top:8px;border:2px solid #5C3340;border-radius:6px;padding:8px;display:inline-block;min-width:200px}.totales h3{font-size:10px;color:#5C3340;margin-bottom:6px;text-align:center}.total-item{font-size:9px;margin-bottom:3px;display:flex;justify-content:space-between;gap:20px}</style></head><body>';
             html += '<h1>Los Rogeles de Marcela - Planilla de Repartida</h1><h2>'+sem+'</h2><div class="grid">';
             ps.forEach(p => {
-              const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto);
+              const pedCafe = pedsCafe.find(pc=>pc.punto===p.punto && pc.semana===sem);
               html += '<div class="punto"><div class="punto-nombre">'+p.punto+'</div>';
               if((p.ENTERO||0)>0) html += '<div class="item">ENTERO: '+p.ENTERO+'</div>';
               if((p.MEDIANO||0)>0) html += '<div class="item">MEDIANO: '+p.MEDIANO+'</div>';
