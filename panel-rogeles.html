@@ -377,6 +377,8 @@ function App() {
   const semActiva = semVista || sem;
   const ps = peds.filter(p => p.semana===semActiva);
   const gma = ps.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
+  const ganVentasMayo = ventas.filter(v=>v.tipo==="mayorista").reduce((a,v)=>a+(v.ganancia||0),0);
+  const gmaMayoTotal = gma + ganVentasMayo;
   const gmaMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
   const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
@@ -756,7 +758,7 @@ function App() {
           <ST>Resumen del dia</ST>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
             <KPI label="Total Caja" value={fmt(caja)} sub="cobrado" color={C.verde}/>
-            <KPI label="Ganancia Total" value={fmt(gmi+gmaMes+ganCafeMes)} sub="rogeles+cafe" color={C.naranja}/>
+            <KPI label="Ganancia Total" value={fmt(gmi+gmaMayoTotal+ganCafeMes)} sub="rogeles+cafe" color={C.naranja}/>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
             <div onClick={()=>{setTab("ventas");setFiltroVentas("hoy");}} style={{cursor:"pointer"}}><KPI label="Ventas hoy" value={hoy.length} sub="toca para ver" color={C.rosa}/></div>
@@ -1155,7 +1157,7 @@ function App() {
               </div>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <span style={{fontSize:12,color:C.marronL}}>Ganancia Rogeles:</span>
-                <span style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>{fmt(gma)}</span>
+                <span style={{fontSize:12,color:C.verde,fontWeight:"bold"}}>{fmt(gmaMayoTotal)}</span>
               </div>
               {ganCafe>0&&<div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <span style={{fontSize:12,color:"#C0392B"}}>Ganancia Cafe:</span>
@@ -1464,7 +1466,7 @@ function App() {
           {/* TOTAL GENERAL */}
           <Card title="TOTAL GENERAL" titleColor={C.naranja}>
             <div style={{textAlign:"center",padding:"12px 0"}}>
-              <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gmaMes+ganCafeMes)}</div>
+              <div style={{fontSize:44,fontWeight:"bold",color:C.naranja}}>{fmt(gmi+gmaMayoTotal+ganCafeMes)}</div>
               <div style={{fontSize:11,color:C.marronL,marginTop:4}}>Rogeles + Cafe</div>
             </div>
             {(()=>{
