@@ -1584,6 +1584,7 @@ function App() {
 
 function StatsTab({ventas, peds, pedsCafe}) {
   const [vista, setVista] = React.useState("ventas");
+  const [filtroMesMayo, setFiltroMesMayo] = React.useState("");
   const mesActual = new Date().getMonth();
   const anioActual = new Date().getFullYear();
   const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -1648,8 +1649,12 @@ function StatsTab({ventas, peds, pedsCafe}) {
   const dowNames = ["Dom","Lun","Mar","Mie","Jue","Vie","Sab"];
 
   // STATS MAYORISTAS por punto
+  const pedsFiltrados = filtroMesMayo ? peds.filter(p=>{
+    const m=p.semana?p.semana.match(/(\d+)\/(\d+)\/(\d{4})/):null;
+    return m && `${m[2]}/${m[3]}`===filtroMesMayo;
+  }) : peds;
   const statsPunto = {};
-  peds.forEach(p => {
+  pedsFiltrados.forEach(p => {
     if(p.punto.toLowerCase().includes("valle escondido")) return;
     if(!statsPunto[p.punto]) statsPunto[p.punto] = {entero:0,mediano:0,pequeno:0,porcion:0,ganancia:0,pedidos:0,cafe:{}};
     const sp = statsPunto[p.punto];
@@ -1660,7 +1665,11 @@ function StatsTab({ventas, peds, pedsCafe}) {
     sp.ganancia += p.ganancia||0;
     sp.pedidos++;
   });
-  pedsCafe.forEach(pc => {
+  const pedsCafeFiltrados = filtroMesMayo ? pedsCafe.filter(p=>{
+    const m=p.semana?p.semana.match(/(\d+)\/(\d+)\/(\d{4})/):null;
+    return m && `${m[2]}/${m[3]}`===filtroMesMayo;
+  }) : pedsCafe;
+  pedsCafeFiltrados.forEach(pc => {
     if(pc.punto.toLowerCase().includes("valle escondido")) return;
     if(!statsPunto[pc.punto]) statsPunto[pc.punto] = {entero:0,mediano:0,pequeno:0,porcion:0,ganancia:0,pedidos:0,cafe:{}};
     Object.entries(pc.cantidades||{}).forEach(([k,v]) => {
@@ -1776,6 +1785,16 @@ function StatsTab({ventas, peds, pedsCafe}) {
 
     {vista==="mayorista" && <div>
       <div style={{fontSize:11,color:C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Estadisticas por punto mayorista</div>
+      {(()=>{
+        const semanas = [...new Set(peds.map(p=>p.semana))].sort().reverse();
+        const mesesDisp = [...new Set(semanas.map(s=>{const m=s.match(/(\d+)\/(\d+)\/(\d{4})/);return m?`${m[2]}/${m[3]}`:null}).filter(Boolean))];
+        return mesesDisp.length>1 ? <div style={{marginBottom:12}}>
+          <select onChange={e=>setFiltroMesMayo(e.target.value)} style={inp()}>
+            <option value="">Todos los meses</option>
+            {mesesDisp.map(m=><option key={m} value={m}>{["","Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"][parseInt(m.split("/")[0])]+" "+m.split("/")[1]}</option>)}
+          </select>
+        </div> : null;
+      })()}
 
       {puntosOrdenados.length===0 && <div style={{textAlign:"center",color:C.marronL,padding:30}}>Sin datos de pedidos</div>}
 
