@@ -377,8 +377,9 @@ function App() {
   const semActiva = semVista || sem;
   const ps = peds.filter(p => p.semana===semActiva);
   const gma = ps.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
+  const gmaTodoElMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
   const ganVentasMayo = ventas.filter(v=>v.tipo==="mayorista").reduce((a,v)=>a+(v.ganancia||0),0);
-  const gmaMayoTotal = gma + ganVentasMayo;
+  const gmaMayoTotal = gmaTodoElMes + ganVentasMayo;
   const gmaMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
   const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
