@@ -72,7 +72,6 @@ const dbFB = firebase.database();
         <option>BlackBull</option>
         <option>Canitas / Valle del Golf / Causana</option>
         <option>Camino a San Carlos</option>
-        <option>Centro (Bonafide Colon y Canada)</option>
         <option>Cerro de las Rosas / Urca</option>
         <option>Cofico</option>
         <option>Docta</option>
@@ -80,8 +79,7 @@ const dbFB = firebase.database();
         <option>J. Claret / P. Lugones</option>
         <option>La Cuesta / La Calera</option>
         <option>Manantiales</option>
-        <option>Montecristo</option>
-        <option>Nueva Cordoba (Strobel Panaderia / Cafe)</option>
+        <option>Nueva Cordoba</option>
         <option>Orfeo / Dino</option>
         <option>Sierras Chicas - Rio Ceballos / Salsipuedes</option>
         <option>Siete Soles / Tejas 3</option>
@@ -102,7 +100,7 @@ const dbFB = firebase.database();
       <div class="size-grid">
         <div class="size-card">
           <div class="size-name">ENTERO</div>
-          <div class="size-price" id="price-entero">$56.940 c/u</div>
+          <div class="size-price" id="price-entero">$60.000 c/u</div>
           <div class="qty-row">
             <button class="qty-btn minus" id="btn-entero-minus">-</button>
             <span class="qty-val" id="val-entero">0</span>
@@ -111,7 +109,7 @@ const dbFB = firebase.database();
         </div>
         <div class="size-card">
           <div class="size-name">MEDIANO</div>
-          <div class="size-price" id="price-medio">$43.000 c/u</div>
+          <div class="size-price" id="price-medio">$45.500 c/u</div>
           <div class="qty-row">
             <button class="qty-btn minus" id="btn-medio-minus">-</button>
             <span class="qty-val" id="val-medio">0</span>
@@ -120,7 +118,7 @@ const dbFB = firebase.database();
         </div>
         <div class="size-card">
           <div class="size-name">PEQUENO</div>
-          <div class="size-price" id="price-cuarto">$34.500 c/u</div>
+          <div class="size-price" id="price-cuarto">$36.000 c/u</div>
           <div class="qty-row">
             <button class="qty-btn minus" id="btn-cuarto-minus">-</button>
             <span class="qty-val" id="val-cuarto">0</span>
@@ -317,9 +315,9 @@ const dbFB = firebase.database();
 <script>
   // Precios
   const PRECIOS = {
-    entero:   {label:"ENTERO",   precio:60000, costo:48050, gan:8890},
-    medio:    {label:"MEDIANO",  precio:45500, costo:35500, gan:7500},
-    cuarto:   {label:"PEQUENO",  precio:36000, costo:28900, gan:5600},
+    entero:   {label:"ENTERO",   precio:60000, costo:51100, gan:8900},
+    medio:    {label:"MEDIANO",  precio:45500, costo:37600, gan:7900},
+    cuarto:   {label:"PEQUENO",  precio:36000, costo:30700, gan:5300},
     rogelito: {label:"PORCION",  precio:42120, costo:37600, gan:4520}
   };
   const PRECIOS_COSTO = {entero:48050, medio:29150, cuarto:20350, rogelito:37600};
