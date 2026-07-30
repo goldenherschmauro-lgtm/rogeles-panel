@@ -72,9 +72,11 @@ const dbFB = firebase.database();
         <option>BlackBull</option>
         <option>Canitas / Valle del Golf / Causana</option>
         <option>Camino a San Carlos</option>
+        <option>Centro</option>
         <option>Cerro de las Rosas / Urca</option>
         <option>Cofico</option>
         <option>Docta</option>
+        <option>General Paz</option>
         <option>Intercountry (El Bosque)</option>
         <option>J. Claret / P. Lugones</option>
         <option>La Cuesta / La Calera</option>
@@ -125,15 +127,7 @@ const dbFB = firebase.database();
             <button class="qty-btn plus" id="btn-cuarto-plus">+</button>
           </div>
         </div>
-        <div class="size-card">
-          <div class="size-name">PORCION</div>
-          <div class="size-price" id="price-rogelito">$42.120 x6 . $7.020 c/u</div>
-          <div class="qty-row">
-            <button class="qty-btn minus" id="btn-rogelito-minus">-</button>
-            <span class="qty-val" id="val-rogelito">0</span>
-            <button class="qty-btn plus" id="btn-rogelito-plus">+</button>
-          </div>
-        </div>
+
       </div>
     </div>
 
@@ -351,7 +345,7 @@ const dbFB = firebase.database();
   }
 
   // State
-  const cantidades = {entero:0, medio:0, cuarto:0, rogelito:0};
+  const cantidades = {entero:0, medio:0, cuarto:0};
   const cantidadesCafe = {peru250:0, brasil250:0, col250:0, guat250:0, etiopia250:0, kenia250:0, peru1kg:0, brasil1kg:0, col1kg:0, etiopia1kg:0, kenia1kg:0, capscol:0, capsperu:0};
   let cafeVisible = false;
   let esValle = false;
@@ -537,7 +531,7 @@ const dbFB = firebase.database();
     document.getElementById("punto").addEventListener("change", actualizarPrecios);
     
     // Rogeles buttons
-    const rogelSizes = ["entero","medio","cuarto","rogelito"];
+    const rogelSizes = ["entero","medio","cuarto"];
     rogelSizes.forEach(s => {
       document.getElementById("btn-"+s+"-minus").addEventListener("click", ()=>cambiar(s,-1));
       document.getElementById("btn-"+s+"-plus").addEventListener("click", ()=>cambiar(s,1));
