@@ -90,6 +90,7 @@ const H2026 = [
   {mes:"Abril",   gmi:2438539, gma:6089810, tot:8654602,  caja:0,       mE:0,  mM:0,  mC:0,  mP:0,  myE:0,   myM:0,   myC:0,  myP:0},
   {mes:"Mayo",    gmi:1566580, gma:5867350, tot:7542650,  caja:4603780, mE:0,  mM:0,  mC:0,  mP:0,  myE:245, myM:303, myC:253, myP:0, gcafe:108720},
   {mes:"Junio",   gmi:1181740, gma:8561130, tot:9742870,  caja:3428540, mE:0,  mM:0,  mC:0,  mP:0,  myE:337, myM:468, myC:367, myP:0, gcafe:114920},
+  {mes:"Julio",   gmi:2165000, gma:5803320, tot:7993818,  caja:6689300, mE:0,  mM:0,  mC:0,  mP:0,  myE:219, myM:313, myC:264, myP:0, gcafe:25498},
 ];
 
 // Firebase helpers
@@ -377,7 +378,15 @@ function App() {
   const semActiva = semVista || sem;
   const ps = peds.filter(p => p.semana===semActiva);
   const gma = ps.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
-  const gmaTodoElMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
+  const mesActualNum = new Date().getMonth()+1;
+  const anioActualNum = new Date().getFullYear();
+  const gmaTodoElMes = peds.filter(p => {
+    if(p.punto.toLowerCase().includes("valle escondido")) return false;
+    if(!p.semana) return false;
+    const m = p.semana.match(/(\d+)\/(\d+)\/(\d{4})/);
+    if(!m) return false;
+    return parseInt(m[2])===mesActualNum && parseInt(m[3])===anioActualNum;
+  }).reduce((a,p) => a+(p.ganancia||0), 0);
   const ganVentasMayo = ventas.filter(v=>v.tipo==="mayorista").reduce((a,v)=>a+(v.ganancia||0),0);
   const gmaMayoTotal = gmaTodoElMes + ganVentasMayo;
   const gmaMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
