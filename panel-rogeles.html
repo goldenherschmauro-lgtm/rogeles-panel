@@ -1934,7 +1934,46 @@ function HistorialTab({anio, setAnio}) {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+function Login({onSuccess}) {
+  const [user, setUser] = React.useState("");
+  const [pass, setPass] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  const submit = e => {
+    e.preventDefault();
+    if (user === "Rogeles" && pass === "1625") {
+      localStorage.setItem("rogelesAuth", "1");
+      setError("");
+      onSuccess();
+    } else {
+      setError("Usuario o contraseña incorrectos");
+    }
+  };
+
+  return (
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:C.bg,padding:20}}>
+      <form onSubmit={submit} style={{background:C.card,borderRadius:16,padding:28,maxWidth:320,width:"100%",boxShadow:"0 4px 20px rgba(0,0,0,0.08)",border:"1px solid "+C.border}}>
+        <div style={{fontSize:18,fontWeight:"bold",color:C.rosa,textAlign:"center",marginBottom:20}}>Los Rogeles de Marcela</div>
+        <div style={{fontSize:11,color:C.marronL,marginBottom:6}}>Usuario</div>
+        <input value={user} onChange={e=>setUser(e.target.value)} autoFocus
+          style={{width:"100%",padding:10,borderRadius:8,border:"1px solid "+C.border,marginBottom:14,fontSize:14,boxSizing:"border-box"}}/>
+        <div style={{fontSize:11,color:C.marronL,marginBottom:6}}>Contraseña</div>
+        <input type="password" value={pass} onChange={e=>setPass(e.target.value)}
+          style={{width:"100%",padding:10,borderRadius:8,border:"1px solid "+C.border,marginBottom:14,fontSize:14,boxSizing:"border-box"}}/>
+        {error && <div style={{color:C.rojo,fontSize:12,marginBottom:10}}>{error}</div>}
+        <button type="submit" style={{width:"100%",padding:12,borderRadius:8,border:"none",background:C.rosa,color:"#fff",fontWeight:"bold",fontSize:14,cursor:"pointer"}}>Entrar</button>
+      </form>
+    </div>
+  );
+}
+
+function Root() {
+  const [auth, setAuth] = React.useState(() => localStorage.getItem("rogelesAuth") === "1");
+  if (!auth) return <Login onSuccess={() => setAuth(true)}/>;
+  return <App/>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
 </script>
 </body>
 </html>
