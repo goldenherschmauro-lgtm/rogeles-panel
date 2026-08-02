@@ -266,9 +266,9 @@ function CalendarioEntregas({ventas, setVentas, calMes, calAnio, setCalMes, setC
                   </div>}
                 </div>
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                  {!v.pagado && <button onClick={()=>setVentas(p=>p.map(x=>x.id===v.id?{...x,pagado:true}:x))}
+                  {!v.pagado && <button onClick={()=>fbUpdate("ventas/"+v.id,{pagado:true})}
                     style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#7BAE84",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Cobrar</button>}
-                  {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s))setVentas(p=>p.map(x=>x.id===v.id?{...x,senia:(x.senia||0)+parseInt(s)}:x));}}
+                  {!v.pagado && <button onClick={()=>{const s=prompt("Cuanto pago de senia?");if(s&&!isNaN(s))fbUpdate("ventas/"+v.id,{senia:(v.senia||0)+parseInt(s)});}}
                     style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#D4845A",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Senia</button>}
                   {v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:false})} style={{flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#8B6070",color:"#fff",fontSize:11,cursor:"pointer",fontWeight:"bold"}}>Deshacer entrega</button>}
                   {!v.entregado && <button onClick={()=>fbUpdate("ventas/"+v.id,{entregado:true})}
@@ -371,32 +371,34 @@ function App() {
   // Rogeles metrics
   const pend = ventas.filter(v => !v.pagado);
   const hoy = ventas.filter(v => v.fecha===new Date().toLocaleDateString("es-AR"));
-  const caja = ventas.filter(v => v.pagado).reduce((a,v) => a+v.precio, 0);
   const mes = new Date().getMonth()+1 + "-" + new Date().getFullYear();
   const ventasMes = ventas.filter(v => { try { const p=v.fecha.split("/"); return (parseInt(p[1])-1+1)+"-"+parseInt(p[2])===mes; } catch{return true;} });
+  // Caja: solo lo cobrado del mes actual, para no arrastrar cobros de meses viejos.
+  const caja = ventasMes.filter(v => v.pagado).reduce((a,v) => a+v.precio, 0);
   const gmi = ventasMes.filter(v => v.tipo==="minorista").reduce((a,v) => a+v.ganancia, 0);
   const semActiva = semVista || sem;
   const ps = peds.filter(p => p.semana===semActiva);
   const gma = ps.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
   const mesActualNum = new Date().getMonth()+1;
   const anioActualNum = new Date().getFullYear();
-  const gmaTodoElMes = peds.filter(p => {
-    if(p.punto.toLowerCase().includes("valle escondido")) return false;
-    if(!p.semana) return false;
-    const m = p.semana.match(/(\d+)\/(\d+)\/(\d{4})/);
+  // peds/pedsCafe en Firebase nunca se borran solas: todo total "mensual" tiene
+  // que filtrar explicitamente por semana/mes actual, si no arrastra meses viejos.
+  const esDelMesActual = semanaStr => {
+    if(!semanaStr) return false;
+    const m = semanaStr.match(/(\d+)\/(\d+)\/(\d{4})/);
     if(!m) return false;
     return parseInt(m[2])===mesActualNum && parseInt(m[3])===anioActualNum;
-  }).reduce((a,p) => a+(p.ganancia||0), 0);
+  };
+  const gmaTodoElMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido") && esDelMesActual(p.semana)).reduce((a,p) => a+(p.ganancia||0), 0);
   const ganVentasMayo = ventas.filter(v=>v.tipo==="mayorista").reduce((a,v)=>a+(v.ganancia||0),0);
   const gmaMayoTotal = gmaTodoElMes + ganVentasMayo;
-  const gmaMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+(p.ganancia||0), 0);
+  const ganCafeMes = pedsCafe.filter(p => !p.punto.toLowerCase().includes("valle escondido") && esDelMesActual(p.semana)).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
   const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
 
   // Cafe metrics
   const psCafe = pedsCafe.filter(p => p.semana===semActiva);
   const ganCafe = psCafe.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
-  const ganCafeMes = pedsCafe.filter(p => !p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
   const invValleCafe = psCafe.filter(p => p.punto.toLowerCase().includes("valle escondido")).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.cv*(p.cantidades[prod.id]||0)),0), 0);
   const conCafe = CAFE.reduce((acc,p) => { acc[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0); return acc; }, {});
 
@@ -767,7 +769,7 @@ function App() {
         {tab==="dashboard" && <div>
           <ST>Resumen del dia</ST>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-            <KPI label="Total Caja" value={fmt(caja)} sub="cobrado" color={C.verde}/>
+            <KPI label="Caja del Mes" value={fmt(caja)} sub="cobrado" color={C.verde}/>
             <KPI label="Ganancia Total" value={fmt(gmi+gmaMayoTotal+ganCafeMes)} sub="rogeles+cafe" color={C.naranja}/>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
@@ -818,7 +820,7 @@ function App() {
             ))}
           </Card>}
           <CalendarioEntregas ventas={ventas} setVentas={setVentas} calMes={calMes} calAnio={calAnio} setCalMes={setCalMes} setCalAnio={setCalAnio}/>
-          <Card title={sem} titleColor={C.rosa}>
+          <Card title={semActiva} titleColor={C.rosa}>
             {SIZES.map(s => (
               <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
                 <span style={{fontSize:13,color:C.marronL}}>{s}</span>
@@ -1097,17 +1099,34 @@ function App() {
           </button>
           {(()=>{
             const semanas = [...new Set(peds.map(p=>p.semana))].sort().reverse();
-            return semanas.length > 1 ? <div style={{marginBottom:12}}>
+            if(semanas.length <= 1) return null;
+            const MESES_SEM=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+            const porMes = {};
+            semanas.forEach(s => {
+              const m = s.match(/(\d+)\/(\d+)\/(\d{4})/);
+              const key = m ? m[3]+"-"+m[2].padStart(2,"0") : "otros";
+              if(!porMes[key]) porMes[key]=[];
+              porMes[key].push(s);
+            });
+            const mesesKeys = Object.keys(porMes).sort().reverse();
+            return <div style={{marginBottom:12}}>
               <div style={{fontSize:10,color:C.marronL,marginBottom:6,letterSpacing:1,textTransform:"uppercase"}}>Ver semana:</div>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {semanas.map(s => (
-                  <button key={s} onClick={()=>setSemVista(s)}
-                    style={{padding:"6px 10px",borderRadius:10,border:"2px solid "+(semVista===s?C.rosa:C.border),background:semVista===s?C.rosaBg:"transparent",color:semVista===s?C.rosa:C.marronL,fontSize:10,cursor:"pointer",fontWeight:semVista===s?"bold":"normal"}}>
-                    {s.replace("Pedido semanal ","Sem. ")}
-                  </button>
-                ))}
-              </div>
-            </div> : null;
+              {mesesKeys.map(key => {
+                const [anioK,mesK] = key.split("-");
+                const nombreMes = key==="otros" ? "Otros" : MESES_SEM[parseInt(mesK)-1]+" "+anioK;
+                return <div key={key} style={{marginBottom:8}}>
+                  <div style={{fontSize:9,color:C.rosaL,fontWeight:"bold",textTransform:"uppercase",marginBottom:4}}>{nombreMes}</div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {porMes[key].map(s => (
+                      <button key={s} onClick={()=>setSemVista(s)}
+                        style={{padding:"6px 10px",borderRadius:10,border:"2px solid "+(semVista===s?C.rosa:C.border),background:semVista===s?C.rosaBg:"transparent",color:semVista===s?C.rosa:C.marronL,fontSize:10,cursor:"pointer",fontWeight:semVista===s?"bold":"normal"}}>
+                        {s.replace("Pedido semanal ","Sem. ")}{s===sem?" (actual)":""}
+                      </button>
+                    ))}
+                  </div>
+                </div>;
+              })}
+            </div>;
           })()}
           <button onClick={()=>{
             const win = window.open("","_blank");
@@ -1142,17 +1161,6 @@ function App() {
           }} style={{width:"100%",padding:12,borderRadius:12,border:"2px solid #5C3340",background:"#FDF6F0",color:"#5C3340",fontWeight:"bold",cursor:"pointer",fontSize:13,marginBottom:12}}>
             Imprimir planilla repartida
           </button>
-          {/* Selector de semana */}
-          {(()=>{
-            const semanas = [...new Set(peds.map(p=>p.semana))].sort().reverse();
-            if(semanas.length > 1) return <div style={{marginBottom:12}}>
-              <Lbl>Ver semana:</Lbl>
-              <select value={semVista} onChange={e=>setSemVista(e.target.value)} style={inp()}>
-                {semanas.map(s=><option key={s} value={s}>{s}{s===sem?" (actual)":""}</option>)}
-              </select>
-            </div>;
-            return null;
-          })()}
           <Card title={"Consolidado - "+semActiva} titleColor={C.rosa}>
             {SIZES.map(s => (
               <div key={s} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.border}}>
@@ -1179,7 +1187,7 @@ function App() {
               </div>
               <div style={{display:"flex",justifyContent:"space-between",background:C.rosaBg,borderRadius:10,padding:"10px 12px",marginTop:6}}>
                 <span style={{fontSize:12,color:C.marron,fontWeight:"bold"}}>TOTAL GAN MENSUAL:</span>
-                <span style={{fontSize:15,color:C.verde,fontWeight:"bold"}}>{fmt(peds.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+(p.ganancia||0),0)+pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+(p.ganancia||0),0))}</span>
+                <span style={{fontSize:15,color:C.verde,fontWeight:"bold"}}>{fmt(gmaMayoTotal+ganCafeMes)}</span>
               </div>
             </div>
           </Card>
@@ -1346,7 +1354,7 @@ function App() {
             <button onClick={cerrarCafe} style={{...btnFill(C.marron),fontSize:12}}>Cerrar pedido</button>
           </div>
           <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid #E8C5C0"}}>
-            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Consolidado - {sem}</div>
+            <div style={{fontSize:11,color:"#C0392B",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>Consolidado - {semActiva}</div>
             {CAFE.map(p => (
               <div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #F5E5E0"}}>
                 <span style={{fontSize:12,color:C.marronL}}>{p.n}</span>
@@ -1407,8 +1415,10 @@ function App() {
             </div>
           </div>}
           {pedsCafe.length===0 && !showCafeForm && <Empty text="No hay pedidos de cafe esta semana"/>}
-          {pedsCafe.map(p => (
-            <div key={p.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid #E8C5C0"}}>
+          {pedsCafe.map(p => {
+            const esSemActual = p.semana===sem;
+            return (
+            <div key={p.id} style={{background:esSemActual?C.card:"#F5F5F5",borderRadius:14,padding:14,marginBottom:10,border:esSemActual?"1px solid #E8C5C0":"1px solid #CCC",opacity:esSemActual?1:0.7}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                 <div style={{flex:1}}>
                   <div style={{fontWeight:"bold",fontSize:14}}>{p.punto}</div>
@@ -1425,7 +1435,8 @@ function App() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>}
 
         {/* GANANCIA */}
@@ -1453,7 +1464,7 @@ function App() {
           {/* GANANCIA CAFE */}
           {(()=>{
             const ganCafeMino = ventas.filter(v=>v.cafeCantidades).reduce((a,v)=>a+CAFE.reduce((b,p)=>b+(p.gm*((v.cafeCantidades||{})[p.id]||0)),0),0);
-            const ganCafeMayo = pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+CAFE.reduce((b,prod)=>b+(prod.gma*(p.cantidades[prod.id]||0)),0),0);
+            const ganCafeMayo = ganCafeMes;
             const totalCafe = ganCafeMino + ganCafeMayo;
             return <Card title="Ganancia CAFE Cherry Season" titleColor="#C0392B" borderColor="#E8C5C0">
               <div style={{textAlign:"center",padding:"12px 0"}}>
@@ -1506,10 +1517,8 @@ function App() {
           const mesNombre=MESES2[mesActual]+" "+anioActual;
           const gastosMes=gastos.filter(g=>{const d=new Date(g.fecha);return d.getMonth()===mesActual&&d.getFullYear()===anioActual;});
           const totalGastosMes=gastosMes.reduce((a,g)=>a+(g.monto||0),0);
-          const ganMayoMes=peds.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+(p.ganancia||0),0);
-          const ganCafeMes=pedsCafe.filter(p=>!p.punto.toLowerCase().includes("valle escondido")).reduce((a,p)=>a+(p.ganancia||0),0);
-          const ganMinoMes=ventas.reduce((a,v)=>a+(v.ganancia||0),0);
-          const ganTotalMes=ganMayoMes+ganCafeMes+ganMinoMes;
+          const ganMinoMes=ventasMes.reduce((a,v)=>a+(v.ganancia||0),0);
+          const ganTotalMes=gmaMayoTotal+ganCafeMes+ganMinoMes;
           const netoMes=ganTotalMes-totalGastosMes;
           const agregarGasto=()=>{
             if(!gastoForm.monto||isNaN(gastoForm.monto)){showT("Ingresa un monto válido",false);return;}
