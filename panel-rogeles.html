@@ -390,7 +390,7 @@ function App() {
     return parseInt(m[2])===mesActualNum && parseInt(m[3])===anioActualNum;
   };
   const gmaTodoElMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido") && esDelMesActual(p.semana)).reduce((a,p) => a+(p.ganancia||0), 0);
-  const ganVentasMayo = ventas.filter(v=>v.tipo==="mayorista").reduce((a,v)=>a+(v.ganancia||0),0);
+  const ganVentasMayo = ventasMes.filter(v=>v.tipo==="mayorista").reduce((a,v)=>a+(v.ganancia||0),0);
   const gmaMayoTotal = gmaTodoElMes + ganVentasMayo;
   const ganCafeMes = pedsCafe.filter(p => !p.punto.toLowerCase().includes("valle escondido") && esDelMesActual(p.semana)).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
