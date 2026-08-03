@@ -43,12 +43,14 @@ const PUNTOS = [
 ];
 
 const PRODS = [
-  { id:"peru250",      nombre:"Peru Blend 250gr",         tipo:"grano",   costoValle:15791, precioMino:23000, precioMayo:19320, ganMino:7209,  ganMayo:3529, minimo:1 },
-  { id:"colombia250",  nombre:"Colombia El Tambo 250gr",  tipo:"grano",   costoValle:20873, precioMino:26500, precioMayo:22260, ganMino:5627,  ganMayo:1387, minimo:1 },
-  { id:"guatemala250", nombre:"Guatemala Anaer. 250gr",   tipo:"grano",   costoValle:21054, precioMino:30000, precioMayo:25200, ganMino:8946,  ganMayo:4146, minimo:1 },
-  { id:"peru1kg",      nombre:"Peru Blend 1kg",           tipo:"grano",   costoValle:39780, precioMino:52100, precioMayo:46369, ganMino:12320, ganMayo:6589, minimo:1 },
-  { id:"capscolombia", nombre:"Capsulas Colombia x10",    tipo:"capsula", costoValle:13260, precioMino:18000, precioMayo:14760, ganMino:4740,  ganMayo:1500, minimo:6 },
-  { id:"capsperu",     nombre:"Capsulas Peru Blend x10",  tipo:"capsula", costoValle:13260, precioMino:18000, precioMayo:14760, ganMino:4740,  ganMayo:1500, minimo:6 },
+  { id:"peru250",      nombre:"Peru Organico 250gr",             tipo:"grano",   costoValle:17545, precioMino:26000, precioMayo:21840, ganMino:8455,  ganMayo:4295, minimo:1 },
+  { id:"guatemala250", nombre:"Guatemala Huehuetenango 250gr",   tipo:"grano",   costoValle:20570, precioMino:29000, precioMayo:24360, ganMino:8430,  ganMayo:3790, minimo:1 },
+  { id:"kenia250",     nombre:"Kenia 250gr",                     tipo:"grano",   costoValle:24200, precioMino:31000, precioMayo:26040, ganMino:6800,  ganMayo:1840, minimo:1 },
+  { id:"peru1kg",      nombre:"Peru Organico Kg",                tipo:"grano",   costoValle:49610, precioMino:60000, precioMayo:53400, ganMino:10390, ganMayo:3790, minimo:1 },
+  { id:"guatemala1kg", nombre:"Guatemala Huehuetenango Kg",      tipo:"grano",   costoValle:55660, precioMino:70000, precioMayo:62300, ganMino:14340, ganMayo:6640, minimo:1 },
+  { id:"kenia1kg",     nombre:"Kenia Kg",                        tipo:"grano",   costoValle:71390, precioMino:85000, precioMayo:75650, ganMino:13610, ganMayo:4260, minimo:1 },
+  { id:"capscolombia", nombre:"Capsulas Colombia La Plata x10",  tipo:"capsula", costoValle:14520, precioMino:18000, precioMayo:14760, ganMino:3480,  ganMayo:240,  minimo:6 },
+  { id:"capsbrasil",   nombre:"Capsulas Brasil Bourbon x10",     tipo:"capsula", costoValle:14520, precioMino:18000, precioMayo:14760, ganMino:3480,  ganMayo:240,  minimo:6 },
 ];
 
 const SK = "cafe_cs_v1";
@@ -79,7 +81,7 @@ function App() {
   const [form, setForm] = useState({punto:PUNTOS[0], cantidades:{}});
   const [toast, setToast] = useState(null);
   const [vistaStock, setVistaStock] = useState(false);
-  const [stock, setStock] = useState({peru250:0,colombia250:0,guatemala250:0,peru1kg:0,capscolombia:0,capsperu:0});
+  const [stock, setStock] = useState({peru250:0,guatemala250:0,kenia250:0,peru1kg:0,guatemala1kg:0,kenia1kg:0,capscolombia:0,capsbrasil:0});
 
   useEffect(() => { setPedidos(ld()); }, []);
   useEffect(() => { sd(pedidos); }, [pedidos]);
