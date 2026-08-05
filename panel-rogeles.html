@@ -551,7 +551,6 @@ function App() {
       +(totalM>0?"MEDIANOS: "+totalM+"\n":"")
       +(totalP>0?"PEQUENOS: "+totalP+"\n":"")
       +(totalPo>0?"PORCIONES (cajas): "+totalPo+"\n":"")
-      +"\nTotal puntos: "+ps.length
       +"\n\nGracias!";
     window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
     showT("Pedido enviado a Rodri");
@@ -563,8 +562,8 @@ function App() {
       {key:"Manantiales",       label:"MANANTIALES",                         retira:""},
       {key:"Barrio Jardin",     label:"BARRIO JARDIN",                       retira:"retira papa coti"},
       {key:"Camino a San Carlos",label:"CAMINO SAN CARLOS",                  retira:"retira Fran"},
-      {key:"Montecristo",       label:"MONTECRISTO",                         retira:"retira Belen"},
-      {key:"Nueva Cordoba",     label:"NUEVA CORDOBA",                       retira:"Fabrica nueva"},
+      {key:"General Paz",       label:"GENERAL PAZ",                         retira:"retira en Manantiales"},
+      {key:"Nueva Cordoba",     label:"NUEVA CORDOBA",                       retira:"retira Angie"},
     ];
     let rep = "";
     REPARTIDA.forEach(r => {
