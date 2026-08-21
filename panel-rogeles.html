@@ -300,6 +300,7 @@ function App() {
   const [pedsCafe, setPedsCafe] = useState([]);
   const [showCafeForm, setShowCafeForm] = useState(false);
   const [semVista, setSemVista] = React.useState(sem);
+  const [enviosLog, setEnviosLog] = React.useState({});
   const [cafeForm, setCafeForm] = useState({punto:PUNTOS[0],cantidades:{peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}});
   const [stockCafe, setStockCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
@@ -346,6 +347,10 @@ function App() {
       const v=snap.val();
       if(v) setPeds(Object.values(v).sort((a,b)=>b.id-a.id));
       else setPeds([]);
+    });
+    const refEnvios = db.ref("envios/rodri");
+    refEnvios.on("value", snap => {
+      setEnviosLog(snap.val() || {});
     });
     // Listen to pedsCafe
     const refPedsCafe = db.ref("pedsCafe");
@@ -554,6 +559,8 @@ function App() {
       +(totalPo>0?"PORCIONES (cajas): "+totalPo+"\n":"")
       +"\n\nGracias!";
     window.open("https://wa.me/5493513128283?text="+encodeURIComponent(msg),"_blank");
+    const keySemRodri = semActiva.replace(/\//g,"-");
+    db.ref("envios/rodri/"+keySemRodri).set({semana:semActiva, timestamp:Date.now(), cantidadPedidos:ps.length, totalE, totalM, totalP, totalPo});
     showT("Pedido enviado a Rodri");
   };
 
@@ -1193,7 +1200,8 @@ function App() {
             </div>
           </Card>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-            <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
+            {(()=>{ const keySemRodri = semActiva.replace(/\//g,"-"); const logRodri = enviosLog[keySemRodri]; return logRodri && ps.length>logRodri.cantidadPedidos ? <div style={{background:"#fff3cd",border:"1px solid #ffc107",borderRadius:8,padding:8,marginBottom:8,fontSize:11,color:"#856404"}}>⚠️ Hay {ps.length-logRodri.cantidadPedidos} pedido(s) nuevo(s) desde el ultimo envio a Rodri de esta semana. Revisa y reenvia si hace falta.</div> : null; })()}
+          <button onClick={enviarPedido} style={{...btnFill(C.marron),fontSize:11}}>Enviar pedido a Rodri</button>
             <button onClick={enviarRepartida} style={{...btnFill(C.rosa),fontSize:11}}>Enviar repartida</button>
           </div>
           {waPedidoEditado&&<div style={{marginBottom:12}}>
