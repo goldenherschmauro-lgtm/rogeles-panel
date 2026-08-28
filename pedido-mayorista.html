@@ -454,10 +454,10 @@ const dbFB = firebase.database();
       cantidadesCafe:{...cantidadesCafe},
       ganancia: ganRog, fecha: new Date().toISOString()
     };
-    dbFB.ref("peds/"+id).set(pedido);
+    dbFB.ref("peds/"+id).set(pedido).catch(err=>{ alert("No se pudo guardar tu pedido, revisa tu conexion e intenta de nuevo. Si el problema sigue, avisale a Mauro. Detalle: "+(err&&err.message?err.message:err)); });
     if(cafeItems.length>0) {
       const cafePed = {id:id+1, punto, cantidades:{...cantidadesCafe}, semana:SEMANA, ganancia:ganCafe};
-      dbFB.ref("pedsCafe/"+(id+1)).set(cafePed);
+      dbFB.ref("pedsCafe/"+(id+1)).set(cafePed).catch(err=>{ alert("No se pudo guardar tu pedido de cafe, revisa tu conexion e intenta de nuevo. Si el problema sigue, avisale a Mauro. Detalle: "+(err&&err.message?err.message:err)); });
     }
 
     // Mensaje a Mauro
