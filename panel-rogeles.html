@@ -1472,7 +1472,7 @@ function App() {
 
           {/* GANANCIA CAFE */}
           {(()=>{
-            const ganCafeMino = ventas.filter(v=>v.cafeCantidades).reduce((a,v)=>a+CAFE.reduce((b,p)=>b+(p.gm*((v.cafeCantidades||{})[p.id]||0)),0),0);
+            const ganCafeMino = ventasMes.filter(v=>v.cafeCantidades).reduce((a,v)=>a+CAFE.reduce((b,p)=>b+(p.gm*((v.cafeCantidades||{})[p.id]||0)),0),0);
             const ganCafeMayo = ganCafeMes;
             const totalCafe = ganCafeMino + ganCafeMayo;
             return <Card title="Ganancia CAFE Cherry Season" titleColor="#C0392B" borderColor="#E8C5C0">
