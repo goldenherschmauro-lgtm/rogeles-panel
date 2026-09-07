@@ -396,7 +396,15 @@ function App() {
     if(!m) return false;
     return parseInt(m[2])===mesActualNum && parseInt(m[3])===anioActualNum;
   };
-  const gmaTodoElMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido") && esDelMesActual(p.semana)).reduce((a,p) => a+(p.ganancia||0), 0);
+  // peds tiene fecha real de creacion (ISO): usarla para el mes en vez del inicio de semana,
+  // asi un pedido cerrado en el mes actual cuenta en el mes actual aunque su semana empiece antes.
+  const esFechaDelMesActual = fechaStr => {
+    if(!fechaStr) return false;
+    const d = new Date(fechaStr);
+    if(isNaN(d.getTime())) return false;
+    return (d.getMonth()+1)===mesActualNum && d.getFullYear()===anioActualNum;
+  };
+  const gmaTodoElMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido") && (p.fecha ? esFechaDelMesActual(p.fecha) : esDelMesActual(p.semana))).reduce((a,p) => a+(p.ganancia||0), 0);
   const ganVentasMayo = ventasMes.filter(v=>v.tipo==="mayorista").reduce((a,v)=>a+(v.ganancia||0),0);
   const gmaMayoTotal = gmaTodoElMes + ganVentasMayo;
   const ganCafeMes = pedsCafe.filter(p => !p.punto.toLowerCase().includes("valle escondido") && esDelMesActual(p.semana)).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
