@@ -293,7 +293,7 @@ function App() {
   const [peds, setPeds] = useState([]);
   const [svf, setSvf] = useState(false);
   const [spf, setSpf] = useState(false);
-  const [vf, setVf] = useState({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
+  const [vf, setVf] = useState({tipo:"minorista",cliente:"",celular:"",punto:"",tamano:"ENTERO",cantidad:1,retira:"",pagado:false,fecha:new Date().toLocaleDateString("es-AR")});
   const [pf, setPf] = useState({punto:PUNTOS[0],ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
   const [toast, setToast] = useState(null);
   const [rv, setRv] = useState({ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
@@ -418,7 +418,8 @@ function App() {
   const conCafe = CAFE.reduce((acc,p) => { acc[p.id]=psCafe.reduce((a,ped)=>a+(ped.cantidades[p.id]||0),0); return acc; }, {});
 
   const regVenta = () => {
-    if(!vf.cliente.trim()) { showT("Ingresa el nombre del cliente",false); return; }
+    if(vf.tipo==="minorista" && !vf.cliente.trim()) { showT("Ingresa el nombre del cliente",false); return; }
+    if(vf.tipo==="mayorista" && !vf.punto) { showT("Selecciona el punto de venta mayorista",false); return; }
     const cants = vf.cantidades || {};
     const totalUnidades = SIZES.reduce((a,s)=>a+(cants[s]||0),0);
     const totalCafeUnidades = CAFE.reduce((a,p)=>a+((vf.cafeCantidades||{})[p.id]||0),0);
@@ -459,7 +460,7 @@ function App() {
         return ns;
       });
     }
-    setVf({tipo:"minorista",cliente:"",celular:"",tamano:"ENTERO",cantidad:1,cantidades:{},retira:"",pagado:false,entregado:false,senia:0,descuentoPct:0,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
+    setVf({tipo:"minorista",cliente:"",celular:"",punto:"",tamano:"ENTERO",cantidad:1,cantidades:{},retira:"",pagado:false,entregado:false,senia:0,descuentoPct:0,fecha:new Date().toLocaleDateString("es-AR"),cafeCantidades:{}});
     setSvf(false);
     showT("Venta registrada");
   };
@@ -875,7 +876,14 @@ function App() {
                 </button>
               ))}
             </div>
-            <input placeholder="Nombre *" value={vf.cliente} onChange={e=>setVf(f=>({...f,cliente:e.target.value}))} style={inp()}/>
+            {vf.tipo==="mayorista" ? (
+              <select value={vf.punto||""} onChange={e=>setVf(f=>({...f,punto:e.target.value}))} style={inp()}>
+                <option value="">Punto *</option>
+                {PUNTOS.map(p=><option key={p} value={p}>{p}</option>)}
+              </select>
+            ) : (
+              <input placeholder="Nombre *" value={vf.cliente} onChange={e=>setVf(f=>({...f,cliente:e.target.value}))} style={inp()}/>
+            )}
             <input type="tel" placeholder="Celular (opcional)" value={vf.celular} onChange={e=>setVf(f=>({...f,celular:e.target.value}))} style={inp()}/>
             <Lbl>Rogeles (cantidad por tamano)</Lbl>
             {SIZES.map(s => {
@@ -1714,6 +1722,18 @@ function StatsTab({ventas, peds, pedsCafe}) {
       statsPunto[pc.punto].cafe[k] = (statsPunto[pc.punto].cafe[k]||0) + v;
     });
     statsPunto[pc.punto].ganancia += pc.ganancia||0;
+  });
+
+  ventasMes.filter(v => v.tipo==="mayorista" && v.punto).forEach(v => {
+    if(v.punto.toLowerCase().includes("valle escondido")) return;
+    if(!statsPunto[v.punto]) statsPunto[v.punto] = {entero:0,mediano:0,pequeno:0,porcion:0,ganancia:0,pedidos:0,cafe:{}};
+    const sp = statsPunto[v.punto];
+    const cv = v.cantidades || {};
+    sp.entero += cv.ENTERO||0;
+    sp.mediano += cv.MEDIANO||0;
+    sp.pequeno += cv.PEQUENO||0;
+    sp.ganancia += v.ganancia||0;
+    sp.pedidos++;
   });
 
   const puntosOrdenados = Object.entries(statsPunto)
