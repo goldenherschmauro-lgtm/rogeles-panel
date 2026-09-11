@@ -325,12 +325,12 @@ function App() {
     });
 
     // Stock: load once only - set loaded flag after
-    db.ref("stock").on("value", nap => { 
+    db.ref("stock").once("value").then(snap => { 
       const v=snap.val(); 
       if(v) setStock(v); 
       window._stockFBLoaded = true;
     });
-    db.ref("stockCafe").on("value", nap => { 
+    db.ref("stockCafe").once("value").then(snap => { 
       const v=snap.val(); 
       if(v) setStockCafe(v);
       window._stockCafeFBLoaded = true;
