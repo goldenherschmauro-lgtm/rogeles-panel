@@ -325,12 +325,12 @@ function App() {
     });
 
     // Stock: load once only - set loaded flag after
-    db.ref("stock").once("value").then(snap => { 
+    db.ref("stock").on("value", nap => { 
       const v=snap.val(); 
       if(v) setStock(v); 
       window._stockFBLoaded = true;
     });
-    db.ref("stockCafe").once("value").then(snap => { 
+    db.ref("stockCafe").on("value", nap => { 
       const v=snap.val(); 
       if(v) setStockCafe(v);
       window._stockCafeFBLoaded = true;
@@ -434,6 +434,7 @@ function App() {
     const v = {
       ...vf,
       id: Date.now(),
+      fecha: new Date().toLocaleDateString("es-AR"),
       tamano: resumen||"Cafe",
       cantidad: totalUnidades,
       precio: totalRogeles+totalCafe-descuento,
