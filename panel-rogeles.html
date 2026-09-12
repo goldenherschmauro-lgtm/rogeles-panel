@@ -381,7 +381,7 @@ function App() {
   const mes = new Date().getMonth()+1 + "-" + new Date().getFullYear();
   const ventasMes = ventas.filter(v => { try { const p=v.fecha.split("/"); return (parseInt(p[1])-1+1)+"-"+parseInt(p[2])===mes; } catch{return true;} });
   // Caja: solo lo cobrado del mes actual, para no arrastrar cobros de meses viejos.
-  const caja = ventasMes.filter(v => v.pagado).reduce((a,v) => a+v.precio, 0);
+  const caja = ventasMes.filter(v => v.pagado).reduce((a,v) => a+(v.precio||0), 0);
   const gmi = ventasMes.filter(v => v.tipo==="minorista").reduce((a,v) => a+v.ganancia, 0);
   const semActiva = semVista || sem;
   const ps = peds.filter(p => p.semana===semActiva);
@@ -997,7 +997,7 @@ function App() {
             <div key={v.id} style={{background:C.card,borderRadius:14,padding:14,marginBottom:10,border:"1px solid "+(v.pagado?C.verde+"44":C.rojo+"33")}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                 <div style={{flex:1}}>
-                  <div style={{fontWeight:"bold",fontSize:14}}>{v.cliente}</div>
+                  <div style={{fontWeight:"bold",fontSize:14}}>{v.cliente || v.punto}</div>
                   <div style={{fontSize:11,color:C.marronL,marginTop:3}}>{v.tamano} x{v.cantidad} - {v.tipo} - {v.fecha}{v.retira?" - "+v.retira:""}</div>
                   {v.celular && <a href={"https://wa.me/54"+v.celular.replace(/\D/g,"")} target="_blank" style={{fontSize:11,color:"#25D366",fontWeight:"bold",textDecoration:"none",display:"block",marginTop:2}}>WA: {v.celular}</a>}
                 </div>
