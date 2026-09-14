@@ -243,7 +243,7 @@ function CalendarioEntregas({ventas, setVentas, calMes, calAnio, setCalMes, setC
               <div key={v.id} style={{background:"#FDF6F0",borderRadius:12,padding:12,marginBottom:10,border:"1px solid "+(v.entregado?"#C5E0CB":v.pagado?"#7BAE8444":"#F0D0D8")}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
                   <div>
-                    <div style={{fontSize:14,fontWeight:"bold",color:"#5C3340"}}>{v.cliente}</div>
+                    <div style={{fontSize:14,fontWeight:"bold",color:"#5C3340"}}>{v.cliente || v.punto}</div>
                     {v.celular && <div style={{fontSize:11,color:"#8B6070",marginTop:2}}>{v.celular}</div>}
                   </div>
                   <div style={{background:v.entregado?"#7B68EE":v.pagado?"#7BAE84":"#E8A0A8",color:"#fff",borderRadius:20,padding:"3px 10px",fontSize:10,fontWeight:"bold"}}>
@@ -473,7 +473,7 @@ function App() {
   const anularVenta = id => {
     const v = ventas.find(x=>x.id===id);
     if(!v) return;
-    if(!window.confirm("Anular la venta de "+v.cliente+"? Se devuelve el stock.")) return;
+    if(!window.confirm("Anular la venta de "+(v.cliente||v.punto)+"? Se devuelve el stock.")) return;
     fbRemove("ventas/"+id);
     setStock(p => {
       const ns = {...p};
@@ -828,7 +828,7 @@ function App() {
             {pend.slice(0,4).map(v => (
               <div key={v.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,background:C.bg,borderRadius:10,padding:"10px 12px",border:"1px solid "+C.border}}>
                 <div>
-                  <div style={{fontSize:13,fontWeight:"bold"}}>{v.cliente}</div>
+                  <div style={{fontSize:13,fontWeight:"bold"}}>{v.cliente || v.punto}</div>
                   <div style={{fontSize:11,color:C.marronL}}>{v.tamano} x{v.cantidad} - {v.retira||"-"}</div>
                 </div>
                 <div style={{textAlign:"right"}}>
