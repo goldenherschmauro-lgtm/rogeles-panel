@@ -309,6 +309,8 @@ function App() {
   const [waPedidoEditado, setWaPedidoEditado] = useState(null);
   const [gastos, setGastos] = useState([]);
   const [gastoForm, setGastoForm] = useState({categoria:"AFIP", descripcion:"", monto:""});
+  const [facturas, setFacturas] = useState([]);
+  const [facturaForm, setFacturaForm] = useState({proveedor:"Producción Rogel", descripcion:"", monto:"", imagen:null});
   const [editForm, setEditForm] = useState({});
 
   // Firebase listeners - sync in real time
@@ -319,6 +321,12 @@ function App() {
       const v = snap.val();
       if(v) setGastos(Object.values(v).sort((a,b)=>b.id-a.id));
       else setGastos([]);
+    });
+    const refFacturas = db.ref("facturas");
+    refFacturas.on("value", snap => {
+      const v = snap.val();
+      if(v) setFacturas(Object.values(v).sort((a,b)=>b.id-a.id));
+      else setFacturas([]);
     });
 
     // Stock: load once only - set loaded flag after
@@ -1549,6 +1557,34 @@ function App() {
             const g={id:Date.now(),categoria:gastoForm.categoria,descripcion:gastoForm.descripcion,monto:parseInt(gastoForm.monto),fecha:new Date().toISOString(),mes:mesNombre};
             fbSet("gastos/"+g.id,g);setGastoForm({categoria:"AFIP",descripcion:"",monto:""});showT("Gasto registrado");
           };
+          const facturasMes=facturas.filter(f=>f.mes===mesNombre);
+          const totalFacturasMes=facturasMes.reduce((a,f)=>a+(f.monto||0),0);
+          const manejarImagenFactura=(e)=>{
+            const file=e.target.files[0];
+            if(!file)return;
+            const reader=new FileReader();
+            reader.onload=(ev)=>{
+              const img=new Image();
+              img.onload=()=>{
+                const maxW=1000;
+                const esc=Math.min(1,maxW/img.width);
+                const canvas=document.createElement("canvas");
+                canvas.width=img.width*esc;canvas.height=img.height*esc;
+                const ctx=canvas.getContext("2d");
+                ctx.drawImage(img,0,0,canvas.width,canvas.height);
+                const b64=canvas.toDataURL("image/jpeg",0.6);
+                setFacturaForm(f=>({...f,imagen:b64}));
+              };
+              img.src=ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          };
+          const agregarFactura=()=>{
+            if(!facturaForm.monto||isNaN(facturaForm.monto)){showT("Ingresa un monto válido",false);return;}
+            if(!facturaForm.imagen){showT("Subí la foto de la factura",false);return;}
+            const f={id:Date.now(),proveedor:facturaForm.proveedor,descripcion:facturaForm.descripcion,monto:parseInt(facturaForm.monto),fecha:new Date().toISOString(),mes:mesNombre,imagen:facturaForm.imagen};
+            fbSet("facturas/"+f.id,f);setFacturaForm({proveedor:"Producción Rogel",descripcion:"",monto:"",imagen:null});showT("Factura registrada");
+          };
           const porMes={};
           gastos.forEach(g=>{const k=g.mes||"Sin mes";if(!porMes[k])porMes[k]=[];porMes[k].push(g);});
           return <div style={{paddingBottom:20}}>
@@ -1580,6 +1616,51 @@ function App() {
               <input type="number" placeholder="0" value={gastoForm.monto} onChange={e=>setGastoForm(f=>({...f,monto:e.target.value}))} style={{...inp(),marginBottom:14}}/>
               <button onClick={agregarGasto} style={btnFill(C.rosa)}>+ Agregar gasto</button>
             </Card>
+            <Card title="Cargar factura de compra" titleColor={C.rosa}>
+              <Lbl>Proveedor</Lbl>
+              <select value={facturaForm.proveedor} onChange={e=>setFacturaForm(f=>({...f,proveedor:e.target.value}))} style={{...inp(),marginBottom:10}}>
+                <option>Producción Rogel</option><option>Cherry Season Café</option><option>Otro</option>
+              </select>
+              <Lbl>Descripcion (opcional)</Lbl>
+              <input placeholder="Ej: Insumos semana" value={facturaForm.descripcion} onChange={e=>setFacturaForm(f=>({...f,descripcion:e.target.value}))} style={{...inp(),marginBottom:10}}/>
+              <Lbl>Monto $</Lbl>
+              <input type="number" placeholder="0" value={facturaForm.monto} onChange={e=>setFacturaForm(f=>({...f,monto:e.target.value}))} style={{...inp(),marginBottom:10}}/>
+              <Lbl>Foto de la factura</Lbl>
+              <input type="file" accept="image/*" capture="environment" onChange={manejarImagenFactura} style={{...inp(),marginBottom:10}}/>
+              {facturaForm.imagen&&<img src={facturaForm.imagen} style={{width:"100%",borderRadius:10,marginBottom:10}}/>}
+              <button onClick={agregarFactura} style={btnFill(C.rosa)}>+ Subir factura</button>
+            </Card>
+            <Card title="Chequeo Mayorista" titleColor={C.rosa}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+                <div style={{background:C.bg,borderRadius:12,padding:12,textAlign:"center"}}>
+                  <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Ganancia mayorista (sistema)</div>
+                  <div style={{fontSize:16,fontWeight:"bold",color:C.verde}}>{fmt(gmaMayoTotal)}</div>
+                </div>
+                <div style={{background:C.bg,borderRadius:12,padding:12,textAlign:"center"}}>
+                  <div style={{fontSize:11,color:C.marronL,marginBottom:4}}>Facturas de compra</div>
+                  <div style={{fontSize:16,fontWeight:"bold",color:C.rojo}}>{fmt(totalFacturasMes)}</div>
+                </div>
+              </div>
+              {totalFacturasMes>gmaMayoTotal&&<div style={{background:"#FFE5E5",borderRadius:10,padding:10,fontSize:12,color:C.rojo,textAlign:"center"}}>⚠️ Las facturas de compra superan la ganancia mayorista del mes — revisar</div>}
+            </Card>
+            {facturas.length>0&&<Card title="Facturas cargadas" titleColor="#888">
+              {facturas.map(f=>(
+                <div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid "+C.border}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    {f.imagen&&<img src={f.imagen} onClick={()=>window.open(f.imagen,"_blank")} style={{width:40,height:40,objectFit:"cover",borderRadius:6,cursor:"pointer"}}/>}
+                    <div>
+                      <div style={{fontSize:13,fontWeight:"bold",color:C.marron}}>{f.proveedor}</div>
+                      {f.descripcion&&<div style={{fontSize:11,color:C.marronL}}>{f.descripcion}</div>}
+                      <div style={{fontSize:10,color:C.marronL}}>{f.mes}</div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{fontSize:13,color:C.rojo,fontWeight:"bold"}}>{fmt(f.monto)}</div>
+                    <button onClick={()=>{if(window.confirm("Eliminar?"))fbRemove("facturas/"+f.id);}} style={{fontSize:10,background:C.rojo,color:"#fff",border:"none",borderRadius:6,padding:"3px 7px",cursor:"pointer"}}>X</button>
+                  </div>
+                </div>
+              ))}
+            </Card>}
             {Object.entries(porMes).map(([mes,items])=>{
               const totalMes=items.reduce((a,g)=>a+(g.monto||0),0);
               return <Card key={mes} title={mes} titleColor="#888">
