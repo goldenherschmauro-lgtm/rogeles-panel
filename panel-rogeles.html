@@ -95,6 +95,7 @@ const H2026 = [
 const fbSet = (path, data) => db.ref(path).set(data).catch(e=>console.log("FB error:",e));
 const fbUpdate = (path, data) => db.ref(path).update(data).catch(e=>console.log("FB error:",e));
 const fbRemove = (path) => db.ref(path).remove().catch(e=>console.log("FB error:",e));
+const fbIncrement = (path, delta) => db.ref(path).transaction(cur => (cur||0) + delta).catch(e=>console.log("FB error:",e));
 const postSheets = (data) => { fetch(SHEETS_URL, {method:"POST", body:JSON.stringify(data)}).catch(()=>{}); };
 const fetchSheets = (tipo, callback) => {
   const name = "cb_"+Date.now();
@@ -285,6 +286,7 @@ function CalendarioEntregas({ventas, setVentas, calMes, calAnio, setCalMes, setC
 function App() {
   const [tab, setTab] = useState("dashboard");
   const [stock, setStock] = useState({ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
+  const [stockBaseline, setStockBaseline] = useState({ENTERO:0,MEDIANO:0,PEQUENO:0,PORCION:0});
   const [ventas, setVentas] = useState([]);
   const [peds, setPeds] = useState([]);
   const [svf, setSvf] = useState(false);
@@ -300,6 +302,7 @@ function App() {
   const [enviosLog, setEnviosLog] = React.useState({});
   const [cafeForm, setCafeForm] = useState({punto:PUNTOS[0],cantidades:{peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0}});
   const [stockCafe, setStockCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
+  const [stockCafeBaseline, setStockCafeBaseline] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [rvCafe, setRvCafe] = useState({peru250:0,col250:0,guat250:0,peru1kg:0,capscol:0,capsperu:0});
   const [calMes, setCalMes] = useState(new Date().getMonth());
   const [calAnio, setCalAnio] = useState(new Date().getFullYear());
@@ -331,12 +334,12 @@ function App() {
     // Stock: load once only - set loaded flag after
     db.ref("stock").once("value").then(snap => { 
       const v=snap.val(); 
-      if(v) setStock(v); 
+      if(v) { setStock(v); setStockBaseline(v); }
       window._stockFBLoaded = true;
     });
     db.ref("stockCafe").once("value").then(snap => { 
       const v=snap.val(); 
-      if(v) setStockCafe(v);
+      if(v) { setStockCafe(v); setStockCafeBaseline(v); }
       window._stockCafeFBLoaded = true;
     });
     // Listen to ventas
@@ -450,8 +453,8 @@ function App() {
     // Descontar stock rogeles y guardar en Firebase
     setStock(p => {
       const ns = {...p};
-      SIZES.forEach(s => { if((cants[s]||0)>0) ns[s]=(ns[s]||0)-(cants[s]||0); });
-      fbSet("stock", ns);
+      SIZES.forEach(s => { if((cants[s]||0)>0) { ns[s]=(ns[s]||0)-(cants[s]||0); fbIncrement("stock/"+s, -(cants[s]||0)); } });
+      setStockBaseline(ns);
       return ns;
     });
     postSheets({tipo:"venta", ...v});
@@ -459,8 +462,8 @@ function App() {
     if(vf.cafeCantidades) {
       setStockCafe(s => {
         const ns = {...s};
-        CAFE.forEach(p => { if((vf.cafeCantidades[p.id]||0)>0) ns[p.id]=(ns[p.id]||0)-(vf.cafeCantidades[p.id]||0); });
-        setTimeout(() => fbSet("stockCafe", ns), 500);
+        CAFE.forEach(p => { if((vf.cafeCantidades[p.id]||0)>0) { ns[p.id]=(ns[p.id]||0)-(vf.cafeCantidades[p.id]||0); fbIncrement("stockCafe/"+p.id, -(vf.cafeCantidades[p.id]||0)); } });
+        setStockCafeBaseline(ns);
         return ns;
       });
     }
@@ -481,24 +484,26 @@ function App() {
     fbRemove("ventas/"+id);
     setStock(p => {
       const ns = {...p};
+      const deltas = {};
       if(v.cantidades) {
-        SIZES.forEach(s => { if((v.cantidades[s]||0)>0) ns[s]=(ns[s]||0)+(v.cantidades[s]||0); });
+        SIZES.forEach(s => { if((v.cantidades[s]||0)>0) { ns[s]=(ns[s]||0)+(v.cantidades[s]||0); deltas[s]=(deltas[s]||0)+(v.cantidades[s]||0); } });
       } else if(v.tamano) {
         const t = v.tamano.toUpperCase();
         const c = parseInt(v.cantidad)||1;
-        if(t.includes("ENTERO")) ns.ENTERO=(ns.ENTERO||0)+c;
-        else if(t.includes("MEDIANO")) ns.MEDIANO=(ns.MEDIANO||0)+c;
-        else if(t.includes("PEQUENO")||t.includes("CUARTO")) ns.PEQUENO=(ns.PEQUENO||0)+c;
-        else if(t.includes("PORCION")||t.includes("ROGELITO")) ns.PORCION=(ns.PORCION||0)+c;
+        if(t.includes("ENTERO")) { ns.ENTERO=(ns.ENTERO||0)+c; deltas.ENTERO=(deltas.ENTERO||0)+c; }
+        else if(t.includes("MEDIANO")) { ns.MEDIANO=(ns.MEDIANO||0)+c; deltas.MEDIANO=(deltas.MEDIANO||0)+c; }
+        else if(t.includes("PEQUENO")||t.includes("CUARTO")) { ns.PEQUENO=(ns.PEQUENO||0)+c; deltas.PEQUENO=(deltas.PEQUENO||0)+c; }
+        else if(t.includes("PORCION")||t.includes("ROGELITO")) { ns.PORCION=(ns.PORCION||0)+c; deltas.PORCION=(deltas.PORCION||0)+c; }
       }
-      setTimeout(()=>fbSet("stock",ns),300);
+      Object.keys(deltas).forEach(s => fbIncrement("stock/"+s, deltas[s]));
+      setStockBaseline(ns);
       return ns;
     });
     if(v.cafeCantidades) {
       setStockCafe(s => {
         const ns = {...s};
-        CAFE.forEach(p => { if((v.cafeCantidades[p.id]||0)>0) ns[p.id]=(ns[p.id]||0)+(v.cafeCantidades[p.id]||0); });
-        setTimeout(()=>fbSet("stockCafe",ns),300);
+        CAFE.forEach(p => { if((v.cafeCantidades[p.id]||0)>0) { ns[p.id]=(ns[p.id]||0)+(v.cafeCantidades[p.id]||0); fbIncrement("stockCafe/"+p.id, (v.cafeCantidades[p.id]||0)); } });
+        setStockCafeBaseline(ns);
         return ns;
       });
     }
@@ -737,11 +742,14 @@ function App() {
     if(vOrig?.cantidades) {
       setStock(p => {
         const ns = {...p};
+        const deltas = {};
         SIZES.forEach(s => {
           const diff = (cants[s]||0) - (vOrig.cantidades[s]||0);
           ns[s] = (ns[s]||0) - diff;
+          if(diff !== 0) deltas[s] = -diff;
         });
-        setTimeout(()=>fbSet("stock",ns),300);
+        Object.keys(deltas).forEach(s => fbIncrement("stock/"+s, deltas[s]));
+        setStockBaseline(ns);
         return ns;
       });
     }
@@ -1054,7 +1062,13 @@ function App() {
         {tab==="stock" && <div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:20,marginBottom:14}}>
             <ST noTop>Control de Stock</ST>
-            <button onClick={()=>{fbSet("stock",stock);fbSet("stockCafe",stockCafe);showT("Stock guardado!");}}
+            <button onClick={()=>{
+              SIZES.forEach(s=>{ const d=(stock[s]||0)-(stockBaseline[s]||0); if(d!==0) fbIncrement("stock/"+s, d); });
+              Object.keys(stockCafe).forEach(k=>{ const d=(stockCafe[k]||0)-(stockCafeBaseline[k]||0); if(d!==0) fbIncrement("stockCafe/"+k, d); });
+              setStockBaseline(stock);
+              setStockCafeBaseline(stockCafe);
+              showT("Stock guardado!");
+            }}
               style={{padding:"8px 16px",borderRadius:12,border:"none",background:C.verde,color:"#fff",fontWeight:"bold",cursor:"pointer",fontSize:12}}>
               Guardar stock
             </button>
