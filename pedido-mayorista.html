@@ -328,6 +328,7 @@ const dbFB = firebase.database();
     const sizes = ["entero","medio","cuarto","rogelito"];
     sizes.forEach(s => {
       const el = document.getElementById("price-"+s);
+      if(!el) return;
       if(esValle) {
         el.textContent = "Precio interno";
       } else {
