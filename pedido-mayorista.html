@@ -196,7 +196,18 @@ const dbFB = firebase.database();
             <button class="qty-btn plus" id="btn-cafe-colcaturra250-plus">+</button>
           </div>
         </div>
-        <div class="cafe-card">
+                <div class="cafe-card">
+          <div class="cafe-info">
+            <div class="cafe-name">Guatemala 250gr</div>
+            <div class="cafe-price" id="cafe-price-guat250">$24.650 c/u</div>
+          </div>
+          <div class="qty-row">
+            <button class="qty-btn minus" id="btn-cafe-guat250-minus">-</button>
+            <span class="qty-val" id="cafe-val-guat250">0</span>
+            <button class="qty-btn plus" id="btn-cafe-guat250-plus">+</button>
+          </div>
+        </div>
+<div class="cafe-card">
           <div class="cafe-info">
             <div class="cafe-name">Peru Blend 1kg</div>
             <div class="cafe-price" id="cafe-price-peru1kg">$51.000 c/u</div>
@@ -229,7 +240,18 @@ const dbFB = firebase.database();
             <button class="qty-btn plus" id="btn-cafe-kenia1kg-plus">+</button>
           </div>
         </div>
-        <div class="card-title" style="margin-top:12px">Capsulas (minimo 6 cajas)</div>
+                <div class="cafe-card">
+          <div class="cafe-info">
+            <div class="cafe-name">Guatemala 1kg</div>
+            <div class="cafe-price" id="cafe-price-guat1kg">$51.000 c/u</div>
+          </div>
+          <div class="qty-row">
+            <button class="qty-btn minus" id="btn-cafe-guat1kg-minus">-</button>
+            <span class="qty-val" id="cafe-val-guat1kg">0</span>
+            <button class="qty-btn plus" id="btn-cafe-guat1kg-plus">+</button>
+          </div>
+        </div>
+<div class="card-title" style="margin-top:12px">Capsulas (minimo 6 cajas)</div>
         <div class="cafe-card">
           <div class="cafe-info">
             <div class="cafe-name">Capsulas Colombia x10</div>
@@ -282,6 +304,8 @@ const dbFB = firebase.database();
     col1kg: {label:"Colombia La Plata 1kg", precio:55250, costo:40364, gan:14886, minimo:1},
     kenia1kg: {label:"Kenia 1kg", precio:72250, costo:65195, gan:7055, minimo:1},
     capscol: {label:"Capsulas Colombia x10", precio:15300, costo:13260, gan:2040, minimo:6},
+    guat250: {label:"Guatemala 250gr", precio:24650, costo:20300, gan:4350, minimo:1},
+    guat1kg: {label:"Guatemala 1kg", precio:51000, costo:42000, gan:9000, minimo:1},
   };
   const WA_MAURO = "5493513128283";
   const SEMANA = obtenerSemana();
@@ -299,7 +323,7 @@ const dbFB = firebase.database();
 
   // State
   const cantidades = {entero:0, medio:0, cuarto:0};
-  const cantidadesCafe = {peru250:0, col250:0, kenia250:0, ruanda250:0, colcaturra250:0, peru1kg:0, col1kg:0, kenia1kg:0, capscol:0};
+  const cantidadesCafe = {peru250:0, col250:0, kenia250:0, ruanda250:0, colcaturra250:0, peru1kg:0, col1kg:0, kenia1kg:0, capscol:0, guat250:0, guat1kg:0};
   let cafeVisible = false;
   let esValle = false;
 
@@ -492,7 +516,7 @@ const dbFB = firebase.database();
     });
     
     // Cafe buttons
-    const cafeSizes = ["peru250","col250","kenia250","ruanda250","colcaturra250","peru1kg","col1kg","kenia1kg","capscol"];
+    const cafeSizes = ["peru250","col250","kenia250","ruanda250","colcaturra250","peru1kg","col1kg","kenia1kg","capscol","guat250","guat1kg"];
     cafeSizes.forEach(id => {
       document.getElementById("btn-cafe-"+id+"-minus").addEventListener("click", ()=>cambiarCafe(id,-1));
       document.getElementById("btn-cafe-"+id+"-plus").addEventListener("click", ()=>cambiarCafe(id,1));
