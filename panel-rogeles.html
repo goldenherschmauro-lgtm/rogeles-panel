@@ -1724,6 +1724,7 @@ function App() {
 function StatsTab({ventas, peds, pedsCafe}) {
   const [vista, setVista] = React.useState("ventas");
   const [filtroMesMayo, setFiltroMesMayo] = React.useState("");
+  const [filtroMesMino, setFiltroMesMino] = React.useState("");
   const mesActual = new Date().getMonth();
   const anioActual = new Date().getFullYear();
   const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -1738,8 +1739,15 @@ function StatsTab({ventas, peds, pedsCafe}) {
   const ventasMes = ventas.filter(v => {
     if(!v.fecha) return false;
     const d = parseDate(v.fecha);
-    return d && d.getMonth()===mesActual && d.getFullYear()===anioActual;
+    if(!d) return false;
+    if(filtroMesMino){
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      return `${mm}/${d.getFullYear()}`===filtroMesMino;
+    }
+    return d.getMonth()===mesActual && d.getFullYear()===anioActual;
   });
+  const mesMostradoNum = filtroMesMino ? parseInt(filtroMesMino.split("/")[0])-1 : mesActual;
+  const anioMostrado = filtroMesMino ? parseInt(filtroMesMino.split("/")[1]) : anioActual;
 
   const getCant = (v, tipo) => {
     if(v.cantidades) return v.cantidades[tipo]||0;
@@ -1844,7 +1852,17 @@ function StatsTab({ventas, peds, pedsCafe}) {
     </div>
 
     {vista==="ventas" && <div>
-      <div style={{fontSize:11,color:C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>{MESES[mesActual]} {anioActual} - Ventas minoristas</div>
+      <div style={{fontSize:11,color:C.rosaL,letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"bold"}}>{MESES[mesMostradoNum]} {anioMostrado} - Ventas minoristas</div>
+
+      {(()=>{
+        const mesesDisp = [...new Set(ventas.filter(v=>v.fecha).map(v=>{const dd=parseDate(v.fecha); return dd?`${String(dd.getMonth()+1).padStart(2,"0")}/${dd.getFullYear()}`:null;}).filter(Boolean))].sort().reverse();
+        return mesesDisp.length>1 ? <div style={{marginBottom:12}}>
+          <select onChange={e=>setFiltroMesMino(e.target.value)} value={filtroMesMino} style={inp()}>
+            <option value="">Mes actual ({MESES[mesActual]} {anioActual})</option>
+            {mesesDisp.map(m=>{const partes=m.split("/"); return <option key={m} value={m}>{MESES[parseInt(partes[0])-1]} {partes[1]}</option>;})}
+          </select>
+        </div> : null;
+      })()}
 
       {/* Resumen */}
       <div style={{background:C.card,borderRadius:16,padding:16,marginBottom:14,border:"1px solid "+C.border}}>
