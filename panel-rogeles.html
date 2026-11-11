@@ -91,6 +91,7 @@ const H2026 = [
   {mes:"Julio",   gmi:2165000, gma:5803320, tot:7993818,  caja:6689300, mE:0,  mM:0,  mC:0,  mP:0,  myE:219, myM:313, myC:264, myP:0, gcafe:25498},
   {mes:"Agosto",  gmi:1757221, gma:7961200, tot:9751477,  caja:5302180, mE:0,  mM:0,  mC:0,  mP:0,  myE:300, myM:430, myC:348, myP:0, gcafe:33056},
   {mes:"Septiembre", gmi:1767195, gma:8676160, tot:10463700, caja:5981960, mE:0,  mM:0,  mC:0,  mP:0,  myE:371, myM:483, myC:288, myP:0, gcafe:20345},
+  {mes:"Octubre",    gmi:2524600, gma:9482200, tot:12129626, caja:7896200, mE:0,  mM:0,  mC:0,  mP:0,  myE:271, myM:528, myC:306, myP:0, gcafe:122826},
 ];
 
 // Firebase helpers
@@ -416,7 +417,7 @@ function App() {
   const gmaTodoElMes = peds.filter(p => !p.punto.toLowerCase().includes("valle escondido") && (p.fecha ? esFechaDelMesActual(p.fecha) : esDelMesActual(p.semana))).reduce((a,p) => a+(p.ganancia||0), 0);
   const ganVentasMayo = ventasMes.filter(v=>v.tipo==="mayorista").reduce((a,v)=>a+(v.ganancia||0),0);
   const gmaMayoTotal = gmaTodoElMes + ganVentasMayo;
-  const ganCafeMes = pedsCafe.filter(p => !p.punto.toLowerCase().includes("valle escondido") && esDelMesActual(p.semana)).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
+  const ganCafeMes = pedsCafe.filter(p => !p.punto.toLowerCase().includes("valle escondido") && (p.fecha ? esFechaDelMesActual(p.fecha) : esDelMesActual(p.semana))).reduce((a,p) => a+CAFE.reduce((b,prod)=>b+(prod.gma*((p.cantidades||{})[prod.id]||0)),0), 0);
   const con = SIZES.reduce((acc,s) => { acc[s]=ps.reduce((a,p)=>a+(p[s]||0),0); return acc; }, {});
   const sc = n => n<0 ? C.rojo : n===0 ? C.rojo : n<=3 ? C.naranja : C.verde;
 
